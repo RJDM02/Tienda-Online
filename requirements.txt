@@ -1,0 +1,6 @@
+# Este proyecto es un frontend React gestionado con npm (ver package.json).
+# No se requieren dependencias de Python; se mantiene este archivo para entornos que lo solicitan.
+# Versiones recomendadas del runtime:
+#   Node.js >= 18.0.0
+#   npm >= 9.0.0
+
