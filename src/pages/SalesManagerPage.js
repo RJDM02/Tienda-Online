@@ -217,17 +217,17 @@ const SalesManagerPage = () => {
     return (
       <>
         {/* Precio base corregido */}
-        <p className="text-gray-600 text-sm">Precio base: {precioPostDescuento.toFixed(2)} {pedido.moneda?.nombre}</p>
+        <p className="text-gray-600 text-sm">Precio base: {precioPostDescuento.toFixed(2)} {`Venta realizada en: ${pedido.moneda?.nombre ?? ''}`}</p>
         
         {/* Precio gestor corregido */}
-        <p className="text-gray-600 text-sm">Precio gestor: {precioGestor.toFixed(2)} {pedido.moneda?.nombre}</p>
+        <p className="text-gray-600 text-sm">Precio gestor: {precioGestor.toFixed(2)}</p>
         
-        <p className="text-gray-600 text-sm">Comisión: {comision} {pedido.moneda?.nombre}</p>
+        <p className="text-gray-600 text-sm">Comisión: {comision} {'Dolares (USD)'}</p>
         <p className="text-gray-800 font-bold text-lg">Total: {pedido.costo_post_descuento}</p>
         <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-2 mt-2">
           <p className="text-yellow-800 font-bold flex items-center">
             <MonetizationOnIcon sx={{ fontSize: 16, marginRight: '4px' }} />
-            Ganancia total: {gananciaTotal.toFixed(2)} {pedido.moneda?.nombre}
+            Ganancia total: {gananciaTotal.toFixed(2)} {'Dolares (USD)'}
           </p>
         </div>
       </>

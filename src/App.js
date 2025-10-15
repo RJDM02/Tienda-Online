@@ -42,6 +42,7 @@ import AccountingAdminPageManager from './pages/AccountingAdminPageManager';
 import CreateSalesPageAdmin from './pages/CreateSalesPageAdmin';
 import CreateSalesPageManager from './pages/CreateSalesPageManager';
 import AccountingClientReferidosPage from './pages/AccountingClientReferidosPage';
+import InfoManagerPage from './pages/InfoManagerPage';
 import './App.css';
 
 function App() {
@@ -322,6 +323,14 @@ function App() {
               element={
                 <PrivateRoute allowedRoles={['Gestor de Venta']}> 
                   <SalesManagerPage/>
+                </PrivateRoute>
+              } 
+            />
+            <Route 
+              path="/info-gestor" 
+              element={
+                <PrivateRoute allowedRoles={['Gestor de Venta']}>
+                  <InfoManagerPage/>
                 </PrivateRoute>
               } 
             />

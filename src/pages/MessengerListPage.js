@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   Snackbar,
@@ -34,84 +34,12 @@ const MessengerListPage = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [success, setSuccess] = useState(null);
+  const [actionLoadingId, setActionLoadingId] = useState(null);
   const [filter, setFilter] = useState('all');
   const [selectedDate, setSelectedDate] = useState('');
   const navigate = useNavigate();
 
-  useEffect(() => {
-    const fetchDeliveries = async () => {
-      try {
-        const token = localStorage.getItem('authToken');
-        if (!token) {
-          navigate('/login');
-          return;
-        }
-
-        const response = await fetch('https://videojuegoshabana.com/api/listar_venta_mensajero/', {
-          headers: {
-            'Authorization': `Bearer ${token}`
-          }
-        });
-
-        if (!response.ok) {
-          throw new Error('Error al obtener las entregas');
-        }
-
-        const data = await response.json();
-        
-        const formattedData = data.map(item => ({
-          key: item.id,
-          id: item.id,
-          cliente: {
-            nombre: item.nombre_cliente || 'No especificado',
-            telefono: item.telefono_cliente || 'No especificado',
-            username: item.cliente?.username || 'No especificado',
-            phone: item.cliente?.telefono || 'No especificado',
-          },
-          producto: {
-            nombre: item.producto?.nombre || 'Producto no especificado',
-            garantia: item.producto?.garantia || false,
-            regalo: item.producto?.regalo || false,
-            regalo_nombre: item.producto?.regalo_nombre || null
-          },
-          variacion: item.variacion ? {
-            nombre: item.variacion.item_info?.nombre || 'Sin variación',
-            color: item.variacion.item_info?.color || 'Sin color',
-            modelo: item.variacion.item_info?.modelo || 'Sin modelo'
-          } : null,
-          precio: item.costo_post_descuento || '0.00',
-          moneda: item.moneda?.nombre || 'No especificada',
-          domicilio: {
-            ubicacion: item.domicilio?.ubicacion || 'Ubicación no especificada',
-            precio: item.domicilio?.precio || '0.00'
-          },
-          referencia: item.punto_referencia || 'Sin referencia',
-          horario: item.horario_deseado_entrega ? new Date(item.horario_deseado_entrega).toLocaleString() : 'No especificado',
-          fecha: item.horario_deseado_entrega ? new Date(item.horario_deseado_entrega).toLocaleDateString() : 'No especificado',
-          fechaObj: item.horario_deseado_entrega ? new Date(item.horario_deseado_entrega) : null,
-          estado: 'pendiente'
-        }));
-
-        setDeliveries(formattedData);
-        
-        // Agrupar entregas
-        const grouped = groupDeliveries(formattedData);
-        setGroupedDeliveries(grouped);
-        setFilteredDeliveries(grouped);
-      } catch (err) {
-        setError(err.message);
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchDeliveries();
-  }, [navigate]);
-
-  useEffect(() => {
-    applyFilters();
-  }, [filter, selectedDate, groupedDeliveries]);
-
-  const groupDeliveries = (deliveries) => {
+  const groupDeliveries = useCallback((deliveries) => {
     const groups = {};
     
     deliveries.forEach(delivery => {
@@ -127,6 +55,8 @@ const MessengerListPage = () => {
           fecha: delivery.fecha,
           fechaObj: delivery.fechaObj,
           moneda: delivery.moneda,
+          nota: delivery.nota,
+
           productos: [{
             id: delivery.id,
             nombre: delivery.producto.nombre,
@@ -151,11 +81,93 @@ const MessengerListPage = () => {
           regalo_nombre: delivery.producto.regalo_nombre,
           estado: delivery.estado
         });
+        if (!groups[groupKey].nota && delivery.nota) {
+          groups[groupKey].nota = delivery.nota;
+        }
       }
     });
     
     return Object.values(groups);
-  };
+  }, []);
+
+  const fetchDeliveries = useCallback(async () => {
+    setLoading(true);
+    try {
+      const token = localStorage.getItem('authToken');
+      if (!token) {
+        navigate('/login');
+        return false;
+      }
+
+      const response = await fetch('https://videojuegoshabana.com/api/listar_venta_mensajero/', {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+
+      if (!response.ok) {
+        throw new Error('Error al obtener las entregas');
+      }
+
+      const data = await response.json();
+      
+      const formattedData = data.map(item => ({
+        key: item.id,
+        id: item.id,
+        cliente: {
+          nombre: item.nombre_cliente || 'No especificado',
+          telefono: item.telefono_cliente || 'No especificado',
+          username: item.cliente?.username || 'No especificado',
+          phone: item.cliente?.telefono || 'No especificado',
+        },
+        producto: {
+          nombre: item.producto?.nombre || 'Producto no especificado',
+          garantia: item.producto?.garantia || false,
+          regalo: item.producto?.regalo || false,
+          regalo_nombre: item.producto?.regalo_nombre || null
+        },
+        variacion: item.variacion ? {
+          nombre: item.variacion.item_info?.nombre || 'Sin variaci�n',
+          color: item.variacion.item_info?.color || 'Sin color',
+          modelo: item.variacion.item_info?.modelo || 'Sin modelo'
+        } : null,
+        precio: item.costo_post_descuento || '0.00',
+        moneda: item.moneda?.nombre || 'No especificada',
+        domicilio: {
+          ubicacion: item.domicilio?.ubicacion || 'Ubicaci�n no especificada',
+          precio: item.domicilio?.precio || '0.00'
+        },
+        nota: item.nota || '',
+        referencia: item.punto_referencia || 'Sin referencia',
+        horario: item.horario_deseado_entrega ? new Date(item.horario_deseado_entrega).toLocaleString() : 'No especificado',
+        fecha: item.horario_deseado_entrega ? new Date(item.horario_deseado_entrega).toLocaleDateString() : 'No especificado',
+        fechaObj: item.horario_deseado_entrega ? new Date(item.horario_deseado_entrega) : null,
+        estado: 'pendiente'
+      }));
+
+      setDeliveries(formattedData);
+      
+      // Agrupar entregas
+      const grouped = groupDeliveries(formattedData);
+      setGroupedDeliveries(grouped);
+      setFilteredDeliveries(grouped);
+      return true;
+    } catch (err) {
+      setError(err.message);
+      return false;
+    } finally {
+      setLoading(false);
+    }
+  }, [navigate, groupDeliveries]);
+
+  useEffect(() => {
+    fetchDeliveries();
+  }, [fetchDeliveries]);
+
+  useEffect(() => {
+    applyFilters();
+  }, [filter, selectedDate, groupedDeliveries]);
+
 
   const applyFilters = () => {
     let filtered = [...groupedDeliveries];
@@ -220,6 +232,67 @@ const MessengerListPage = () => {
   const handleCloseAlert = () => {
     setError(null);
     setSuccess(null);
+  };
+
+  const handlePerformDelivery = async (deliveryId) => {
+    const token = localStorage.getItem('authToken');
+    if (!token) {
+      setError('Debes iniciar sesiA3n nuevamente.');
+      navigate('/login');
+      return;
+    }
+
+    try {
+      setActionLoadingId(deliveryId);
+      setError(null);
+      setSuccess(null);
+
+      const response = await fetch(`https://videojuegoshabana.com/api/realizar_mensajeria/${deliveryId}`, {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+
+      if (!response.ok) {
+        let message = 'No se pudo actualizar la mensajerA-a.';
+        try {
+          const errorData = await response.json();
+          if (typeof errorData === 'string') {
+            message = errorData;
+          } else if (errorData?.detail) {
+            message = errorData.detail;
+          } else if (errorData?.message) {
+            message = errorData.message;
+          }
+        } catch (parseError) {
+          // Ignorar errores de parseo y usar el mensaje genA3rico
+        }
+        throw new Error(message);
+      }
+
+      let successMessage = 'Entrega actualizada correctamente.';
+      try {
+        const result = await response.json();
+        if (typeof result === 'string') {
+          successMessage = result;
+        } else if (result?.message) {
+          successMessage = result.message;
+        }
+      } catch (parseError) {
+        // Ignorar errores de parseo cuando no hay contenido
+      }
+
+      setSuccess(successMessage);
+      const refreshed = await fetchDeliveries();
+      if (!refreshed) {
+        setSuccess(null);
+      }
+    } catch (err) {
+      setError(err.message || 'OcurriA3 un error al actualizar la mensajerA-a.');
+    } finally {
+      setActionLoadingId(null);
+    }
   };
 
   const handleRefresh = () => {
@@ -510,6 +583,7 @@ const MessengerListPage = () => {
                   {filteredDeliveries.map((group, index) => {
                     const statusConfig = getStatusConfig(group.estado);
                     const StatusIcon = statusConfig.icon;
+                    const primaryDeliveryId = group.ids[0];
                     
                     return (
                       <div key={index} className="bg-white rounded-2xl shadow-lg overflow-hidden hover:shadow-xl transition-all duration-200 transform hover:-translate-y-1">
@@ -520,9 +594,40 @@ const MessengerListPage = () => {
                               <h3 className="text-lg font-bold text-gray-900">Entrega #{group.ids.join(' y ')}</h3>
                               <p className="text-sm text-gray-600">{group.productos.length} producto{group.productos.length > 1 ? 's' : ''}</p>
                             </div>
-                            <div className={`px-3 py-1 rounded-lg border text-sm font-medium flex items-center space-x-2 ${statusConfig.color}`}>
-                              <StatusIcon sx={{ fontSize: 16 }} />
-                              <span>{statusConfig.text}</span>
+                            <div className="flex items-center gap-3">
+                              {primaryDeliveryId && (
+                                <Button
+                                  variant="contained"
+                                  size="small"
+                                  onClick={() => handlePerformDelivery(primaryDeliveryId)}
+                                  disabled={actionLoadingId === primaryDeliveryId}
+                                  sx={{
+                                    borderRadius: '9999px',
+                                    background: 'linear-gradient(135deg, #FF6B00 0%, #FF8500 100%)',
+                                    fontWeight: 600,
+                                    textTransform: 'none',
+                                    padding: '6px 16px',
+                                    boxShadow: '0 4px 12px rgba(255, 107, 0, 0.3)',
+                                    '&:hover': {
+                                      background: 'linear-gradient(135deg, #E55A00 0%, #E57000 100%)',
+                                      transform: 'translateY(-1px)',
+                                      boxShadow: '0 6px 16px rgba(255, 107, 0, 0.4)',
+                                    },
+                                    '&.Mui-disabled': {
+                                      background: 'rgba(255, 107, 0, 0.4)',
+                                      color: '#fff',
+                                      boxShadow: 'none',
+                                    },
+                                    transition: 'all 0.2s ease-in-out',
+                                  }}
+                                >
+                                  {actionLoadingId === primaryDeliveryId ? 'Procesando...' : 'Realizar mensajeria'}
+                                </Button>
+                              )}
+                              <div className={`px-3 py-1 rounded-lg border text-sm font-medium flex items-center space-x-2 ${statusConfig.color}`}>
+                                <StatusIcon sx={{ fontSize: 16 }} />
+                                <span>{statusConfig.text}</span>
+                              </div>
                             </div>
                           </div>
                         </div>
@@ -622,6 +727,11 @@ const MessengerListPage = () => {
                                   <span className="font-medium">Referencia:</span> {group.referencia}
                                 </p>
                               )}
+                              {group.nota && group.nota.trim() !== '' && (
+                                <p className="text-gray-600 text-sm">
+                                  <span className="font-medium">Nota:</span> {group.nota}
+                                </p>
+                              )}
                               <div className="flex items-center space-x-2 text-gray-600 text-sm mt-3">
                                 <ScheduleIcon sx={{ fontSize: 16 }} />
                                 <span><span className="font-medium">Horario deseado:</span> {group.horario}</span>
@@ -682,3 +792,9 @@ const MessengerListPage = () => {
 };
 
 export default MessengerListPage;
+
+
+
+
+
+
