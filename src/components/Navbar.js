@@ -43,6 +43,7 @@ import ReceiptIcon from '@mui/icons-material/Receipt';
 import EqualizerIcon from '@mui/icons-material/Equalizer';
 import NotificationsIcon from '@mui/icons-material/Notifications';
 import HomeIcon from '@mui/icons-material/Home';
+import InfoIcon from '@mui/icons-material/Info';
 import logo from '@/assets/logo.png';
 import ModalEditCliente from '../components/ModalEditCliente';
 import CarBuy from './CarBuy';
@@ -328,7 +329,7 @@ function Navbar({ onShowLogin }) {
     { icon: <AccountBalance />, title: "Contabilidad General(Administador)", path: "/admin-contabilidad-general-admin" },
     { icon: <ReceiptIcon />, title: "Record Ventas (Todos)", path: "/record-ventas" },
     { icon: <EqualizerIcon />, title: "Estadísticas", path: "/statistics" },
-    { icon: <HomeIcon />, title: "Administrar HomePage", path: "/admin-homepage" }
+    { icon: <HomeIcon />, title: "Administrar HomePage", path: "/admin-homepage" },
   ];
 
   const sharedAdminManagerItems = [
@@ -336,7 +337,8 @@ function Navbar({ onShowLogin }) {
   ];
 
   const managerSpecificItems = [
-    { icon: <HistoryIcon />, title: "Mis ventas", path: "/admin-ventas-gestor" }
+    { icon: <HistoryIcon />, title: "Mis ventas", path: "/admin-ventas-gestor" },
+    { icon: <InfoIcon />, title: "Info gestor", path: "/info-gestor" }
   ];
 
   const mobileMenuItems = [
@@ -483,6 +485,18 @@ function Navbar({ onShowLogin }) {
                   sx={{ display: { xs: 'none', sm: 'flex' } }}
                 >
                   <ReceiptIcon />
+                </IconButton>
+              </Tooltip>
+            )}
+
+            {isCourier && (
+              <Tooltip title="Mis entregas">
+                <IconButton 
+                  color="inherit" 
+                  onClick={() => navigateWithReload('/mensajeria-lista')}
+                  sx={{ display: { xs: 'none', sm: 'flex' } }}
+                >
+                  <DeliveryDiningIcon />
                 </IconButton>
               </Tooltip>
             )}
