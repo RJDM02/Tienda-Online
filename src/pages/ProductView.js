@@ -28,6 +28,7 @@ import {
 import { jwtDecode } from 'jwt-decode';
 import Navbar from '../components/Navbar';
 import CardItem from '../components/CardItem';
+import FloatingWhatsAppButton from '../components/FloatingWhatsAppButton';
 import { useCart } from '../context/CartContext';
 
 const style = {
@@ -1098,6 +1099,7 @@ const ProductView = ({ onShowLogin = () => {} }) => {
           </div>
         </Box>
       </Modal>
+      <FloatingWhatsAppButton />
     </div>
   );
 };

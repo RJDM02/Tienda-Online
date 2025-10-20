@@ -3,6 +3,7 @@ import { useLocation, useNavigate, Link } from 'react-router-dom';
 import Dashbar from '../components/Dashbar';
 import Navbar from '../components/Navbar';
 import CardItem from '../components/CardItem';
+import FloatingWhatsAppButton from '../components/FloatingWhatsAppButton';
 import { jwtDecode } from 'jwt-decode';
 
 const ShopPage = () => {
@@ -328,6 +329,7 @@ const ShopPage = () => {
           </div>
         </div>
       </div>
+      <FloatingWhatsAppButton />
     </div>
   );
 };
