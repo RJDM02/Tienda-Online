@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { ChevronLeft, ChevronRight, Mail, Phone, MessageCircle } from 'lucide-react';
+import FloatingWhatsAppButton from '../components/FloatingWhatsAppButton';
 
 const HomePage = () => {
   const [currentMainSlide, setCurrentMainSlide] = useState(0);
@@ -343,6 +344,7 @@ const HomePage = () => {
           </div>
         </div>
       </footer>  
+      <FloatingWhatsAppButton />
     </div>
   );
 };
