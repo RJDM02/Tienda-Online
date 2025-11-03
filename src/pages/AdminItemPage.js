@@ -340,7 +340,7 @@ const AdminItemPage = () => {
     garantia: '',
     regalo: '',
     condicion: '',
-    sub_categoria:'',
+    sub_categoria: [],
     comision: 0,
     video: null,
     currentVideoUrl: '',
@@ -363,7 +363,9 @@ const AdminItemPage = () => {
       garantia: item.garantia?.id || '',
       regalo: item.regalo?.id || '',
       condicion: item.condicion_detalle?.id || '',
-      sub_categoria: item.subcategorias_detalle?.[0]?.id || '',
+      sub_categoria: item.subcategorias_detalle
+        ? item.subcategorias_detalle.map(sub => sub.id)
+        : [],
       comision: item.comision || 0,
       video: null,
       currentVideoUrl: item.video || '',
@@ -398,6 +400,14 @@ const AdminItemPage = () => {
     setEditForm(prev => ({
       ...prev,
       [name]: type === 'checkbox' ? checked : value
+    }));
+  };
+
+  const handleEditSubCategoriaChange = (event) => {
+    const { value } = event.target;
+    setEditForm(prev => ({
+      ...prev,
+      sub_categoria: Array.isArray(value) ? value : value ? [value] : [],
     }));
   };
 
@@ -489,7 +499,11 @@ const AdminItemPage = () => {
       if (editForm.garantia) formData.append('garantia', editForm.garantia);
       if (editForm.regalo) formData.append('regalo', editForm.regalo);
       if (editForm.condicion) formData.append('condicion', editForm.condicion);
-      if (editForm.sub_categoria) formData.append('sub_categoria', editForm.sub_categoria);
+      if (editForm.sub_categoria && editForm.sub_categoria.length) {
+        editForm.sub_categoria.forEach(subcategoriaId => {
+          formData.append('sub_categoria', subcategoriaId);
+        });
+      }
       // Manejo del video
       if (editForm.video) {
         formData.append('video', editForm.video);
@@ -1629,10 +1643,23 @@ const AdminItemPage = () => {
                 <FormControl fullWidth margin="normal">
                   <InputLabel>Subcategoría</InputLabel>
                   <Select
+                    multiple
                     name="sub_categoria"
                     value={editForm.sub_categoria}
-                    onChange={handleEditChange}
+                    onChange={handleEditSubCategoriaChange}
                     label="Subcategoría"
+                    renderValue={(selected) => {
+                      const values = Array.isArray(selected) ? selected : selected ? [selected] : [];
+                      if (!values.length) {
+                        return 'Selecciona subcategorias';
+                      }
+                      return values
+                        .map((value) => {
+                          const match = subcategoriesData.find(sub => String(sub.id) === String(value));
+                          return match ? match.nombre : value;
+                        })
+                        .join(', ');
+                    }}
                     sx={{
                       borderRadius: '12px',
                       '& .MuiOutlinedInput-root': {
@@ -1648,9 +1675,6 @@ const AdminItemPage = () => {
                       },
                     }}
                   >
-                    <MenuItem value="">
-                      <em>Ninguna</em>
-                    </MenuItem>
                     {subcategoriesData.map(subcategoria => (
                       <MenuItem key={subcategoria.id} value={subcategoria.id}>
                         {subcategoria.nombre}

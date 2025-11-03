@@ -44,7 +44,8 @@ const DataClientePage = () => {
     cupon: [],
     pedidos_pendientes: [],
     historial_venta: [],
-    pedidos_referidos_historial: []
+    pedidos_referidos_historial: [],
+    puntos: 0
   });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -65,24 +66,34 @@ const DataClientePage = () => {
           return;
         }
 
-        const response = await fetch('https://videojuegoshabana.com/api/listar_datos_cliente/', {
-          headers: {
-            'Authorization': `Bearer ${token}`
-          }
-        });
+        const headers = {
+          'Authorization': `Bearer ${token}`
+        };
 
-        if (!response.ok) {
+        const [clientResponse, pointsResponse] = await Promise.all([
+          fetch('https://videojuegoshabana.com/api/listar_datos_cliente/', { headers }),
+          fetch('https://videojuegoshabana.com/api/obtener_puntos/', { headers })
+        ]);
+
+        if (!clientResponse.ok) {
           throw new Error('Error al obtener los datos del cliente');
         }
 
-        const data = await response.json();
-        // Aseguramos que los arrays siempre tengan valor
+        if (!pointsResponse.ok) {
+          throw new Error('Error al obtener los puntos del cliente');
+        }
+
+        const data = await clientResponse.json();
+        const pointsData = await pointsResponse.json();
+        const puntos = Number(pointsData?.puntos ?? 0);
+        // Aseguramos que los arrays siempre tengan valor y agregamos los puntos del cliente
         setClientData({
           ...data,
           cupon: data.cupon || [],
           pedidos_pendientes: data.pedidos_pendientes || [],
           historial_venta: data.historial_venta || [],
-          pedidos_referidos_historial: data.pedidos_referidos_historial || []
+          pedidos_referidos_historial: data.pedidos_referidos_historial || [],
+          puntos: Number.isFinite(puntos) ? puntos : 0
         });
       } catch (err) {
         setError(err.message);
@@ -229,6 +240,23 @@ const DataClientePage = () => {
                     </div>
 
                     <Divider className="my-6" />
+
+                    <div className="bg-blue-50 rounded-xl p-4 mb-4">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center">
+                          <LoyaltyIcon className="text-blue-600 mr-2" />
+                          <Typography variant="subtitle2" className="font-bold text-blue-800">
+                            Mis Puntos
+                          </Typography>
+                        </div>
+                        <Typography variant="h4" className="font-bold text-blue-700">
+                          {Number(clientData.puntos ?? 0).toLocaleString('es-ES')}
+                        </Typography>
+                      </div>
+                      <Typography variant="body2" className="text-blue-600 mt-1">
+                        Puntos disponibles para canjear
+                      </Typography>
+                    </div>
 
                     {/* Estadísticas de referidos */}
                     {clientData.pedidos_referidos_historial && clientData.pedidos_referidos_historial.length > 0 && (

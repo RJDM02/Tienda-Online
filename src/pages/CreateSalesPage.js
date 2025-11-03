@@ -24,6 +24,8 @@ import { useCart } from '../context/CartContext';
 import AdminNotifier from '../components/AdminNotifier';
 import { styles, LoadingState, ErrorState, SectionTitle } from './CreateSalesPageStyles';
 
+const POINTS_THRESHOLD = 500;
+
 const CreateSalesPage = () => {
   const location = useLocation();
   const navigate = useNavigate();
@@ -36,6 +38,7 @@ const CreateSalesPage = () => {
   const [error, setError] = useState(null);
   const [success, setSuccess] = useState(false);
   const [processedItems, setProcessedItems] = useState(0);
+  const [availablePoints, setAvailablePoints] = useState(0);
   
   // Obtener los items del carrito y el código de referido
   const cartItems = location.state?.cartItems || [];
@@ -50,24 +53,66 @@ const CreateSalesPage = () => {
     clientName: '',
     clientPhone: '',
     managerPrice: '',
+    puntos: 0,
     referidoId: referralCodeFromCart // ← USAR EL CÓDIGO DEL CARRITO
   });
   
   const [currentUser, setCurrentUser] = useState(null);
   const [openSnackbar, setOpenSnackbar] = useState(false);
   const [isManager, setIsManager] = useState(false);
+  const [phoneError, setPhoneError] = useState('');
 
   useEffect(() => {
+    const fetchUserPoints = async (authToken) => {
+      try {
+        const response = await axios.get('https://videojuegoshabana.com/api/obtener_puntos/', {
+          headers: { 'Authorization': `Bearer ${authToken}` }
+        });
+        const fetchedPoints = Number(response.data?.puntos ?? 0);
+        const safePoints = Number.isFinite(fetchedPoints) ? fetchedPoints : 0;
+        const usablePoints = safePoints >= POINTS_THRESHOLD ? safePoints : 0;
+
+        setAvailablePoints(safePoints);
+        setFormData(prev => {
+          const prevPoints = parseInt(prev.puntos, 10);
+          const normalizedPrev = Number.isNaN(prevPoints) ? 0 : prevPoints;
+          return {
+            ...prev,
+            puntos: usablePoints > 0 ? Math.min(normalizedPrev, usablePoints) : 0
+          };
+        });
+      } catch (pointsError) {
+        console.error('Error al obtener puntos del usuario:', pointsError);
+        setAvailablePoints(0);
+        setFormData(prev => ({
+          ...prev,
+          puntos: 0
+        }));
+      }
+    };
+
     const token = localStorage.getItem('authToken');
     if (token) {
       try {
         const decoded = jwtDecode(token);
         setCurrentUser(decoded);
         setIsManager(decoded.rol === 'Gestor de Venta');
+        fetchUserPoints(token);
       } catch (error) {
         console.error('Error decoding token:', error);
         localStorage.removeItem('authToken');
+        setAvailablePoints(0);
+        setFormData(prev => ({
+          ...prev,
+          puntos: 0
+        }));
       }
+    } else {
+      setAvailablePoints(0);
+      setFormData(prev => ({
+        ...prev,
+        puntos: 0
+      }));
     }
 
     // También verificar si hay código de referido en la URL por si acaso
@@ -113,11 +158,37 @@ const CreateSalesPage = () => {
         headers: { 'Authorization': `Bearer ${token}` }
       } : {};
 
-      // Obtener información adicional para la notificación
+      if (isManager || !currentUser) {
+        const phoneValue = formData.clientPhone.trim();
+        if (!/^[0-9]+$/.test(phoneValue)) {
+          setPhoneError('El telefono solo permite numeros');
+          setSubmitting(false);
+          return;
+        }
+        setPhoneError('');
+      }
+
       const selectedCurrency = currencies.find(c => c.id === parseInt(formData.currencyId));
       const selectedDeliveryPoint = deliveryPoints.find(d => d.id === parseInt(formData.deliveryPointId));
-      
-      // Preparar datos para la notificación
+
+      const rawPoints = parseInt(formData.puntos, 10);
+      let puntosRedimidos = Number.isNaN(rawPoints) ? 0 : rawPoints;
+
+      if (puntosRedimidos < 0) {
+        setError('Los puntos a utilizar no pueden ser negativos.');
+        setSubmitting(false);
+        return;
+      }
+
+      const maxUsablePoints = availablePoints >= POINTS_THRESHOLD ? availablePoints : 0;
+      if (maxUsablePoints === 0) {
+        puntosRedimidos = 0;
+      } else if (puntosRedimidos > maxUsablePoints) {
+        setError(`No puedes usar mas de ${maxUsablePoints} puntos en esta compra.`);
+        setSubmitting(false);
+        return;
+      }
+
       const notificationData = {
         cartItems: cartItems,
         clientName: formData.clientName,
@@ -129,12 +200,13 @@ const CreateSalesPage = () => {
         deliveryDateTime: formData.deliveryDateTime,
         referencePoint: formData.referencePoint,
         note: formData.note,
+        puntos: puntosRedimidos,
         referidoId: formData.referidoId, // Incluir código de referido en la notificación
         currentUser: currentUser
       };
 
       // Procesar cada item del carrito
-      const requests = cartItems.map((item) => {
+      const requests = cartItems.map((item, index) => {
         const salesData = {
           moneda_id: formData.currencyId,
           domicilio_id: formData.deliveryPointId,
@@ -161,6 +233,8 @@ const CreateSalesPage = () => {
           salesData.telefono_cliente = formData.clientPhone;
         }
 
+        salesData.puntos = index === 0 ? puntosRedimidos : 0;
+
         if (item.isVariation) {
           salesData.variacion_id = item.variationId;
         } else {
@@ -177,6 +251,12 @@ const CreateSalesPage = () => {
       
       // Éxito: vaciar carrito, mostrar mensaje y limpiar códigos de referido
       clearCart();
+      const remainingPoints = Math.max(0, availablePoints - puntosRedimidos);
+      setAvailablePoints(remainingPoints);
+      setFormData(prev => ({
+        ...prev,
+        puntos: 0
+      }));
       localStorage.removeItem('referralCode'); // Limpiar el código después de usarlo
       setSuccess(true);
       setOpenSnackbar(true);
@@ -203,6 +283,36 @@ const CreateSalesPage = () => {
 
   const handleChange = (e) => {
     const { name, value } = e.target;
+
+    if (name === 'puntos') {
+      const maxUsablePoints = availablePoints >= POINTS_THRESHOLD ? availablePoints : 0;
+
+      if (maxUsablePoints === 0) {
+        setFormData(prev => ({ ...prev, puntos: 0 }));
+        return;
+      }
+
+      if (value === '') {
+        setFormData(prev => ({ ...prev, puntos: '' }));
+        return;
+      }
+
+      const parsed = parseInt(value, 10);
+      const sanitized = Number.isNaN(parsed)
+        ? 0
+        : Math.max(0, Math.min(parsed, maxUsablePoints));
+
+      setFormData(prev => ({ ...prev, puntos: sanitized }));
+      return;
+    }
+
+    if (name === 'clientPhone') {
+      const digitsOnly = /^[0-9]*$/;
+      setPhoneError(digitsOnly.test(value) ? '' : 'El telefono solo permite numeros');
+      setFormData(prev => ({ ...prev, clientPhone: value }));
+      return;
+    }
+
     setFormData(prev => ({ ...prev, [name]: value }));
   };
 
@@ -267,12 +377,15 @@ const CreateSalesPage = () => {
                   <Grid item xs={12} sm={6}>
                     <TextField
                       fullWidth
-                      label="Teléfono"
+                      label="Telefono"
                       name="clientPhone"
                       value={formData.clientPhone}
                       onChange={handleChange}
                       required
                       type="tel"
+                      error={Boolean(phoneError)}
+                      helperText={phoneError || ' '}
+                      inputProps={{ inputMode: 'numeric', pattern: '[0-9]*' }}
                       sx={styles.textField}
                     />
                   </Grid>
@@ -381,6 +494,37 @@ const CreateSalesPage = () => {
                   ))}
                 </Select>
               </FormControl>
+
+              <Box sx={{ mb: 3 }}>
+                <Typography variant="subtitle1" sx={{ fontWeight: 600, mb: 1 }}>
+                  Puntos disponibles
+                </Typography>
+                <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
+                  {currentUser
+                    ? (availablePoints >= POINTS_THRESHOLD
+                      ? `Tienes ${availablePoints.toLocaleString('es-ES')} puntos disponibles para usar.`
+                      : `Tienes ${availablePoints.toLocaleString('es-ES')} puntos disponibles. Necesitas al menos ${POINTS_THRESHOLD.toLocaleString('es-ES')} puntos para canjear.`)
+                    : 'Inicia sesion para acumular y canjear puntos.'}
+                </Typography>
+                <TextField
+                  fullWidth
+                  label="Puntos a utilizar"
+                  name="puntos"
+                  value={formData.puntos}
+                  onChange={handleChange}
+                  type="number"
+                  inputProps={{ min: 0, max: availablePoints >= POINTS_THRESHOLD ? availablePoints : 0, step: 1 }}
+                  disabled={!currentUser || availablePoints < POINTS_THRESHOLD}
+                  sx={styles.textField}
+                  helperText={
+                    !currentUser
+                      ? 'Este campo se habilita al iniciar sesion.'
+                      : availablePoints < POINTS_THRESHOLD
+                        ? `Necesitas al menos ${POINTS_THRESHOLD.toLocaleString('es-ES')} puntos para canjear.`
+                        : `Puedes usar hasta ${availablePoints.toLocaleString('es-ES')} puntos en esta compra.`
+                  }
+                />
+              </Box>
 
               <LocalizationProvider dateAdapter={AdapterDateFns}>
                 <Grid container spacing={2} sx={{ mb: 3 }}>
