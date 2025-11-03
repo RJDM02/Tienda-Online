@@ -60,6 +60,7 @@ const CreateSalesPageManager = () => {
   
   const [currentUser, setCurrentUser] = useState(null);
   const [openSnackbar, setOpenSnackbar] = useState(false);
+  const [phoneError, setPhoneError] = useState('');
 
   useEffect(() => {
     const token = localStorage.getItem('authToken');
@@ -203,6 +204,14 @@ const CreateSalesPageManager = () => {
 
   const handleChange = (e) => {
     const { name, value } = e.target;
+
+    if (name === 'clientPhone') {
+      const digitsOnly = /^[0-9]*$/;
+      setPhoneError(digitsOnly.test(value) ? '' : 'Usted es más cubano que el café hola quita el +53 ese anda');
+      setFormData(prev => ({ ...prev, clientPhone: value }));
+      return;
+    }
+
     setFormData(prev => ({ ...prev, [name]: value }));
   };
 
@@ -278,6 +287,9 @@ const CreateSalesPageManager = () => {
                     onChange={handleChange}
                     required
                     type="tel"
+                    error={Boolean(phoneError)}
+                    helperText={phoneError || ' '}
+                    inputProps={{ inputMode: 'numeric', pattern: '[0-9]*' }}
                     sx={styles.textField}
                   />
                 </Grid>
