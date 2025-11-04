@@ -15,6 +15,14 @@ import DeleteIcon from '@mui/icons-material/Delete';
 import AddIcon from '@mui/icons-material/Add';
 import CloudUploadIcon from '@mui/icons-material/CloudUpload';
 
+const normalizeOrdenValue = (value) => {
+  if (value === null || value === undefined || value === '') {
+    return null;
+  }
+  const numericValue = Number(value);
+  return Number.isNaN(numericValue) ? null : numericValue;
+};
+
 const AdminCategoriesPage = () => {
   const navigate = useNavigate();
   const [categories, setCategories] = useState([]);
@@ -33,7 +41,8 @@ const AdminCategoriesPage = () => {
   // Formulario de edición
   const [editForm, setEditForm] = useState({
     nombre: '',
-    imagen: null
+    imagen: null,
+    orden: ''
   });
 
   // Obtener token de autenticación
@@ -72,7 +81,16 @@ const AdminCategoriesPage = () => {
       }
 
       const data = await response.json();
-      setCategories(data);
+      const sortedData = [...data].sort((a, b) => {
+        const aOrden = normalizeOrdenValue(a.orden);
+        const bOrden = normalizeOrdenValue(b.orden);
+
+        if (aOrden === null && bOrden === null) return 0;
+        if (aOrden === null) return 1;
+        if (bOrden === null) return -1;
+        return aOrden - bOrden;
+      });
+      setCategories(sortedData);
     } catch (err) {
       setError(err.message);
     } finally {
@@ -104,9 +122,11 @@ const AdminCategoriesPage = () => {
 
       const data = await response.json();
       setCurrentCategory(data);
+      const ordenValue = normalizeOrdenValue(data.orden);
       setEditForm({
         nombre: data.nombre,
-        imagen: null
+        imagen: null,
+        orden: ordenValue === null ? '' : ordenValue
       });
       setImagePreview(data.imagen);
       setImageFile(null);
@@ -178,6 +198,7 @@ const AdminCategoriesPage = () => {
     try {
       const formData = new FormData();
       formData.append('nombre', editForm.nombre);
+      formData.append('orden', editForm.orden === '' ? '' : String(editForm.orden));
       
       if (editForm.imagen) {
         formData.append('imagen', editForm.imagen);
@@ -366,6 +387,42 @@ const AdminCategoriesPage = () => {
                 onChange={(e) => setEditForm({...editForm, nombre: e.target.value})}
                 required
                 margin="normal"
+                sx={{
+                  '& .MuiOutlinedInput-root': {
+                    borderRadius: '12px',
+                    '&:hover fieldset': {
+                      borderColor: '#FF6B00',
+                    },
+                    '&.Mui-focused fieldset': {
+                      borderColor: '#FF6B00',
+                    },
+                  },
+                  '& .MuiInputLabel-root.Mui-focused': {
+                    color: '#FF6B00',
+                  },
+                }}
+              />
+              <TextField
+                label="Orden"
+                variant="outlined"
+                fullWidth
+                type="number"
+                value={editForm.orden === '' ? '' : editForm.orden}
+                onChange={(e) => {
+                  const { value } = e.target;
+                  if (value === '') {
+                    setEditForm(prev => ({ ...prev, orden: '' }));
+                    return;
+                  }
+
+                  const numericValue = Number(value);
+                  if (!Number.isNaN(numericValue)) {
+                    setEditForm(prev => ({ ...prev, orden: numericValue }));
+                  }
+                }}
+                margin="normal"
+                inputProps={{ inputMode: 'numeric', pattern: '[0-9]*' }}
+                helperText="Solo numeros; deja vacio para enviar la categoria al final."
                 sx={{
                   '& .MuiOutlinedInput-root': {
                     borderRadius: '12px',
