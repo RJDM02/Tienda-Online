@@ -27,6 +27,13 @@ const normalizeOrdenValue = (value) => {
   return Number.isNaN(numericValue) ? null : numericValue;
 };
 
+const compareNullableNumbers = (a, b) => {
+  if (a === null && b === null) return 0;
+  if (a === null) return 1;
+  if (b === null) return -1;
+  return a - b;
+};
+
 const AdminSubcategoriesPage = () => {
   const navigate = useNavigate();
   const [subcategories, setSubcategories] = useState([]);
@@ -84,15 +91,9 @@ const AdminSubcategoriesPage = () => {
       }
 
       const categoriesData = await categoriesResponse.json();
-      const sortedCategories = [...categoriesData].sort((a, b) => {
-        const aOrden = normalizeOrdenValue(a.orden);
-        const bOrden = normalizeOrdenValue(b.orden);
-
-        if (aOrden === null && bOrden === null) return 0;
-        if (aOrden === null) return 1;
-        if (bOrden === null) return -1;
-        return aOrden - bOrden;
-      });
+      const sortedCategories = [...categoriesData].sort((a, b) =>
+        compareNullableNumbers(normalizeOrdenValue(a.orden), normalizeOrdenValue(b.orden))
+      );
       setCategories(sortedCategories);
 
       // Obtener subcategorías
@@ -114,13 +115,35 @@ const AdminSubcategoriesPage = () => {
 
       const subcategoriesData = await subcategoriesResponse.json();
       const sortedSubcategories = [...subcategoriesData].sort((a, b) => {
+        const aCategoryOrden = normalizeOrdenValue(a.categoria?.orden);
+        const bCategoryOrden = normalizeOrdenValue(b.categoria?.orden);
+        const categoryOrderComparison = compareNullableNumbers(aCategoryOrden, bCategoryOrden);
+        if (categoryOrderComparison !== 0) {
+          return categoryOrderComparison;
+        }
+
+        const categoryNameComparison = (a.categoria?.nombre || '').localeCompare(
+          b.categoria?.nombre || '',
+          undefined,
+          { sensitivity: 'base' }
+        );
+        if (categoryNameComparison !== 0) {
+          return categoryNameComparison;
+        }
+
         const aOrden = normalizeOrdenValue(a.orden);
         const bOrden = normalizeOrdenValue(b.orden);
+        const subcategoryOrderComparison = compareNullableNumbers(aOrden, bOrden);
+        if (subcategoryOrderComparison !== 0) {
+          return subcategoryOrderComparison;
+        }
 
-        if (aOrden === null && bOrden === null) return 0;
-        if (aOrden === null) return 1;
-        if (bOrden === null) return -1;
-        return aOrden - bOrden;
+        const nameComparison = (a.nombre || '').localeCompare(b.nombre || '', undefined, { sensitivity: 'base' });
+        if (nameComparison !== 0) {
+          return nameComparison;
+        }
+
+        return (a.id || 0) - (b.id || 0);
       });
       setSubcategories(sortedSubcategories);
     } catch (err) {

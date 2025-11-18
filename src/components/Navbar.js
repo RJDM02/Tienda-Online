@@ -277,7 +277,7 @@ function Navbar({ onShowLogin }) {
     // Configura un nuevo timer que ejecutará la búsqueda después de 500ms (puedes ajustar este valor)
     const timer = setTimeout(() => {
       updateSearch(value);
-    }, 700);
+    }, 1100);
     
     setDebounceTimer(timer);
   };

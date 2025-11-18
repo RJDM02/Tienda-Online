@@ -351,14 +351,18 @@ const AdminItemPage = () => {
   // Abrir modal de edición
   const handleOpenEditModal = (item) => {
     setCurrentItem(item);
-    setOldDiscount(item.descuento || 0);
+    
+    // Calcular el valor monetario del descuento actual
+    const currentDiscountValue = item.descuento ? (item.precio * item.descuento) / 100 : 0;
+    setOldDiscount(currentDiscountValue);
+    
     setEditForm({
       nombre: item.nombre,
       descripcion: item.descripcion || '',
       cantidad: item.cantidad,
       precio: item.precio,
       costo: item.costo || 0,
-      descuento: item.descuento,
+      descuento: currentDiscountValue, // Mostrar el valor monetario ($12.00)
       estado: item.estado,
       garantia: item.garantia?.id || '',
       regalo: item.regalo?.id || '',
@@ -531,19 +535,23 @@ const AdminItemPage = () => {
       }
       // Enviar notificación de descuento si aplica
       if (editForm.descuento !== oldDiscount) {
-        await DiscountAlert.sendDiscountNotification(
-          {
-            ...currentItem,
-            nombre: editForm.nombre,
-            precio: editForm.precio,
-            descuento: editForm.descuento,
-            // Calcular precio con descuento
-            precio_post_descuento: editForm.precio - editForm.descuento
-          },
-          oldDiscount,
-          editForm.descuento
-        );
-      }
+      // Calcular el porcentaje para la notificación (solo para mostrar)
+      const discountPercentage = editForm.precio > 0 
+        ? (editForm.descuento / editForm.precio) * 100 
+        : 0;
+        
+      await DiscountAlert.sendDiscountNotification(
+        {
+          ...currentItem,
+          nombre: editForm.nombre,
+          precio: editForm.precio,
+          descuento: discountPercentage, // Porcentaje para la notificación
+          precio_post_descuento: editForm.precio - editForm.descuento
+        },
+        oldDiscount,
+        editForm.descuento
+      );
+    }
       setSuccess('Producto actualizado correctamente');
       fetchItems();
       handleCloseEditModal();

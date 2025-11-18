@@ -355,11 +355,14 @@ const CreateSalesPageManager = () => {
                   required
                   sx={styles.select}
                 >
-                  {currencies.map(currency => (
-                    <MenuItem key={currency.id} value={currency.id}>
-                      {currency.nombre} (Cambio: {currency.cambio})
-                    </MenuItem>
-                  ))}
+                  {currencies
+                    .filter(currency => currency.cambio > 0) // ← FILTRO AQUÍ
+                    .map(currency => (
+                      <MenuItem key={currency.id} value={currency.id}>
+                        {currency.nombre} (Cambio: {currency.cambio})
+                      </MenuItem>
+                    ))
+                  }
                 </Select>
               </FormControl>
 

@@ -154,7 +154,7 @@ const SalesManagerPage = () => {
   const calcularGananciaTotal = (pedido) => {
     const comision = pedido.producto 
       ? (pedido.producto.producto_comision || pedido.producto.comision || 0)
-      : (pedido.variacion?.variacion_comision || 0);
+      : (pedido.variacion?.comision || 0);
     
     const precioPostDescuento = parseFloat(
       pedido.producto 
@@ -203,7 +203,7 @@ const SalesManagerPage = () => {
   const renderPriceInfo = (pedido) => {
     const comision = pedido.producto 
       ? (pedido.producto.producto_comision || pedido.producto.comision || 0)
-      : (pedido.variacion?.variacion_comision || 0);
+      : (pedido.variacion?.comision || 0);
     
     const precioPostDescuento = parseFloat(
       pedido.producto 

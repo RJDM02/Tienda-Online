@@ -330,13 +330,13 @@ const HomePage = () => {
               </a>
             </div>
             <div className="flex flex-col items-center">
-              <a href="tel:+5352904461" className="flex flex-col items-center">
+              <a href="tel:+5359709174" className="flex flex-col items-center">
               <Phone size={24} className="mb-1" />
               <span className="text-xs md:text-sm">Teléfono</span>
               </a>
             </div>
             <div className="flex flex-col items-center">
-              <a href="https://wa.me/+5352904461" target="_blank" rel="noopener noreferrer" className="flex flex-col items-center">
+              <a href="https://wa.me/+5359709174" target="_blank" rel="noopener noreferrer" className="flex flex-col items-center">
               <MessageCircle size={24} className="mb-1" />
               <span className="text-xs md:text-sm">WhatsApp</span>
               </a>
