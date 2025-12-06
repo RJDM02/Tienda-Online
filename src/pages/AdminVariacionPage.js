@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+﻿import { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { 
   Alert,
@@ -54,7 +54,8 @@ const AdminVariacionPage = () => {
     garantia: '',
     regalo: '',
     condicion: '',
-    comision: ''
+    comision: '',
+    upc: ''
   });
   const [previewImage, setPreviewImage] = useState('');
   const [imageFile, setImageFile] = useState(null);
@@ -209,6 +210,7 @@ const AdminVariacionPage = () => {
       formDataToSend.append('precio', editFormData.precio);
       formDataToSend.append('cantidad', editFormData.cantidad);
       formDataToSend.append('comision', editFormData.comision);
+      formDataToSend.append('upc', editFormData.upc);
       
       // Agregar garantía, regalo y condición solo si tienen valor
       if (editFormData.garantia) {
@@ -345,7 +347,7 @@ const AdminVariacionPage = () => {
                       Imagen
                     </th>
                     <th className="px-6 py-4 text-left text-sm font-semibold text-gray-700 uppercase tracking-wider">
-                      Color
+                      Color / SKU
                     </th>
                     <th className="px-6 py-4 text-left text-sm font-semibold text-gray-700 uppercase tracking-wider">
                       Modelo
@@ -393,6 +395,11 @@ const AdminVariacionPage = () => {
                             <div>
                               <div className="text-sm font-medium text-gray-900">{variacion.color}</div>
                               <div className="text-sm text-gray-500">ID: {variacion.id}</div>
+                              {variacion.upc && (
+                                <div className="text-xs text-gray-400 mt-1 font-mono">
+                                  SKU: {variacion.upc}
+                                </div>
+                              )}
                             </div>
                           </div>
                         </td>
@@ -672,6 +679,31 @@ const AdminVariacionPage = () => {
                 fullWidth
                 required
                 margin="normal"
+                sx={{
+                  '& .MuiOutlinedInput-root': {
+                    borderRadius: '12px',
+                    '&:hover fieldset': {
+                      borderColor: '#FF6B00',
+                    },
+                    '&.Mui-focused fieldset': {
+                      borderColor: '#FF6B00',
+                    },
+                  },
+                  '& .MuiInputLabel-root.Mui-focused': {
+                    color: '#FF6B00',
+                  },
+                }}
+              />
+
+              {/* Campo UPC */}
+              <TextField
+                label="SKU (C�digo de Barras)"
+                name="upc"
+                value={editFormData.upc}
+                onChange={handleEditChange}
+                fullWidth
+                margin="normal"
+                placeholder="Ingrese el c�digo SKU"
                 sx={{
                   '& .MuiOutlinedInput-root': {
                     borderRadius: '12px',

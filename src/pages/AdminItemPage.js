@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useCallback } from 'react';
+﻿import { useState, useEffect, useRef, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {  
   Alert,
@@ -344,7 +344,8 @@ const AdminItemPage = () => {
     comision: 0,
     video: null,
     currentVideoUrl: '',
-    videoPreview: null
+    videoPreview: null,
+    upc: ''
   });
   const [videoError, setVideoError] = useState('');
 
@@ -373,7 +374,8 @@ const AdminItemPage = () => {
       comision: item.comision || 0,
       video: null,
       currentVideoUrl: item.video || '',
-      videoPreview: null
+      videoPreview: null,
+      upc: item.upc || ''
     });
     setVideoError('');
     setOpenEditModal(true);
@@ -498,6 +500,7 @@ const AdminItemPage = () => {
       formData.append('descuento', editForm.descuento);
       formData.append('estado', editForm.estado);
       formData.append('comision', editForm.comision);
+      formData.append('upc', editForm.upc);
       
       // Agregar garantía, regalo y condición
       if (editForm.garantia) formData.append('garantia', editForm.garantia);
@@ -997,6 +1000,9 @@ const AdminItemPage = () => {
                       Precio Final
                     </th>
                     <th className="px-6 py-4 text-left text-sm font-semibold text-gray-700 uppercase tracking-wider">
+                      SKU
+                    </th>
+                    <th className="px-6 py-4 text-left text-sm font-semibold text-gray-700 uppercase tracking-wider">
                       Variaciones
                     </th>
                   </tr>
@@ -1056,6 +1062,11 @@ const AdminItemPage = () => {
                           <div>
                             <div className="text-sm font-medium text-gray-900">{item.nombre}</div>
                             <div className="text-sm text-gray-500">ID: {item.id}</div>
+                            {item.upc && (
+                              <div className="text-xs text-gray-400 mt-1">
+                                SKU: {item.upc}
+                              </div>
+                            )}
                             <div className="text-xs text-gray-400 mt-1">
                               {item.subcategorias_detalle?.map(sc => sc.nombre).join(', ')}
                             </div>
@@ -1182,6 +1193,15 @@ const AdminItemPage = () => {
                       {/* Precio Final */}
                       <td className="px-6 py-4">
                         <div className="text-sm font-bold text-[#FF6B00]">${item.precio_post_descuento}</div>
+                      </td>
+
+                      {/* UPC */}
+                      <td className="px-6 py-4">
+                        <div className="text-sm text-gray-900 font-mono">
+                          {item.upc || (
+                            <span className="text-gray-400 italic">Sin SKU</span>
+                          )}
+                        </div>
                       </td>
 
                       {/* Variaciones */}
@@ -1469,6 +1489,31 @@ const AdminItemPage = () => {
                   }}
                 />
               </div>
+
+              {/* Campo UPC */}
+              <TextField
+                label="SKU (C�digo de Barras)"
+                name="upc"
+                value={editForm.upc}
+                onChange={handleEditChange}
+                fullWidth
+                margin="normal"
+                placeholder="Ingrese el c�digo SKU"
+                sx={{
+                  '& .MuiOutlinedInput-root': {
+                    borderRadius: '12px',
+                    '&:hover fieldset': {
+                      borderColor: '#FF6B00',
+                    },
+                    '&.Mui-focused fieldset': {
+                      borderColor: '#FF6B00',
+                    },
+                  },
+                  '& .MuiInputLabel-root.Mui-focused': {
+                    color: '#FF6B00',
+                  },
+                }}
+              />
               
               {isSuperAdmin && (
                 <TextField

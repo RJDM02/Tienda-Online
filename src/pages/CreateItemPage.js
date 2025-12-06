@@ -5,6 +5,7 @@ import CloudUploadIcon from '@mui/icons-material/CloudUpload';
 import DeleteIcon from '@mui/icons-material/Delete';
 import VideocamIcon from '@mui/icons-material/Videocam';
 import NewProductAlert from '../components/NewProductAlert ';
+
 const CreateItemPage = () => {
     const [formData, setFormData] = useState({
         nombre: '',
@@ -19,7 +20,8 @@ const CreateItemPage = () => {
         regalo: '',
         condicion: '',
         comision: 0,
-        video: null
+        video: null,
+        upc: '' // Nuevo campo agregado
     });
     const [previews, setPreviews] = useState([]);
     const [videoPreview, setVideoPreview] = useState(null);
@@ -32,9 +34,11 @@ const CreateItemPage = () => {
     const [error, setError] = useState('');
     const [success, setSuccess] = useState(false);
     const navigate = useNavigate();
+    
     // Obtener datos del usuario del localStorage
     const userData = JSON.parse(localStorage.getItem('userData') || '{}');
     const isSuperAdmin = userData && (userData.rol === 'Super_Administrador');
+
     useEffect(() => {
         const obtenerDatosIniciales = async () => {
             setLoading(true);
@@ -243,6 +247,7 @@ const CreateItemPage = () => {
             data.append('descuento', formData.descuento);
             data.append('comision', formData.comision);
             data.append('condicion', formData.condicion);
+            data.append('upc', formData.upc); // Agregar el campo UPC al FormData
             
             // Agregar video si existe
             if (formData.video) {
@@ -279,7 +284,7 @@ const CreateItemPage = () => {
                 throw new Error(errorData.detail || errorData.message || 'Error al crear el producto');
             }
 
-             // Enviar notificación SOLO con los datos requeridos
+            // Enviar notificación SOLO con los datos requeridos
             await NewProductAlert.sendNewProductNotification({
                 nombre: formData.nombre,
                 precio: formData.precio,
@@ -303,7 +308,8 @@ const CreateItemPage = () => {
                 regalo: '',
                 condicion: '',
                 comision: 0,
-                video: null
+                video: null,
+                upc: '' // Resetear el campo UPC también
             });
             setPreviews([]);
             setVideoPreview(null);
@@ -333,7 +339,8 @@ const CreateItemPage = () => {
             regalo: '',
             condicion: '',
             comision: 0,
-            video: null
+            video: null,
+            upc: '' // Limpiar el campo UPC también
         });
         setPreviews([]);
         setVideoPreview(null);
@@ -423,6 +430,20 @@ const CreateItemPage = () => {
                                 required
                                 disabled={loading}
                                 placeholder="Ingresa el nombre del producto"
+                                sx={textFieldStyles}
+                            />
+                            
+                            <TextField
+                                label="SKU (Código UPC)"
+                                variant="outlined"
+                                fullWidth
+                                name="upc"
+                                value={formData.upc}
+                                onChange={handleChange}
+                                disabled={loading}
+                                placeholder="Ingresa el código SKU/UPC del producto"
+                                inputProps={{ maxLength: 50 }}
+                                helperText={`${formData.upc.length}/50 caracteres`}
                                 sx={textFieldStyles}
                             />
                             
