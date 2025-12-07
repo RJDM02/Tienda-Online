@@ -21,6 +21,7 @@ const CreateItemPage = () => {
         condicion: '',
         comision: 0,
         video: null,
+        ubicacion: '',
         upc: '' // Nuevo campo agregado
     });
     const [previews, setPreviews] = useState([]);
@@ -247,6 +248,7 @@ const CreateItemPage = () => {
             data.append('descuento', formData.descuento);
             data.append('comision', formData.comision);
             data.append('condicion', formData.condicion);
+            data.append('ubicacion', formData.ubicacion);
             data.append('upc', formData.upc); // Agregar el campo UPC al FormData
             
             // Agregar video si existe
@@ -309,6 +311,7 @@ const CreateItemPage = () => {
                 condicion: '',
                 comision: 0,
                 video: null,
+                ubicacion: '',
                 upc: '' // Resetear el campo UPC también
             });
             setPreviews([]);
@@ -340,6 +343,7 @@ const CreateItemPage = () => {
             condicion: '',
             comision: 0,
             video: null,
+            ubicacion: '',
             upc: '' // Limpiar el campo UPC también
         });
         setPreviews([]);
@@ -459,6 +463,18 @@ const CreateItemPage = () => {
                                 required
                                 disabled={loading}
                                 placeholder="Describe tu producto"
+                                sx={textFieldStyles}
+                            />
+
+                            <TextField
+                                label="Ubicación (opcional)"
+                                variant="outlined"
+                                fullWidth
+                                name="ubicacion"
+                                value={formData.ubicacion}
+                                onChange={handleChange}
+                                disabled={loading}
+                                placeholder="Ej: Almacén central, Pasillo 3"
                                 sx={textFieldStyles}
                             />
                         </div>

@@ -345,7 +345,8 @@ const AdminItemPage = () => {
     video: null,
     currentVideoUrl: '',
     videoPreview: null,
-    upc: ''
+    upc: '',
+    ubicacion: ''
   });
   const [videoError, setVideoError] = useState('');
 
@@ -375,7 +376,8 @@ const AdminItemPage = () => {
       video: null,
       currentVideoUrl: item.video || '',
       videoPreview: null,
-      upc: item.upc || ''
+      upc: item.upc || '',
+      ubicacion: item.ubicacion || ''
     });
     setVideoError('');
     setOpenEditModal(true);
@@ -497,10 +499,11 @@ const AdminItemPage = () => {
       formData.append('cantidad', editForm.cantidad);
       formData.append('precio', editForm.precio);
       formData.append('costo', editForm.costo);
-      formData.append('descuento', editForm.descuento);
-      formData.append('estado', editForm.estado);
-      formData.append('comision', editForm.comision);
-      formData.append('upc', editForm.upc);
+    formData.append('descuento', editForm.descuento);
+    formData.append('estado', editForm.estado);
+    formData.append('comision', editForm.comision);
+    formData.append('upc', editForm.upc);
+    formData.append('ubicacion', editForm.ubicacion);
       
       // Agregar garantía, regalo y condición
       if (editForm.garantia) formData.append('garantia', editForm.garantia);
@@ -1003,6 +1006,9 @@ const AdminItemPage = () => {
                       SKU
                     </th>
                     <th className="px-6 py-4 text-left text-sm font-semibold text-gray-700 uppercase tracking-wider">
+                      Ubicación
+                    </th>
+                    <th className="px-6 py-4 text-left text-sm font-semibold text-gray-700 uppercase tracking-wider">
                       Variaciones
                     </th>
                   </tr>
@@ -1201,6 +1207,13 @@ const AdminItemPage = () => {
                           {item.upc || (
                             <span className="text-gray-400 italic">Sin SKU</span>
                           )}
+                        </div>
+                      </td>
+
+                      {/* Ubicación */}
+                      <td className="px-6 py-4">
+                        <div className="text-sm text-gray-900">
+                          {item.ubicacion || <span className="text-gray-400 italic">Sin ubicación</span>}
                         </div>
                       </td>
 
@@ -1425,6 +1438,30 @@ const AdminItemPage = () => {
                 multiline
                 rows={4}
                 margin="normal"
+                sx={{
+                  '& .MuiOutlinedInput-root': {
+                    borderRadius: '12px',
+                    '&:hover fieldset': {
+                      borderColor: '#FF6B00',
+                    },
+                    '&.Mui-focused fieldset': {
+                      borderColor: '#FF6B00',
+                    },
+                  },
+                  '& .MuiInputLabel-root.Mui-focused': {
+                    color: '#FF6B00',
+                  },
+                }}
+              />
+
+              <TextField
+                label="Ubicación (opcional)"
+                name="ubicacion"
+                value={editForm.ubicacion}
+                onChange={handleEditChange}
+                fullWidth
+                margin="normal"
+                placeholder="Ej: Almacén central, pasillo 3"
                 sx={{
                   '& .MuiOutlinedInput-root': {
                     borderRadius: '12px',
