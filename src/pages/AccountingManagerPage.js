@@ -23,6 +23,7 @@ import {
   FilterOutlined
 } from '@ant-design/icons';
 
+import { API_URL } from '../config/apiConfig';
 const { Title, Text } = Typography;
 
 const AccountingManagerPage = () => {
@@ -47,7 +48,7 @@ const AccountingManagerPage = () => {
     const fetchGestores = async () => {
       try {
         const token = localStorage.getItem('authToken');
-        const response = await axios.get('https://videojuegoshabana.com/api/listar_trabajador/', {
+        const response = await axios.get(`${API_URL}/listar_trabajador/`, {
           headers: {
             'Authorization': `Bearer ${token}`
           }
@@ -136,7 +137,7 @@ const AccountingManagerPage = () => {
     
     try {
       const token = localStorage.getItem('authToken');
-      const response = await axios.get(`https://videojuegoshabana.com/api/listar_contabilidad_gestor/${gestorId}/`, {
+      const response = await axios.get(`${API_URL}/listar_contabilidad_gestor/${gestorId}/`, {
         headers: {
           'Authorization': `Bearer ${token}`
         }
@@ -165,7 +166,7 @@ const AccountingManagerPage = () => {
     setProcessing(true);
     try {
       const token = localStorage.getItem('authToken');
-      await axios.delete(`https://videojuegoshabana.com/api/desactivar_contabilidad/${contabilidadToDeactivate}/`, {
+      await axios.delete(`${API_URL}/desactivar_contabilidad/${contabilidadToDeactivate}/`, {
         headers: {
           'Authorization': `Bearer ${token}`
         }

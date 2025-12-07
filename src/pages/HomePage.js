@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { ChevronLeft, ChevronRight, Mail, Phone, MessageCircle } from 'lucide-react';
 import FloatingWhatsAppButton from '../components/FloatingWhatsAppButton';
 
+import { API_BASE_URL, API_URL } from '../config/apiConfig';
 const HomePage = () => {
   const [currentMainSlide, setCurrentMainSlide] = useState(0);
   const [currentSecondarySlide, setCurrentSecondarySlide] = useState(0);
@@ -18,7 +19,7 @@ const HomePage = () => {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const response = await fetch('https://videojuegoshabana.com/api/listar_homepage/');
+        const response = await fetch(`${API_URL}/listar_homepage/`);
         const data = await response.json();
         setHomeData(data[0]);
       } catch (error) {
@@ -200,7 +201,7 @@ const HomePage = () => {
           onTouchEnd={onTouchEnd}
         >
           <img 
-            src={`https://videojuegoshabana.com${images[currentSlide].imagen}`} 
+            src={`${API_BASE_URL}${images[currentSlide].imagen}`} 
             alt={`Slide ${currentSlide + 1}`}
             className={`${
               isMobile ? 'max-w-full max-h-full object-contain' : 'w-full h-full object-cover'

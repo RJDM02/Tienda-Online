@@ -31,6 +31,7 @@ import CardItem from '../components/CardItem';
 import FloatingWhatsAppButton from '../components/FloatingWhatsAppButton';
 import { useCart } from '../context/CartContext';
 
+import { API_URL } from '../config/apiConfig';
 const style = {
   position: 'absolute',
   top: '50%',
@@ -107,7 +108,7 @@ const ProductView = ({ onShowLogin = () => {} }) => {
       setLoadingRelated(true);
       const encodedCategory = encodeURIComponent(categoryName);
       const response = await fetch(
-        `https://videojuegoshabana.com/api/listar_item_activo/?categoria=${encodedCategory}`
+        `${API_URL}/listar_item_activo/?categoria=${encodedCategory}`
       );
       
       if (!response.ok) {
@@ -135,7 +136,7 @@ const ProductView = ({ onShowLogin = () => {} }) => {
 
   const fetchComments = async () => {
     try {
-      const response = await fetch(`https://videojuegoshabana.com/api/listar_detalle_item/${id}/`);
+      const response = await fetch(`${API_URL}/listar_detalle_item/${id}/`);
       if (!response.ok) {
         throw new Error('Error al cargar comentarios');
       }
@@ -178,7 +179,7 @@ const ProductView = ({ onShowLogin = () => {} }) => {
     const fetchProductDetails = async () => {
       try {
         setLoading(true);
-        const response = await fetch(`https://videojuegoshabana.com/api/listar_detalle_item/${id}/`);
+        const response = await fetch(`${API_URL}/listar_detalle_item/${id}/`);
         
         if (!response.ok) {
           throw new Error('Producto no encontrado');
@@ -285,7 +286,7 @@ const ProductView = ({ onShowLogin = () => {} }) => {
         commentData.producto_id = product.id;
       }
 
-      const response = await fetch('https://videojuegoshabana.com/api/crear_comentario/', {
+      const response = await fetch(`${API_URL}/crear_comentario/`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

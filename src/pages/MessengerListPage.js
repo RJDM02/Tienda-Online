@@ -27,6 +27,7 @@ import ClearIcon from '@mui/icons-material/Clear';
 import ViewListIcon from '@mui/icons-material/ViewList';
 import SearchIcon from '@mui/icons-material/Search';
 
+import { API_URL } from '../config/apiConfig';
 const MessengerListPage = () => {
   const [deliveries, setDeliveries] = useState([]);
   const [groupedDeliveries, setGroupedDeliveries] = useState([]);
@@ -99,7 +100,7 @@ const MessengerListPage = () => {
         return false;
       }
 
-      const response = await fetch('https://videojuegoshabana.com/api/listar_venta_mensajero/', {
+      const response = await fetch(`${API_URL}/listar_venta_mensajero/`, {
         headers: {
           'Authorization': `Bearer ${token}`
         }
@@ -247,7 +248,7 @@ const MessengerListPage = () => {
       setError(null);
       setSuccess(null);
 
-      const response = await fetch(`https://videojuegoshabana.com/api/realizar_mensajeria/${deliveryId}`, {
+      const response = await fetch(`${API_URL}/realizar_mensajeria/${deliveryId}`, {
         method: 'GET',
         headers: {
           'Authorization': `Bearer ${token}`
@@ -792,7 +793,6 @@ const MessengerListPage = () => {
 };
 
 export default MessengerListPage;
-
 
 
 

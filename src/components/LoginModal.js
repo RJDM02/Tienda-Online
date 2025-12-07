@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { X, Eye, EyeOff } from 'lucide-react';
 
+import { API_URL } from '../config/apiConfig';
 const LoginModal = ({ open, onClose }) => {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
@@ -14,7 +15,7 @@ const LoginModal = ({ open, onClose }) => {
     setErrors({});
 
     try {
-      const response = await fetch('https://videojuegoshabana.com/api/login/', {
+      const response = await fetch(`${API_URL}/login/`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

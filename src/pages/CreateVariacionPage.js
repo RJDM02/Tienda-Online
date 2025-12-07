@@ -16,6 +16,7 @@ import {
 import CloudUploadIcon from '@mui/icons-material/CloudUpload';
 import NewVariationAlert from '../components/NewVariationAlert';
 
+import { API_BASE_URL, API_URL } from '../config/apiConfig';
 const CreateVariacionPage = () => {
   const { itemId } = useParams();
   const [formData, setFormData] = useState({
@@ -51,21 +52,21 @@ const CreateVariacionPage = () => {
         }
 
         // Obtener garantías
-        const garantiaResponse = await fetch('https://videojuegoshabana.com/api/listar_garantia/', {
+        const garantiaResponse = await fetch(`${API_URL}/listar_garantia/`, {
           headers: {
             'Authorization': `Bearer ${token}`
           }
         });
         
         // Obtener regalos
-        const regaloResponse = await fetch('https://videojuegoshabana.com/api/listar_regalo/', {
+        const regaloResponse = await fetch(`${API_URL}/listar_regalo/`, {
           headers: {
             'Authorization': `Bearer ${token}`
           }
         });
 
         // Obtener condiciones
-        const condicionResponse = await fetch('https://videojuegoshabana.com/api/listar_condicion/', {
+        const condicionResponse = await fetch(`${API_URL}/listar_condicion/`, {
           headers: {
             'Authorization': `Bearer ${token}`
           }
@@ -161,7 +162,7 @@ const CreateVariacionPage = () => {
         formDataToSend.append('imagen', formData.imagen);
       }
 
-      const response = await fetch('https://videojuegoshabana.com/api/crear_variacion_item/', {
+      const response = await fetch(`${API_URL}/crear_variacion_item/`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`
@@ -178,7 +179,7 @@ const CreateVariacionPage = () => {
         modelo: formData.modelo,
         precio: formData.precio,
         comision: formData.comision,
-        url: `https://videojuegoshabana.com/product/${itemId}`
+        url: `${API_BASE_URL}/product/${itemId}`
       });
       setSuccess(true);
       

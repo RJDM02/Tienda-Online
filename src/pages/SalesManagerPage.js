@@ -24,6 +24,7 @@ import PersonPinIcon from '@mui/icons-material/PersonPin';
 import MonetizationOnIcon from '@mui/icons-material/MonetizationOn';
 import FilterListIcon from '@mui/icons-material/FilterList';
 
+import { API_URL } from '../config/apiConfig';
 const SalesManagerPage = () => {
   const [managerData, setManagerData] = useState({
     nombre: '',
@@ -47,7 +48,7 @@ const SalesManagerPage = () => {
           return;
         }
 
-        const response = await fetch('https://videojuegoshabana.com/api/listar_datos_gestor/', {
+        const response = await fetch(`${API_URL}/listar_datos_gestor/`, {
           headers: {
             'Authorization': `Bearer ${token}`
           }

@@ -6,6 +6,7 @@ import CardItem from '../components/CardItem';
 import FloatingWhatsAppButton from '../components/FloatingWhatsAppButton';
 import { jwtDecode } from 'jwt-decode';
 
+import { API_URL } from '../config/apiConfig';
 const ShopPage = () => {
   const location = useLocation();
   const navigate = useNavigate();
@@ -45,7 +46,7 @@ const ShopPage = () => {
 
   const fetchCategories = useCallback(async () => {
     try {
-      const response = await fetch('https://videojuegoshabana.com/api/listar_categoria/');
+      const response = await fetch(`${API_URL}/listar_categoria/`);
       const data = await response.json();
       setCategoriesData(data);
     } catch (error) {
@@ -57,7 +58,7 @@ const ShopPage = () => {
     fetchCategories();
   }, [fetchCategories]);
 
-  const buildApiUrl = (baseUrl = 'https://videojuegoshabana.com/api/listar_item_activo/') => {
+  const buildApiUrl = (baseUrl = `${API_URL}/listar_item_activo/`) => {
     const params = new URLSearchParams();
     
     if (filters.current.searchTerm) {

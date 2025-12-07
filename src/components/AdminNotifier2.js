@@ -1,6 +1,7 @@
 import emailjs from '@emailjs/browser';
 import { jwtDecode } from 'jwt-decode';
 
+import { API_BASE_URL } from '../config/apiConfig';
 const AdminNotifier2 = {
   /*
   sendNewSaleNotification: async (saleData, saleType = 'gestor') => {
@@ -42,7 +43,7 @@ const AdminNotifier2 = {
       // Crear lista de productos
       let products_list = '';
       saleData.cartItems.forEach(item => {
-        const productUrl = `https://videojuegoshabana.com/product/${item.id}`;
+        const productUrl = `${API_BASE_URL}/product/${item.id}`;
         products_list += `• ${item.name || 'Producto'}: ${productUrl}\n`;
       });
 

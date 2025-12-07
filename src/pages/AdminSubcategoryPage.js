@@ -19,6 +19,7 @@ import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
 import AddIcon from '@mui/icons-material/Add';
 
+import { API_URL } from '../config/apiConfig';
 const normalizeOrdenValue = (value) => {
   if (value === null || value === undefined || value === '') {
     return null;
@@ -74,7 +75,7 @@ const AdminSubcategoriesPage = () => {
 
     try {
       // Obtener categorías
-      const categoriesResponse = await fetch('https://videojuegoshabana.com/api/listar_categoria/', {
+      const categoriesResponse = await fetch(`${API_URL}/listar_categoria/`, {
         headers: {
           'Authorization': `Bearer ${token}`
         }
@@ -97,7 +98,7 @@ const AdminSubcategoriesPage = () => {
       setCategories(sortedCategories);
 
       // Obtener subcategorías
-      const subcategoriesResponse = await fetch('https://videojuegoshabana.com/api/listar_subcategoria/', {
+      const subcategoriesResponse = await fetch(`${API_URL}/listar_subcategoria/`, {
         headers: {
           'Authorization': `Bearer ${token}`
         }
@@ -159,7 +160,7 @@ const AdminSubcategoriesPage = () => {
     if (!token) return;
 
     try {
-      const response = await fetch(`https://videojuegoshabana.com/api/listar_detalle_subcategoria/${id}/`, {
+      const response = await fetch(`${API_URL}/listar_detalle_subcategoria/${id}/`, {
         headers: {
           'Authorization': `Bearer ${token}`
         }
@@ -199,7 +200,7 @@ const AdminSubcategoriesPage = () => {
     }
 
     try {
-      const response = await fetch(`https://videojuegoshabana.com/api/eliminar_subcategoria/${id}/`, {
+      const response = await fetch(`${API_URL}/eliminar_subcategoria/${id}/`, {
         method: 'DELETE',
         headers: {
           'Authorization': `Bearer ${token}`
@@ -234,7 +235,7 @@ const AdminSubcategoriesPage = () => {
 
     try {
       const ordenPayload = editForm.orden === '' ? null : Number(editForm.orden);
-      const response = await fetch(`https://videojuegoshabana.com/api/editar_subcategoria/${currentSubcategory.id}/`, {
+      const response = await fetch(`${API_URL}/editar_subcategoria/${currentSubcategory.id}/`, {
         method: 'PATCH',
         headers: {
           'Authorization': `Bearer ${token}`,

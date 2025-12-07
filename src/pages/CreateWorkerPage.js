@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 
+import { API_URL } from '../config/apiConfig';
 const CreateWorkerPage = () => {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
@@ -41,7 +42,7 @@ const CreateWorkerPage = () => {
     if (!token) return;
 
     try {
-      const response = await fetch('https://videojuegoshabana.com/api/crear_trabajador/', {
+      const response = await fetch(`${API_URL}/crear_trabajador/`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`,

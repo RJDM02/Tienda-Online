@@ -34,6 +34,7 @@ import CakeIcon from '@mui/icons-material/Cake';
 import GroupIcon from '@mui/icons-material/Group';
 import TrendingUpIcon from '@mui/icons-material/TrendingUp';
 
+import { API_URL } from '../config/apiConfig';
 const DataClientePage = () => {
   const [clientData, setClientData] = useState({
     username: '',
@@ -71,8 +72,8 @@ const DataClientePage = () => {
         };
 
         const [clientResponse, pointsResponse] = await Promise.all([
-          fetch('https://videojuegoshabana.com/api/listar_datos_cliente/', { headers }),
-          fetch('https://videojuegoshabana.com/api/obtener_puntos/', { headers })
+          fetch(`${API_URL}/listar_datos_cliente/`, { headers }),
+          fetch(`${API_URL}/obtener_puntos/`, { headers })
         ]);
 
         if (!clientResponse.ok) {

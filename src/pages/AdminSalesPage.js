@@ -3,6 +3,7 @@ import { Table, Button, Space, message, Modal, Descriptions, Form, Input, Select
 import axios from 'axios';
 import moment from 'moment';
 import OrderSoldAlert from '../components/OrderSoldAlert';
+import { API_URL } from '../config/apiConfig';
 const { Option } = Select;
 const { RangePicker } = DatePicker;
 
@@ -40,7 +41,7 @@ const AdminSalesPage = () => {
   const fetchSales = async () => {
     try {
       const token = localStorage.getItem('authToken');
-      const response = await axios.get('https://videojuegoshabana.com/api/listar_venta/', {
+      const response = await axios.get(`${API_URL}/listar_venta/`, {
         headers: {
           Authorization: `Bearer ${token}`
         }
@@ -61,7 +62,7 @@ const AdminSalesPage = () => {
   const fetchCouriers = async () => {
     try {
       const token = localStorage.getItem('authToken');
-      const response = await axios.get('https://videojuegoshabana.com/api/listar_mensajero/', {
+      const response = await axios.get(`${API_URL}/listar_mensajero/`, {
         headers: {
           Authorization: `Bearer ${token}`
         }
@@ -75,7 +76,7 @@ const AdminSalesPage = () => {
   const fetchCurrencies = async () => {
     try {
       const token = localStorage.getItem('authToken');
-      const response = await axios.get('https://videojuegoshabana.com/api/listar_moneda/', {
+      const response = await axios.get(`${API_URL}/listar_moneda/`, {
         headers: {
           Authorization: `Bearer ${token}`
         }
@@ -89,7 +90,7 @@ const AdminSalesPage = () => {
   const fetchDomicilios = async () => {
     try {
       const token = localStorage.getItem('authToken');
-      const response = await axios.get('https://videojuegoshabana.com/api/listar_domicilio/', {
+      const response = await axios.get(`${API_URL}/listar_domicilio/`, {
         headers: {
           Authorization: `Bearer ${token}`
         }
@@ -104,7 +105,7 @@ const AdminSalesPage = () => {
     try {
       setDetailLoading(true);
       const token = localStorage.getItem('authToken');
-      const response = await axios.get(`https://videojuegoshabana.com/api/listar_detalle_venta/${saleId}/`, {
+      const response = await axios.get(`${API_URL}/listar_detalle_venta/${saleId}/`, {
         headers: {
           Authorization: `Bearer ${token}`
         }
@@ -122,7 +123,7 @@ const AdminSalesPage = () => {
     try {
       setEditLoading(true);
       const token = localStorage.getItem('authToken');
-      const response = await axios.get(`https://videojuegoshabana.com/api/listar_detalle_venta/${saleId}/`, {
+      const response = await axios.get(`${API_URL}/listar_detalle_venta/${saleId}/`, {
         headers: {
           Authorization: `Bearer ${token}`
         }
@@ -174,7 +175,7 @@ const AdminSalesPage = () => {
       }
       
       // ✅ 3. LUEGO ejecutar el PATCH para actualizar la venta
-      await axios.patch(`https://videojuegoshabana.com/api/editar_venta/${editingSaleId}/`, {
+      await axios.patch(`${API_URL}/editar_venta/${editingSaleId}/`, {
         ...values,
         horario_deseado_entrega: values.horario_deseado_entrega.format('YYYY-MM-DDTHH:mm:ss')
       }, {

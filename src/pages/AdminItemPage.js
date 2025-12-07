@@ -1,4 +1,5 @@
-﻿import { useState, useEffect, useRef, useCallback } from 'react';
+import { API_URL } from '../config/apiConfig';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {  
   Alert,
@@ -86,7 +87,7 @@ const AdminItemPage = () => {
   };
 
   // Construir URL de la API con los filtros actuales
-  const buildApiUrl = (baseUrl = 'https://videojuegoshabana.com/api/listar_item_all/') => {
+  const buildApiUrl = (baseUrl = `${API_URL}/listar_item_all/`) => {
     const params = new URLSearchParams();
     
     // Agregar cada filtro si tiene valor
@@ -120,35 +121,35 @@ const AdminItemPage = () => {
 
     try {
       // Obtener categorías
-      const categoriesResponse = await fetch('https://videojuegoshabana.com/api/listar_categoria/', {
+      const categoriesResponse = await fetch(`${API_URL}/listar_categoria/`, {
         headers: {
           'Authorization': `Bearer ${token}`
         }
       });
       
       // Obtener subcategorías
-      const subcategoriesResponse = await fetch('https://videojuegoshabana.com/api/listar_subcategoria/', {
+      const subcategoriesResponse = await fetch(`${API_URL}/listar_subcategoria/`, {
         headers: {
           'Authorization': `Bearer ${token}`
         }
       });
       
       // Obtener condiciones
-      const conditionsResponse = await fetch('https://videojuegoshabana.com/api/listar_condicion/', {
+      const conditionsResponse = await fetch(`${API_URL}/listar_condicion/`, {
         headers: {
           'Authorization': `Bearer ${token}`
         }
       });
       
       // Obtener garantías
-      const garantiasResponse = await fetch('https://videojuegoshabana.com/api/listar_garantia/', {
+      const garantiasResponse = await fetch(`${API_URL}/listar_garantia/`, {
         headers: {
           'Authorization': `Bearer ${token}`
         }
       });
       
       // Obtener regalos
-      const regalosResponse = await fetch('https://videojuegoshabana.com/api/listar_regalo/', {
+      const regalosResponse = await fetch(`${API_URL}/listar_regalo/`, {
         headers: {
           'Authorization': `Bearer ${token}`
         }
@@ -521,7 +522,7 @@ const AdminItemPage = () => {
         formData.append('remove_video', 'true');
       }
       
-      const response = await fetch(`https://videojuegoshabana.com/api/editar_item/${currentItem.id}/`, {
+      const response = await fetch(`${API_URL}/editar_item/${currentItem.id}/`, {
         method: 'PATCH',
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -574,7 +575,7 @@ const AdminItemPage = () => {
     if (!token || !currentItem) return;
 
     try {
-      const response = await fetch(`https://videojuegoshabana.com/api/eliminar_item/${currentItem.id}/`, {
+      const response = await fetch(`${API_URL}/eliminar_item/${currentItem.id}/`, {
         method: 'DELETE',
         headers: {
           'Authorization': `Bearer ${token}`

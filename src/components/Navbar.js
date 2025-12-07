@@ -51,6 +51,7 @@ import { useCart } from '../context/CartContext';
 import { jwtDecode } from 'jwt-decode';
 import './Navbar.css';
 
+import { API_BASE_URL } from '../config/apiConfig';
 function Navbar({ onShowLogin }) {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
@@ -66,8 +67,6 @@ function Navbar({ onShowLogin }) {
   const [isLoading, setIsLoading] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const { totalItems } = useCart();
-
-  const API_BASE_URL = 'https://videojuegoshabana.com';
 
   // Función para verificar y limpiar sesión si el token es inválido
   const checkTokenAndCleanSession = () => {

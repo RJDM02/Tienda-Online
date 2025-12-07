@@ -15,6 +15,7 @@ import DeleteIcon from '@mui/icons-material/Delete';
 import AddIcon from '@mui/icons-material/Add';
 import CloudUploadIcon from '@mui/icons-material/CloudUpload';
 
+import { API_URL } from '../config/apiConfig';
 const normalizeOrdenValue = (value) => {
   if (value === null || value === undefined || value === '') {
     return null;
@@ -64,7 +65,7 @@ const AdminCategoriesPage = () => {
     setError(null);
 
     try {
-      const response = await fetch('https://videojuegoshabana.com/api/listar_categoria/', {
+      const response = await fetch(`${API_URL}/listar_categoria/`, {
         headers: {
           'Authorization': `Bearer ${token}`
         }
@@ -104,7 +105,7 @@ const AdminCategoriesPage = () => {
     if (!token) return;
 
     try {
-      const response = await fetch(`https://videojuegoshabana.com/api/listar_detalle_categoria/${id}/`, {
+      const response = await fetch(`${API_URL}/listar_detalle_categoria/${id}/`, {
         headers: {
           'Authorization': `Bearer ${token}`
         }
@@ -162,7 +163,7 @@ const AdminCategoriesPage = () => {
     }
 
     try {
-      const response = await fetch(`https://videojuegoshabana.com/api/eliminar_categoria/${id}/`, {
+      const response = await fetch(`${API_URL}/eliminar_categoria/${id}/`, {
         method: 'DELETE',
         headers: {
           'Authorization': `Bearer ${token}`
@@ -204,7 +205,7 @@ const AdminCategoriesPage = () => {
         formData.append('imagen', editForm.imagen);
       }
 
-      const response = await fetch(`https://videojuegoshabana.com/api/editar_categoria/${currentCategory.id}/`, {
+      const response = await fetch(`${API_URL}/editar_categoria/${currentCategory.id}/`, {
         method: 'PATCH',
         headers: {
           'Authorization': `Bearer ${token}`

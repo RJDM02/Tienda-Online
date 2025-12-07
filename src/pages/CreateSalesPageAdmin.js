@@ -28,6 +28,7 @@ import { jwtDecode } from 'jwt-decode';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import { styles, LoadingState, ErrorState, SectionTitle } from './CreateSalesPageStyles';
 import AdminNotifier2 from '../components/AdminNotifier2';
+import { API_URL } from '../config/apiConfig';
 const CreateAdminSalesPage = () => {
   const location = useLocation();
   const navigate = useNavigate();
@@ -91,10 +92,10 @@ const CreateAdminSalesPage = () => {
           messengersResponse, 
           clientsResponse
         ] = await Promise.all([
-          axios.get('https://videojuegoshabana.com/api/listar_moneda/', config),
-          axios.get('https://videojuegoshabana.com/api/listar_domicilio/', config),
-          axios.get('https://videojuegoshabana.com/api/listar_mensajero/', config),
-          axios.get('https://videojuegoshabana.com/api/listar_cliente_all/', config)
+          axios.get(`${API_URL}/listar_moneda/`, config),
+          axios.get(`${API_URL}/listar_domicilio/`, config),
+          axios.get(`${API_URL}/listar_mensajero/`, config),
+          axios.get(`${API_URL}/listar_cliente_all/`, config)
         ]);
         
         setCurrencies(currenciesResponse.data);
@@ -163,7 +164,7 @@ const CreateAdminSalesPage = () => {
         salesData.producto_id = item.id;
       }
 
-      return axios.post('https://videojuegoshabana.com/api/crear_venta_admin/', salesData, config)
+      return axios.post(`${API_URL}/crear_venta_admin/`, salesData, config)
         .then(() => {
           setProcessedItems(prev => prev + 1);
         });

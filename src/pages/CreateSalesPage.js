@@ -24,6 +24,7 @@ import { useCart } from '../context/CartContext';
 import AdminNotifier from '../components/AdminNotifier';
 import { styles, LoadingState, ErrorState, SectionTitle } from './CreateSalesPageStyles';
 
+import { API_URL } from '../config/apiConfig';
 const POINTS_THRESHOLD = 500;
 
 const CreateSalesPage = () => {
@@ -65,7 +66,7 @@ const CreateSalesPage = () => {
   useEffect(() => {
     const fetchUserPoints = async (authToken) => {
       try {
-        const response = await axios.get('https://videojuegoshabana.com/api/obtener_puntos/', {
+        const response = await axios.get(`${API_URL}/obtener_puntos/`, {
           headers: { 'Authorization': `Bearer ${authToken}` }
         });
         const fetchedPoints = Number(response.data?.puntos ?? 0);
@@ -130,8 +131,8 @@ const CreateSalesPage = () => {
     const fetchData = async () => {
       try {
         const [currenciesResponse, deliveryPointsResponse] = await Promise.all([
-          axios.get('https://videojuegoshabana.com/api/listar_moneda/'),
-          axios.get('https://videojuegoshabana.com/api/listar_domicilio/')
+          axios.get(`${API_URL}/listar_moneda/`),
+          axios.get(`${API_URL}/listar_domicilio/`)
         ]);
         
         setCurrencies(currenciesResponse.data);
@@ -241,7 +242,7 @@ const CreateSalesPage = () => {
           salesData.producto_id = item.id;
         }
 
-        return axios.post('https://videojuegoshabana.com/api/crear_venta/', salesData, config)
+        return axios.post(`${API_URL}/crear_venta/`, salesData, config)
           .then(() => {
             setProcessedItems(prev => prev + 1);
           });

@@ -1,4 +1,5 @@
-﻿import { useState, useEffect } from 'react';
+import { API_URL } from '../config/apiConfig';
+import { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { 
   Alert,
@@ -68,21 +69,21 @@ const AdminVariacionPage = () => {
         const token = localStorage.getItem('authToken');
         
         // Obtener garantías
-        const garantiaResponse = await fetch('https://videojuegoshabana.com/api/listar_garantia/', {
+        const garantiaResponse = await fetch(`${API_URL}/listar_garantia/`, {
           headers: {
             'Authorization': `Bearer ${token}`
           }
         });
         
         // Obtener regalos
-        const regaloResponse = await fetch('https://videojuegoshabana.com/api/listar_regalo/', {
+        const regaloResponse = await fetch(`${API_URL}/listar_regalo/`, {
           headers: {
             'Authorization': `Bearer ${token}`
           }
         });
 
         // Obtener condiciones
-        const condicionResponse = await fetch('https://videojuegoshabana.com/api/listar_condicion/', {
+        const condicionResponse = await fetch(`${API_URL}/listar_condicion/`, {
           headers: {
             'Authorization': `Bearer ${token}`
           }
@@ -118,7 +119,7 @@ const AdminVariacionPage = () => {
         throw new Error('No estás autenticado');
       }
 
-      const response = await fetch(`https://videojuegoshabana.com/api/listar_variaciones_x_item/${itemId}/`, {
+      const response = await fetch(`${API_URL}/listar_variaciones_x_item/${itemId}/`, {
         headers: {
           'Authorization': `Bearer ${token}`
         }
@@ -229,7 +230,7 @@ const AdminVariacionPage = () => {
         formDataToSend.append('imagen', imageFile);
       }
 
-      const response = await fetch(`https://videojuegoshabana.com/api/editar_detalle_variacion/${currentVariacion.id}/`, {
+      const response = await fetch(`${API_URL}/editar_detalle_variacion/${currentVariacion.id}/`, {
         method: 'PATCH',
         headers: {
           'Authorization': `Bearer ${token}`
@@ -255,7 +256,7 @@ const AdminVariacionPage = () => {
   const handleDeleteVariacion = async () => {
     try {
       const token = localStorage.getItem('authToken');
-      const response = await fetch(`https://videojuegoshabana.com/api/eliminar_variacion/${currentVariacion.id}/`, {
+      const response = await fetch(`${API_URL}/eliminar_variacion/${currentVariacion.id}/`, {
         method: 'DELETE',
         headers: {
           'Authorization': `Bearer ${token}`

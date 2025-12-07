@@ -25,6 +25,7 @@ import {
   TeamOutlined
 } from '@ant-design/icons';
 
+import { API_URL } from '../config/apiConfig';
 const { Title, Text } = Typography;
 
 const AccountingClientReferidosPage = () => {
@@ -51,7 +52,7 @@ const AccountingClientReferidosPage = () => {
   const fetchClientesReferidos = async () => {
     try {
       const token = localStorage.getItem('authToken');
-      const response = await axios.get('https://videojuegoshabana.com/api/listar_contabilidad_cliente_referido/', {
+      const response = await axios.get(`${API_URL}/listar_contabilidad_cliente_referido/`, {
         headers: {
           'Authorization': `Bearer ${token}`
         }
@@ -152,7 +153,7 @@ const AccountingClientReferidosPage = () => {
     setProcessing(true);
     try {
       const token = localStorage.getItem('authToken');
-      await axios.delete(`https://videojuegoshabana.com/api/eliminar_contabilidad_cliente_referido/${clienteToDelete}/`, {
+      await axios.delete(`${API_URL}/eliminar_contabilidad_cliente_referido/${clienteToDelete}/`, {
         headers: {
           'Authorization': `Bearer ${token}`
         }

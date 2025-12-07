@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { TextField, Button, Select, MenuItem, InputLabel, FormControl, CircularProgress, Alert, Snackbar } from '@mui/material';
 
+import { API_URL } from '../config/apiConfig';
 const CreateSubcategoryPage = () => {
   const navigate = useNavigate();
   // Estados
@@ -34,7 +35,7 @@ const CreateSubcategoryPage = () => {
 
     const fetchCategories = async () => {
       try {
-        const response = await fetch('https://videojuegoshabana.com/api/listar_categoria/', {
+        const response = await fetch(`${API_URL}/listar_categoria/`, {
           headers: {
             'Authorization': `Bearer ${token}`,
             'Content-Type': 'application/json'
@@ -84,7 +85,7 @@ const CreateSubcategoryPage = () => {
     setSuccess(false);
 
     try {
-      const response = await fetch('https://videojuegoshabana.com/api/crear_subcategoria/', {
+      const response = await fetch(`${API_URL}/crear_subcategoria/`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

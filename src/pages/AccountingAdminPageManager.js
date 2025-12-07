@@ -21,6 +21,7 @@ import axios from 'axios';
 import moment from 'moment';
 import * as XLSX from 'xlsx';
 
+import { API_URL } from '../config/apiConfig';
 const AccountingManagerPage = () => {
   const [accountingData, setAccountingData] = useState([]);
   const [filteredData, setFilteredData] = useState([]);
@@ -51,7 +52,7 @@ const AccountingManagerPage = () => {
       try {
         const token = localStorage.getItem('authToken');
         const response = await axios.get(
-          'https://videojuegoshabana.com/api/listar_contabilidad_superadministrador/',
+          `${API_URL}/listar_contabilidad_superadministrador/`,
           { headers: { Authorization: `Bearer ${token}` } }
         );
         

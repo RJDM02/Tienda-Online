@@ -25,6 +25,7 @@ import AddIcon from '@mui/icons-material/Add';
 import DeleteIcon from '@mui/icons-material/Delete';
 import LocalOfferIcon from '@mui/icons-material/LocalOffer';
 
+import { API_URL } from '../config/apiConfig';
 // Componente auxiliar para mostrar valores monetarios
 const CurrencyValue = ({ value }) => {
   const numValue = Number(value) || 0;
@@ -60,7 +61,7 @@ const AdminCouponPage = () => {
 
       try {
         // Obtener clientes
-        const clientsResponse = await fetch('https://videojuegoshabana.com/api/listar_cliente_all/', {
+        const clientsResponse = await fetch(`${API_URL}/listar_cliente_all/`, {
           headers: {
             'Authorization': `Bearer ${token}`
           }
@@ -74,7 +75,7 @@ const AdminCouponPage = () => {
         setClients(clientsData);
 
         // Obtener cupones
-        const couponsResponse = await fetch('https://videojuegoshabana.com/api/listar_cupon/', {
+        const couponsResponse = await fetch(`${API_URL}/listar_cupon/`, {
           headers: {
             'Authorization': `Bearer ${token}`
           }
@@ -158,7 +159,7 @@ const AdminCouponPage = () => {
         throw new Error('La cifra debe ser un número positivo');
       }
 
-      const response = await fetch('https://videojuegoshabana.com/api/crear_cupon/', {
+      const response = await fetch(`${API_URL}/crear_cupon/`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -179,7 +180,7 @@ const AdminCouponPage = () => {
       setSuccess('Cupón creado correctamente');
       
       // Refrescar la lista de cupones
-      const couponsResponse = await fetch('https://videojuegoshabana.com/api/listar_cupon/', {
+      const couponsResponse = await fetch(`${API_URL}/listar_cupon/`, {
         headers: {
           'Authorization': `Bearer ${token}`
         }
@@ -207,7 +208,7 @@ const AdminCouponPage = () => {
     if (!token || !currentCoupon) return;
 
     try {
-      const response = await fetch(`https://videojuegoshabana.com/api/eliminar_cupon/${currentCoupon.id}/`, {
+      const response = await fetch(`${API_URL}/eliminar_cupon/${currentCoupon.id}/`, {
         method: 'DELETE',
         headers: {
           'Authorization': `Bearer ${token}`

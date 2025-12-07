@@ -13,6 +13,7 @@ import AddIcon from '@mui/icons-material/Add';
 import DeleteIcon from '@mui/icons-material/Delete';
 import AssignmentTurnedInIcon from '@mui/icons-material/AssignmentTurnedIn';
 
+import { API_URL } from '../config/apiConfig';
 const AdminWarrantyPage = () => {
   const navigate = useNavigate();
   const [garantias, setGarantias] = useState([]);
@@ -46,7 +47,7 @@ const AdminWarrantyPage = () => {
     setError(null);
 
     try {
-      const response = await fetch('https://videojuegoshabana.com/api/listar_garantia/', {
+      const response = await fetch(`${API_URL}/listar_garantia/`, {
         method: 'GET',
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -83,7 +84,7 @@ const AdminWarrantyPage = () => {
     setError(null);
 
     try {
-      const response = await fetch('https://videojuegoshabana.com/api/crear_garantia/', {
+      const response = await fetch(`${API_URL}/crear_garantia/`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -120,7 +121,7 @@ const AdminWarrantyPage = () => {
     if (!token || !currentGarantia) return;
 
     try {
-      const response = await fetch(`https://videojuegoshabana.com/api/eliminar_garantia/${currentGarantia.id}/`, {
+      const response = await fetch(`${API_URL}/eliminar_garantia/${currentGarantia.id}/`, {
         method: 'DELETE',
         headers: {
           'Authorization': `Bearer ${token}`,

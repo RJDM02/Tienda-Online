@@ -14,6 +14,7 @@ import DeleteIcon from '@mui/icons-material/Delete';
 import EditIcon from '@mui/icons-material/Edit';
 import CardGiftcardIcon from '@mui/icons-material/CardGiftcard';
 
+import { API_URL } from '../config/apiConfig';
 const AdminGiftPage = () => {
   const navigate = useNavigate();
   const [regalos, setRegalos] = useState([]);
@@ -55,7 +56,7 @@ const AdminGiftPage = () => {
     setError(null);
 
     try {
-      const response = await fetch('https://videojuegoshabana.com/api/listar_regalo/', {
+      const response = await fetch(`${API_URL}/listar_regalo/`, {
         method: 'GET',
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -92,7 +93,7 @@ const AdminGiftPage = () => {
     setError(null);
 
     try {
-      const response = await fetch('https://videojuegoshabana.com/api/crear_regalo/', {
+      const response = await fetch(`${API_URL}/crear_regalo/`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -129,7 +130,7 @@ const AdminGiftPage = () => {
     if (!token || !currentRegalo) return;
 
     try {
-      const response = await fetch(`https://videojuegoshabana.com/api/eliminar_regalo/${currentRegalo.id}/`, {
+      const response = await fetch(`${API_URL}/eliminar_regalo/${currentRegalo.id}/`, {
         method: 'DELETE',
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -165,7 +166,7 @@ const AdminGiftPage = () => {
     setError(null);
 
     try {
-      const response = await fetch(`https://videojuegoshabana.com/api/editar_regalo/${editRegalo.id}/`, {
+      const response = await fetch(`${API_URL}/editar_regalo/${editRegalo.id}/`, {
         method: 'PATCH',
         headers: {
           'Authorization': `Bearer ${token}`,

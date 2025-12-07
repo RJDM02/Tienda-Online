@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Edit, Trash2, Plus, Save, X, FileImage } from 'lucide-react';
 
+import { API_BASE_URL, API_URL } from '../config/apiConfig';
 const AdminHomePage = () => {
   const [homeData, setHomeData] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -14,7 +15,7 @@ const AdminHomePage = () => {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const response = await fetch('https://videojuegoshabana.com/api/listar_homepage/');
+        const response = await fetch(`${API_URL}/listar_homepage/`);
         const data = await response.json();
         setHomeData(data[0]); // Tomamos el primer elemento del array
         setNewLabel(data[0]?.etiqueta || '');
@@ -32,7 +33,7 @@ const AdminHomePage = () => {
   // Función para actualizar la etiqueta
   const updateLabel = async () => {
     try {
-      const response = await fetch('https://videojuegoshabana.com/api/editar_etiqueta/', {
+      const response = await fetch(`${API_URL}/editar_etiqueta/`, {
         method: 'PATCH',
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -58,7 +59,7 @@ const AdminHomePage = () => {
   const deleteHeroImage = async (id) => {
     if (window.confirm('¿Estás seguro de eliminar esta imagen?')) {
       try {
-        const response = await fetch(`https://videojuegoshabana.com/api/eliminar_actualizar_herocarusel/${id}/`, {
+        const response = await fetch(`${API_URL}/eliminar_actualizar_herocarusel/${id}/`, {
            headers: {
           'Authorization': `Bearer ${token}`
           },
@@ -83,7 +84,7 @@ const AdminHomePage = () => {
   const deletePlaceImage = async (id) => {
     if (window.confirm('¿Estás seguro de eliminar esta imagen?')) {
       try {
-        const response = await fetch(`https://videojuegoshabana.com/api/eliminar_actualizar_placecarusel/${id}/`, {
+        const response = await fetch(`${API_URL}/eliminar_actualizar_placecarusel/${id}/`, {
           headers: {
           'Authorization': `Bearer ${token}`
           },  
@@ -115,7 +116,7 @@ const AdminHomePage = () => {
     setUploading({ ...uploading, hero: true });
 
     try {
-      const response = await fetch('https://videojuegoshabana.com/api/crear_herocarusel/', {
+      const response = await fetch(`${API_URL}/crear_herocarusel/`, {
         headers: {
           'Authorization': `Bearer ${token}`
           },
@@ -151,7 +152,7 @@ const AdminHomePage = () => {
     setUploading({ ...uploading, place: true });
 
     try {
-      const response = await fetch('https://videojuegoshabana.com/api/crear_placecarusel/', {
+      const response = await fetch(`${API_URL}/crear_placecarusel/`, {
         headers: {
           'Authorization': `Bearer ${token}`
           },
@@ -290,7 +291,7 @@ const AdminHomePage = () => {
                     <div className="flex items-center">
                       <div className="w-16 h-12 rounded-lg overflow-hidden mr-4 flex-shrink-0">
                         <img
-                          src={`https://videojuegoshabana.com${image.imagen}`}
+                          src={`${API_BASE_URL}${image.imagen}`}
                           alt={`Hero ${image.id}`}
                           className="w-full h-full object-cover"
                         />
@@ -358,7 +359,7 @@ const AdminHomePage = () => {
                     <div className="flex items-center">
                       <div className="w-16 h-12 rounded-lg overflow-hidden mr-4 flex-shrink-0">
                         <img
-                          src={`https://videojuegoshabana.com${image.imagen}`}
+                          src={`${API_BASE_URL}${image.imagen}`}
                           alt={`Place ${image.id}`}
                           className="w-full h-full object-cover"
                         />

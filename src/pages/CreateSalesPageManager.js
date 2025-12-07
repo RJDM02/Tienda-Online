@@ -27,6 +27,7 @@ import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import { styles, LoadingState, ErrorState, SectionTitle } from './CreateSalesPageStyles';
 import AdminNotifier2 from '../components/AdminNotifier2';
 
+import { API_URL } from '../config/apiConfig';
 const CreateSalesPageManager = () => {
   const location = useLocation();
   const navigate = useNavigate();
@@ -97,9 +98,9 @@ const CreateSalesPageManager = () => {
         } : {};
         
         const [currenciesResponse, deliveryPointsResponse, warrantiesResponse] = await Promise.all([
-          axios.get('https://videojuegoshabana.com/api/listar_moneda/'),
-          axios.get('https://videojuegoshabana.com/api/listar_domicilio/'),
-          axios.get('https://videojuegoshabana.com/api/listar_garantia/', config) // Nueva llamada para garantías
+          axios.get(`${API_URL}/listar_moneda/`),
+          axios.get(`${API_URL}/listar_domicilio/`),
+          axios.get(`${API_URL}/listar_garantia/`, config) // Nueva llamada para garantías
         ]);
         
         setCurrencies(currenciesResponse.data);
@@ -153,7 +154,7 @@ const CreateSalesPageManager = () => {
           salesData.producto_id = item.id;
         }
 
-        return axios.post('https://videojuegoshabana.com/api/crear_venta/', salesData, config)
+        return axios.post(`${API_URL}/crear_venta/`, salesData, config)
           .then(() => {
             setProcessedItems(prev => prev + 1);
           });

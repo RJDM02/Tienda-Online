@@ -14,6 +14,7 @@ import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
 import LocationOnIcon from '@mui/icons-material/LocationOn';
 
+import { API_URL } from '../config/apiConfig';
 const AdminDeliveryPage = () => {
   const navigate = useNavigate();
   const [domicilios, setDomicilios] = useState([]);
@@ -48,7 +49,7 @@ const AdminDeliveryPage = () => {
     setError(null);
 
     try {
-      const response = await fetch('https://videojuegoshabana.com/api/listar_domicilio/', {
+      const response = await fetch(`${API_URL}/listar_domicilio/`, {
         method: 'GET',
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -81,7 +82,7 @@ const AdminDeliveryPage = () => {
     if (!token) return;
 
     try {
-      const response = await fetch(`https://videojuegoshabana.com/api/listar_detalle_domicilio/${id}/`, {
+      const response = await fetch(`${API_URL}/listar_detalle_domicilio/${id}/`, {
         method: 'GET',
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -117,7 +118,7 @@ const AdminDeliveryPage = () => {
     setError(null);
 
     try {
-      const response = await fetch('https://videojuegoshabana.com/api/crear_domicilio/', {
+      const response = await fetch(`${API_URL}/crear_domicilio/`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -158,7 +159,7 @@ const AdminDeliveryPage = () => {
     setError(null);
 
     try {
-      const response = await fetch(`https://videojuegoshabana.com/api/editar_domicilio/${currentDomicilio.id}/`, {
+      const response = await fetch(`${API_URL}/editar_domicilio/${currentDomicilio.id}/`, {
         method: 'PATCH',
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -197,7 +198,7 @@ const AdminDeliveryPage = () => {
     if (!token || !currentDomicilio) return;
 
     try {
-      const response = await fetch(`https://videojuegoshabana.com/api/eliminar_domicilio/${currentDomicilio.id}/`, {
+      const response = await fetch(`${API_URL}/eliminar_domicilio/${currentDomicilio.id}/`, {
         method: 'DELETE',
         headers: {
           'Authorization': `Bearer ${token}`,

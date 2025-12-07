@@ -6,6 +6,7 @@ import DeleteIcon from '@mui/icons-material/Delete';
 import VideocamIcon from '@mui/icons-material/Videocam';
 import NewProductAlert from '../components/NewProductAlert ';
 
+import { API_URL } from '../config/apiConfig';
 const CreateItemPage = () => {
     const [formData, setFormData] = useState({
         nombre: '',
@@ -51,28 +52,28 @@ const CreateItemPage = () => {
                 }
 
                 // Obtener subcategorías
-                const subCatResponse = await fetch('https://videojuegoshabana.com/api/listar_subcategoria/', {
+                const subCatResponse = await fetch(`${API_URL}/listar_subcategoria/`, {
                     headers: {
                         'Authorization': `Bearer ${token}`
                     }
                 });
 
                 // Obtener garantías
-                const garantiaResponse = await fetch('https://videojuegoshabana.com/api/listar_garantia/', {
+                const garantiaResponse = await fetch(`${API_URL}/listar_garantia/`, {
                     headers: {
                         'Authorization': `Bearer ${token}`
                     }
                 });
 
                 // Obtener regalos
-                const regaloResponse = await fetch('https://videojuegoshabana.com/api/listar_regalo/', {
+                const regaloResponse = await fetch(`${API_URL}/listar_regalo/`, {
                     headers: {
                         'Authorization': `Bearer ${token}`
                     }
                 });
 
                 // Obtener condiciones
-                const condicionResponse = await fetch('https://videojuegoshabana.com/api/listar_condicion/', {
+                const condicionResponse = await fetch(`${API_URL}/listar_condicion/`, {
                     headers: {
                         'Authorization': `Bearer ${token}`
                     }
@@ -273,7 +274,7 @@ const CreateItemPage = () => {
                 data.append(`imagenes_upload`, file);
             });
 
-            const response = await fetch('https://videojuegoshabana.com/api/crear_item/', {
+            const response = await fetch(`${API_URL}/crear_item/`, {
                 method: 'POST',
                 headers: {
                     'Authorization': `Bearer ${token}`

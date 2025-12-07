@@ -14,6 +14,7 @@ import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
 import GradeIcon from '@mui/icons-material/Grade';
 
+import { API_URL } from '../config/apiConfig';
 const AdminConditionPage = () => {
   const navigate = useNavigate();
   const [condiciones, setCondiciones] = useState([]);
@@ -48,7 +49,7 @@ const AdminConditionPage = () => {
     setError(null);
 
     try {
-      const response = await fetch('https://videojuegoshabana.com/api/listar_condicion/', {
+      const response = await fetch(`${API_URL}/listar_condicion/`, {
         method: 'GET',
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -85,7 +86,7 @@ const AdminConditionPage = () => {
     setError(null);
 
     try {
-      const response = await fetch('https://videojuegoshabana.com/api/crear_condicion/', {
+      const response = await fetch(`${API_URL}/crear_condicion/`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -122,7 +123,7 @@ const AdminConditionPage = () => {
     if (!token || !currentCondicion) return;
 
     try {
-      const response = await fetch(`https://videojuegoshabana.com/api/eliminar_condicion/${currentCondicion.id}/`, {
+      const response = await fetch(`${API_URL}/eliminar_condicion/${currentCondicion.id}/`, {
         method: 'DELETE',
         headers: {
           'Authorization': `Bearer ${token}`,

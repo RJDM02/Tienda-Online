@@ -12,6 +12,7 @@ import {
   PhoneOutlined
 } from '@ant-design/icons';
 
+import { API_URL } from '../config/apiConfig';
 const RecordSalesPage = () => {
   const [sales, setSales] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -29,7 +30,7 @@ const RecordSalesPage = () => {
       try {
         const token = localStorage.getItem('authToken');
         
-        const response = await fetch('https://videojuegoshabana.com/api/listar_historial_venta/', {
+        const response = await fetch(`${API_URL}/listar_historial_venta/`, {
           method: 'GET',
           headers: {
             'Authorization': `Bearer ${token}`
@@ -76,7 +77,7 @@ const RecordSalesPage = () => {
       setEditLoading(true);
       const token = localStorage.getItem('authToken');
       
-      const response = await fetch(`https://videojuegoshabana.com/api/editar_costo/${currentEditId}/`, {
+      const response = await fetch(`${API_URL}/editar_costo/${currentEditId}/`, {
         method: 'PATCH',
         headers: {
           'Authorization': `Bearer ${token}`,

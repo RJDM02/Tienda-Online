@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Slider, Checkbox } from '@mui/material';
 import { ChevronDown, ChevronUp, ChevronRight, ChevronLeft, Edit, User, Filter, DollarSign, Tags, X, Award } from 'lucide-react';
 
+import { API_URL } from '../config/apiConfig';
 const normalizeOrdenValue = (value) => {
   if (value === null || value === undefined || value === '') {
     return null;
@@ -105,7 +106,7 @@ const Dashbar = ({ onFilterChange, userData, onEditProfile, selectedCategories =
   useEffect(() => {
     const fetchConditions = async () => {
       try {
-        const response = await fetch('https://videojuegoshabana.com/api/listar_condicion/', {
+        const response = await fetch(`${API_URL}/listar_condicion/`, {
           method: 'GET',
         });
         
@@ -127,7 +128,7 @@ const Dashbar = ({ onFilterChange, userData, onEditProfile, selectedCategories =
   useEffect(() => {
     const fetchCategories = async () => {
       try {
-        const response = await fetch('https://videojuegoshabana.com/api/listar_categoria/');
+        const response = await fetch(`${API_URL}/listar_categoria/`);
         if (!response.ok) throw new Error('Error al cargar categorías');
         
         const data = await response.json();
@@ -153,7 +154,7 @@ const Dashbar = ({ onFilterChange, userData, onEditProfile, selectedCategories =
   useEffect(() => {
     const fetchSubcategories = async () => {
       try {
-        const response = await fetch('https://videojuegoshabana.com/api/listar_subcategoria/');
+        const response = await fetch(`${API_URL}/listar_subcategoria/`);
         if (!response.ok) throw new Error('Error al cargar subcategorías');
         const data = await response.json();
         const sortedData = sortSubcategoriesWithCategory(data);
