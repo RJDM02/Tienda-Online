@@ -489,8 +489,9 @@ const ProductView = ({ onShowLogin = () => {} }) => {
     }
   };
 
-  const handleShare = () => {
-    // Obtener referido_id del token si existe
+  const handleShare = async () => {
+    if (!product) return;
+
     const getReferidoId = () => {
       try {
         const token = localStorage.getItem('authToken');
@@ -503,64 +504,96 @@ const ProductView = ({ onShowLogin = () => {} }) => {
       }
       return null;
     };
-    
+
     const referidoId = getReferidoId();
+    const baseUrl = `${window.location.origin}/product/${product.id}`;
+    const productUrl = referidoId ? `${baseUrl}?ref=${referidoId}` : baseUrl;
+
     const images = getProductImages();
     const mainImage = images.length > 0 ? images[0] : '';
-    const { garantia, regalo } = getWarrantyAndGiftInfo();
-    
-    let shareText = `${product.nombre}\nPrecio: $${getCurrentPrice()}`;
-    
-    if (garantia) {
-      shareText += `\nGarantía: ${garantia}`;
-    }
-    if (regalo) {
-      shareText += `\nRegalo incluido: ${regalo}`;
-    }
-    
-    // Construir URL con parámetro de referido si existe
-    let productUrl = `${window.location.origin}/product/${product.id}`;
-    if (referidoId) {
-      productUrl += `?ref=${referidoId}`;
-    }
-    
-    shareText += `\n\n${product.descripcion?.substring(0, 500) || 'Producto destacado'}...\n\n${productUrl}`;
-    
-    if (mainImage) {
-      shareText += `\nImagen del producto: ${mainImage}`;
-    }
-    
-    const isMobileDevice = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
-    
-    if (isMobileDevice && navigator.share) {
-      navigator.share({
-        title: `${product.nombre} - $${getCurrentPrice()}`,
-        text: shareText,
-        url: productUrl,
-      }).catch(err => {
-        console.log('Error al compartir:', err);
-        shareFallback(shareText);
-      });
-    } else {
-      shareFallback(shareText);
-    }
-  };
+    const mainImageUrl = mainImage?.startsWith('http')
+      ? mainImage
+      : `${window.location.origin}${mainImage?.startsWith('/') ? '' : '/'}${mainImage || ''}`;
 
-  const shareFallback = (shareText) => {
-    // Extraer la URL limpia del texto para evitar duplicados
-    const urlMatch = shareText.match(/(https?:\/\/[^\s]+)/);
-    const cleanUrl = urlMatch ? urlMatch[0] : `${window.location.origin}/product/${product.id}`;
-    const cleanShareText = shareText.replace(cleanUrl, '').trim();
-    
-    if (window.location.href.includes('web.whatsapp.com')) {
-      window.open(`https://web.whatsapp.com/send?text=${encodeURIComponent(cleanShareText + '\n\n' + cleanUrl)}`, '_blank');
-    } 
-    else if (/Android|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)) {
-      window.open(`whatsapp://send?text=${encodeURIComponent(cleanShareText + '\n\n' + cleanUrl)}`, '_blank');
-    }
-    else {
-      navigator.clipboard.writeText(cleanShareText + '\n\n' + cleanUrl);
-      alert('El texto se ha copiado al portapapeles. Pégalo en WhatsApp manualmente.');
+    const priceLine = hasDiscount()
+      ? `Precio: $${getCurrentPrice()} (antes $${getOriginalPrice()})`
+      : `Precio: $${getCurrentPrice()}`;
+
+    const shareLines = [
+      mainImageUrl,
+      productUrl,
+      `${product.nombre}`,
+      priceLine,
+      `${product.descripcion?.substring(0, 500) || 'Producto destacado'}...`,
+    ];
+
+    const { garantia, regalo } = getWarrantyAndGiftInfo();
+    if (garantia) shareLines.push(`Garantia: ${garantia}`);
+    if (regalo) shareLines.push(`Regalo incluido: ${regalo}`);
+    if (referidoId) shareLines.push(`Codigo de referido: ${referidoId}`);
+
+    const composedText = shareLines.join('\n');
+
+    try {
+      const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+      if (isMobile) {
+        if (navigator.canShare && mainImageUrl) {
+          try {
+            const response = await fetch(mainImageUrl);
+            const blob = await response.blob();
+            const file = new File([blob], 'producto.jpg', { type: blob.type || 'image/jpeg' });
+            if (navigator.canShare({ files: [file] })) {
+              await navigator.share({
+                title: product.nombre,
+                text: composedText,
+                files: [file],
+              });
+              return;
+            }
+          } catch (error) {
+            console.warn('No se pudo adjuntar la imagen al compartir, usando texto.', error);
+          }
+        }
+
+        if (navigator.share) {
+          await navigator.share({
+            title: product.nombre,
+            text: composedText,
+          });
+          return;
+        }
+
+        if (navigator.userAgent.match(/WhatsApp/i)) {
+          window.open(`whatsapp://send?text=${encodeURIComponent(composedText)}`);
+          return;
+        }
+      }
+
+      if (navigator.userAgent.match(/FBAN|FBAV/i)) {
+        window.open(`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(productUrl)}&quote=${encodeURIComponent(composedText)}`, '_blank');
+        return;
+      }
+
+      if (navigator.userAgent.match(/Twitter/i)) {
+        window.open(`https://twitter.com/intent/tweet?text=${encodeURIComponent(composedText)}&url=${encodeURIComponent(productUrl)}`, '_blank');
+        return;
+      }
+
+      if (navigator.clipboard) {
+        await navigator.clipboard.writeText(composedText);
+        alert('Informacion del producto copiada al portapapeles');
+      } else {
+        const textArea = document.createElement('textarea');
+        textArea.value = composedText;
+        document.body.appendChild(textArea);
+        textArea.select();
+        document.execCommand('copy');
+        document.body.removeChild(textArea);
+        alert('Informacion del producto copiada al portapapeles');
+      }
+    } catch (err) {
+      console.error('Error al compartir:', err);
+      window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(composedText)}`, '_blank');
     }
   };
 

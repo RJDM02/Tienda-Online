@@ -27,7 +27,7 @@ const CreateVariacionPage = () => {
     cantidad: '',
     imagen: null,
     garantia: '',
-    regalo: '',
+    regalo: [],
     condicion: '',
     comision: ''
   });
@@ -97,7 +97,7 @@ const CreateVariacionPage = () => {
     const { name, value } = e.target;
     setFormData(prev => ({
       ...prev,
-      [name]: value
+      [name]: name === 'regalo' ? value : value
     }));
   };
 
@@ -154,8 +154,8 @@ const CreateVariacionPage = () => {
         formDataToSend.append('garantia', formData.garantia);
       }
       
-      if (formData.regalo) {
-        formDataToSend.append('regalo', formData.regalo);
+      if (formData.regalo && formData.regalo.length) {
+        formData.regalo.forEach((id) => formDataToSend.append('regalo', id));
       }
       
       if (formData.imagen) {
@@ -192,7 +192,7 @@ const CreateVariacionPage = () => {
         cantidad: '',
         imagen: null,
         garantia: '',
-        regalo: '',
+        regalo: [],
         condicion: '',
         comision: ''
       });
@@ -217,7 +217,7 @@ const CreateVariacionPage = () => {
       cantidad: '',
       imagen: null,
       garantia: '',
-      regalo: '',
+      regalo: [],
       condicion: '',
       comision: ''
     });
@@ -471,14 +471,13 @@ const CreateVariacionPage = () => {
                   </InputLabel>
                   <Select
                     name="regalo"
+                    multiple
                     value={formData.regalo}
                     onChange={handleChange}
                     disabled={loading.form || loading.initialData}
+                    renderValue={(selected) => selected.map((id) => regalos.find(r => r.id === id)?.nombre || id).join(', ')}
                     sx={selectStyles}
                   >
-                    <MenuItem value="">
-                      <em>Ninguno</em>
-                    </MenuItem>
                     {regalos.map(regalo => (
                       <MenuItem key={regalo.id} value={regalo.id}>
                         {regalo.nombre}

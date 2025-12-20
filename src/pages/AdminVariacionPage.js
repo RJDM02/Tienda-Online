@@ -53,7 +53,7 @@ const AdminVariacionPage = () => {
     cantidad: '',
     imagen: null,
     garantia: '',
-    regalo: '',
+    regalo: [],
     condicion: '',
     comision: '',
     upc: ''
@@ -157,7 +157,13 @@ const AdminVariacionPage = () => {
       cantidad: variacion.cantidad,
       imagen: null,
       garantia: variacion.garantia?.id || '',
-      regalo: variacion.regalo?.id || '',
+      regalo: Array.isArray(variacion.regalo)
+        ? variacion.regalo
+        : variacion.regalos
+        ? variacion.regalos.map((r) => r.id)
+        : variacion.regalo
+        ? [variacion.regalo]
+        : [],
       condicion: variacion.condicion_detalle?.id || '',
       comision: variacion.comision || '0.00'
     });
@@ -177,7 +183,7 @@ const AdminVariacionPage = () => {
     const { name, value } = e.target;
     setEditFormData(prev => ({
       ...prev,
-      [name]: value
+      [name]: name === 'regalo' ? value : value
     }));
   };
 
@@ -218,8 +224,8 @@ const AdminVariacionPage = () => {
         formDataToSend.append('garantia', editFormData.garantia);
       }
       
-      if (editFormData.regalo) {
-        formDataToSend.append('regalo', editFormData.regalo);
+      if (editFormData.regalo && editFormData.regalo.length) {
+        editFormData.regalo.forEach((id) => formDataToSend.append('regalo', id));
       }
       
       if (editFormData.condicion) {
@@ -878,9 +884,13 @@ const AdminVariacionPage = () => {
                   <InputLabel>Regalo</InputLabel>
                   <Select
                     name="regalo"
+                    multiple
                     value={editFormData.regalo}
                     onChange={handleEditChange}
                     label="Regalo"
+                    renderValue={(selected) =>
+                      selected.map((id) => regalos.find((r) => r.id === id)?.nombre || id).join(', ')
+                    }
                     sx={{
                       borderRadius: '12px',
                       '& .MuiOutlinedInput-root': {
@@ -896,9 +906,6 @@ const AdminVariacionPage = () => {
                       },
                     }}
                   >
-                    <MenuItem value="">
-                      <em>Ninguno</em>
-                    </MenuItem>
                     {regalos.map(regalo => (
                       <MenuItem key={regalo.id} value={regalo.id}>
                         {regalo.nombre}

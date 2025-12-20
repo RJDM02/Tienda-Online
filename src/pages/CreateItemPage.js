@@ -18,7 +18,7 @@ const CreateItemPage = () => {
         descuento: 0,
         imagenes_upload: [],
         garantia: '',
-        regalo: '',
+        regalo: [],
         condicion: '',
         comision: 0,
         video: null,
@@ -106,7 +106,7 @@ const CreateItemPage = () => {
         const { name, value } = e.target;
         setFormData({
             ...formData,
-            [name]: value
+            [name]: name === 'regalo' ? value : value
         });
     };
 
@@ -262,8 +262,8 @@ const CreateItemPage = () => {
                 data.append('garantia', formData.garantia);
             }
             
-            if (formData.regalo) {
-                data.append('regalo', formData.regalo);
+            if (formData.regalo && formData.regalo.length) {
+                formData.regalo.forEach((id) => data.append('regalo', id));
             }
             
             formData.sub_categoria.forEach(id => {
@@ -308,7 +308,7 @@ const CreateItemPage = () => {
                 descuento: 0,
                 imagenes_upload: [],
                 garantia: '',
-                regalo: '',
+                regalo: [],
                 condicion: '',
                 comision: 0,
                 video: null,
@@ -340,7 +340,7 @@ const CreateItemPage = () => {
             descuento: 0,
             imagenes_upload: [],
             garantia: '',
-            regalo: '',
+            regalo: [],
             condicion: '',
             comision: 0,
             video: null,
@@ -600,9 +600,18 @@ const CreateItemPage = () => {
                                     </InputLabel>
                                     <Select
                                         name="regalo"
+                                        multiple
                                         value={formData.regalo}
                                         onChange={handleChange}
                                         disabled={loading}
+                                        renderValue={(selected) => (
+                                            <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
+                                                {selected.map((value) => {
+                                                    const regalo = regalos.find((r) => r.id === value);
+                                                    return <Chip key={value} label={regalo ? regalo.nombre : value} />;
+                                                })}
+                                            </Box>
+                                        )}
                                         sx={{
                                             borderRadius: '8px',
                                             fontSize: '14px',
@@ -619,9 +628,6 @@ const CreateItemPage = () => {
                                             }
                                         }}
                                     >
-                                        <MenuItem value="">
-                                            <em>Ninguno</em>
-                                        </MenuItem>
                                         {regalos.map(regalo => (
                                             <MenuItem key={regalo.id} value={regalo.id}>
                                                 {regalo.nombre}
