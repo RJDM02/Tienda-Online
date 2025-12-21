@@ -31,7 +31,7 @@ import CardItem from '../components/CardItem';
 import FloatingWhatsAppButton from '../components/FloatingWhatsAppButton';
 import { useCart } from '../context/CartContext';
 
-import { API_URL } from '../config/apiConfig';
+import { API_URL, API_BASE_URL } from '../config/apiConfig';
 const style = {
   position: 'absolute',
   top: '50%',
@@ -506,59 +506,39 @@ const ProductView = ({ onShowLogin = () => {} }) => {
     };
 
     const referidoId = getReferidoId();
-    const baseUrl = `${window.location.origin}/product/${product.id}`;
-    const productUrl = referidoId ? `${baseUrl}?ref=${referidoId}` : baseUrl;
-
-    const images = getProductImages();
-    const mainImage = images.length > 0 ? images[0] : '';
-    const mainImageUrl = mainImage?.startsWith('http')
-      ? mainImage
-      : `${window.location.origin}${mainImage?.startsWith('/') ? '' : '/'}${mainImage || ''}`;
+    const shareBaseUrl = API_BASE_URL
+      ? `${API_BASE_URL}/api/share/product/${product.id}`
+      : `${window.location.origin}/share/product/${product.id}`;
+    const shareUrl = referidoId ? `${shareBaseUrl}?ref=${referidoId}` : shareBaseUrl;
 
     const priceLine = hasDiscount()
       ? `Precio: $${getCurrentPrice()} (antes $${getOriginalPrice()})`
       : `Precio: $${getCurrentPrice()}`;
 
+    const descriptionLine = `${product.descripcion?.substring(0, 200) || 'Producto destacado'}...`;
+
     const shareLines = [
-      mainImageUrl,
-      productUrl,
       `${product.nombre}`,
       priceLine,
-      `${product.descripcion?.substring(0, 500) || 'Producto destacado'}...`,
+      descriptionLine,
     ];
 
     const { garantia, regalo } = getWarrantyAndGiftInfo();
     if (garantia) shareLines.push(`Garantia: ${garantia}`);
     if (regalo) shareLines.push(`Regalo incluido: ${regalo}`);
     if (referidoId) shareLines.push(`Codigo de referido: ${referidoId}`);
+    shareLines.push(shareUrl);
 
     const composedText = shareLines.join('\n');
 
     try {
       const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
       if (isMobile) {
-        if (navigator.canShare && mainImageUrl) {
-          try {
-            const response = await fetch(mainImageUrl);
-            const blob = await response.blob();
-            const file = new File([blob], 'producto.jpg', { type: blob.type || 'image/jpeg' });
-            if (navigator.canShare({ files: [file] })) {
-              await navigator.share({
-                title: product.nombre,
-                text: composedText,
-                files: [file],
-              });
-              return;
-            }
-          } catch (error) {
-            console.warn('No se pudo adjuntar la imagen al compartir, usando texto.', error);
-          }
-        }
-
         if (navigator.share) {
           await navigator.share({
             title: product.nombre,
             text: composedText,
+            url: shareUrl,
           });
           return;
         }
@@ -570,12 +550,12 @@ const ProductView = ({ onShowLogin = () => {} }) => {
       }
 
       if (navigator.userAgent.match(/FBAN|FBAV/i)) {
-        window.open(`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(productUrl)}&quote=${encodeURIComponent(composedText)}`, '_blank');
+        window.open(`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(shareUrl)}&quote=${encodeURIComponent(composedText)}`, '_blank');
         return;
       }
 
       if (navigator.userAgent.match(/Twitter/i)) {
-        window.open(`https://twitter.com/intent/tweet?text=${encodeURIComponent(composedText)}&url=${encodeURIComponent(productUrl)}`, '_blank');
+        window.open(`https://twitter.com/intent/tweet?text=${encodeURIComponent(composedText)}&url=${encodeURIComponent(shareUrl)}`, '_blank');
         return;
       }
 
