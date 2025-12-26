@@ -155,16 +155,21 @@ export const LoadingState = () => (
 );
 
 // Component for error state
-export const ErrorState = ({ error, onReload }) => (
+export const ErrorState = ({ error, onReload, onGoShop }) => (
   <Box sx={styles.errorContainer}>
     <Alert severity="error">{error}</Alert>
-    <Button 
-      variant="contained" 
-      sx={{ mt: 2 }}
-      onClick={onReload}
-    >
-      Recargar página
-    </Button>
+    <Box sx={{ display: 'flex', gap: 2, mt: 2 }}>
+      {onGoShop && (
+        <Button variant="contained" onClick={onGoShop}>
+          Ir a la tienda
+        </Button>
+      )}
+      {!onGoShop && onReload && (
+        <Button variant="contained" onClick={onReload}>
+          Recargar página
+        </Button>
+      )}
+    </Box>
   </Box>
 );
 

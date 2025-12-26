@@ -27,6 +27,24 @@ import { styles, LoadingState, ErrorState, SectionTitle } from './CreateSalesPag
 import { API_URL } from '../config/apiConfig';
 const POINTS_THRESHOLD = 500;
 
+const parseErrorMessage = (error) => {
+  const status = error.response?.status;
+  if (status === 500) return `Error ${status}`;
+  const prod = error.response?.data?.producto;
+  const vari = error.response?.data?.variacion;
+  const disponible = error.response?.data?.disponible;
+  const solicitada = error.response?.data?.solicitada;
+  if (prod || vari) {
+    return `${error.response?.data?.error || 'Error'} (${prod || vari} - disponible ${disponible ?? '0'}, solicitada ${solicitada ?? '1'})`;
+  }
+  return (
+    error.response?.data?.error ||
+    error.response?.data?.message ||
+    error.message ||
+    'Error al procesar la venta. Intente nuevamente.'
+  );
+};
+
 const CreateSalesPage = () => {
   const location = useLocation();
   const navigate = useNavigate();
@@ -274,9 +292,7 @@ const CreateSalesPage = () => {
       }, 3000);
     } catch (error) {
       console.error('Error:', error);
-      setError(error.response?.data?.message || 
-              error.message || 
-              'Error al procesar la venta. Intente nuevamente.');
+      setError(parseErrorMessage(error));
     } finally {
       setSubmitting(false);
     }
@@ -330,7 +346,8 @@ const CreateSalesPage = () => {
   }
 
   if (error) {
-    return <ErrorState error={error} onReload={handleReload} />;
+    const goShop = () => navigate('/shop');
+    return <ErrorState error={error} onGoShop={goShop} onReload={handleReload} />;
   }
 
   return (

@@ -29,6 +29,25 @@ import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import { styles, LoadingState, ErrorState, SectionTitle } from './CreateSalesPageStyles';
 import AdminNotifier2 from '../components/AdminNotifier2';
 import { API_URL } from '../config/apiConfig';
+
+const parseErrorMessage = (error) => {
+  const status = error.response?.status;
+  if (status === 500) return `Error ${status}`;
+  const prod = error.response?.data?.producto;
+  const vari = error.response?.data?.variacion;
+  const disponible = error.response?.data?.disponible;
+  const solicitada = error.response?.data?.solicitada;
+  if (prod || vari) {
+    return `${error.response?.data?.error || 'Error'} (${prod || vari} - disponible ${disponible ?? '0'}, solicitada ${solicitada ?? '1'})`;
+  }
+  return (
+    error.response?.data?.error ||
+    error.response?.data?.message ||
+    error.message ||
+    'Error al procesar la venta. Intente nuevamente.'
+  );
+};
+
 const CreateAdminSalesPage = () => {
   const location = useLocation();
   const navigate = useNavigate();
@@ -206,9 +225,7 @@ const CreateAdminSalesPage = () => {
     }, 3000);
   } catch (error) {
     console.error('Error:', error);
-    setError(error.response?.data?.message || 
-            error.message || 
-            'Error al procesar la venta. Intente nuevamente.');
+    setError(parseErrorMessage(error));
   } finally {
     setSubmitting(false);
   }
@@ -240,7 +257,8 @@ const CreateAdminSalesPage = () => {
   }
 
   if (error) {
-    return <ErrorState error={error} onReload={handleReload} />;
+    const goShop = () => navigate('/shop');
+    return <ErrorState error={error} onGoShop={goShop} onReload={handleReload} />;
   }
 
   return (
