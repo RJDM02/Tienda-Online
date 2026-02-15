@@ -37,6 +37,7 @@ import { CartProvider } from './context/CartContext';
 import RecordsSalesManagerPage from './pages/RecordsSalesManagerPage';
 import NotificationsPage from './pages/NotificationsPage';
 import StatisticsPage from './pages/StatisticsPage';
+import ProductInventoryAgingPage from './pages/ProductInventoryAgingPage';
 import AdminHomePage from './pages/AdminHomePage';
 import AccountingAdminPageManager from './pages/AccountingAdminPageManager';
 import CreateSalesPageAdmin from './pages/CreateSalesPageAdmin';
@@ -293,6 +294,14 @@ function App() {
                   <StatisticsPage/>
                 </PrivateRoute>
               } 
+            />
+            <Route
+              path="/analytics-antiguedad-productos"
+              element={
+                <PrivateRoute allowedRoles={['Super_Administrador', 'Administrador']}>
+                  <ProductInventoryAgingPage />
+                </PrivateRoute>
+              }
             />
             <Route 
               path="/record-ventas-manager" 

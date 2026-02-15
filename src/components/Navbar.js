@@ -41,6 +41,7 @@ import Assessment from "@mui/icons-material/Assessment";
 import AccountBalance from "@mui/icons-material/AccountBalance";
 import ReceiptIcon from '@mui/icons-material/Receipt';
 import EqualizerIcon from '@mui/icons-material/Equalizer';
+import BubbleChartIcon from '@mui/icons-material/BubbleChart';
 import NotificationsIcon from '@mui/icons-material/Notifications';
 import HomeIcon from '@mui/icons-material/Home';
 import InfoIcon from '@mui/icons-material/Info';
@@ -328,6 +329,7 @@ function Navbar({ onShowLogin }) {
     { icon: <AccountBalance />, title: "Contabilidad General(Administador)", path: "/admin-contabilidad-general-admin" },
     { icon: <ReceiptIcon />, title: "Record Ventas (Todos)", path: "/record-ventas" },
     { icon: <EqualizerIcon />, title: "Estadísticas", path: "/statistics" },
+    { icon: <BubbleChartIcon />, title: "Antigüedad Inventario", path: "/analytics-antiguedad-productos" },
     { icon: <HomeIcon />, title: "Administrar HomePage", path: "/admin-homepage" },
   ];
 
@@ -694,3 +696,4 @@ function Navbar({ onShowLogin }) {
 }
 
 export default Navbar;
+
