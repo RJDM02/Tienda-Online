@@ -93,15 +93,19 @@ const CardItem = ({ product, searchTerm = '', userRole }) => {
       mainImageUrl,
       productUrl,
       `${product.nombre}`,
+      product.condicion_detalle?.nombre ? `Condición: ${product.condicion_detalle.nombre}` : null,
       hasDiscount ? `Precio: $${product.precio_post_descuento} (antes $${product.precio})` : `Precio: $${product.precio}`,
       `${product.descripcion?.substring(0, 500) || 'Producto destacado'}...`,
     ];
 
+    // Eliminar entradas vacías antes de componer el mensaje
+    const filteredShareLines = shareLines.filter(Boolean);
+
     if (referidoId) {
-      shareLines.push(`Codigo de referido: ${referidoId}`);
+      filteredShareLines.push(`Codigo de referido: ${referidoId}`);
     }
 
-    const composedText = shareLines.join('\n');
+    const composedText = filteredShareLines.join('\n');
 
     setOpenSnackbar(false);
 

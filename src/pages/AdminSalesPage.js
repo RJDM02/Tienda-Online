@@ -132,7 +132,8 @@ const AdminSalesPage = () => {
       form.setFieldsValue({
         domicilio_id: response.data.domicilio.id,
         mensajero_id: response.data.mensajero?.id,
-        horario_deseado_entrega: moment(response.data.horario_deseado_entrega),
+        // Parseamos conservando la zona para no perder la hora real que vino del backend
+        horario_deseado_entrega: moment.parseZone(response.data.horario_deseado_entrega),
         estado: response.data.estado || 'Pendiente',
         descuento: response.data.porcentaje_descuento || 0
       });
@@ -151,6 +152,11 @@ const AdminSalesPage = () => {
       const values = await form.validateFields();
       setEditLoading(true);
       const token = localStorage.getItem('authToken');
+      
+      // Garantizar que enviamos una ISO completa con zona horaria
+      const horarioISO = values.horario_deseado_entrega 
+        ? values.horario_deseado_entrega.toISOString() 
+        : null;
       
       // ✅ 1. PRIMERO verificar si el usuario seleccionó "procesado"
       const userSelectedProcesado = values.estado === 'procesado';
@@ -177,7 +183,7 @@ const AdminSalesPage = () => {
       // ✅ 3. LUEGO ejecutar el PATCH para actualizar la venta
       await axios.patch(`${API_URL}/editar_venta/${editingSaleId}/`, {
         ...values,
-        horario_deseado_entrega: values.horario_deseado_entrega.format('YYYY-MM-DDTHH:mm:ss')
+        horario_deseado_entrega: horarioISO
       }, {
         headers: {
           Authorization: `Bearer ${token}`

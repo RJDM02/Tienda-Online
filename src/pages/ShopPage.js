@@ -19,7 +19,7 @@ const ShopPage = () => {
   const [userData, setUserData] = useState(null);
   const filters = useRef({
     subcategories: [],
-    priceRange: [0, 2000],
+    priceRange: [0, 9999],
     searchTerm: '',
     categories: [],
     conditions: []
@@ -156,7 +156,7 @@ const ShopPage = () => {
     const subcategoriesParam = searchParams.get('subcategories') || '';
     const conditionsParam = searchParams.get('conditions') || '';
     const minPrice = parseInt(searchParams.get('min')) || 0;
-    const maxPrice = parseInt(searchParams.get('max')) || 2000;
+    const maxPrice = parseInt(searchParams.get('max')) || 9999;
     
     filters.current = {
       searchTerm: searchQuery,
@@ -214,7 +214,7 @@ const ShopPage = () => {
     if (filters.current.conditions.length > 0) {
       return <>Filtrando por <span className="text-[#FF6B00] font-bold">{filters.current.conditions.length}</span> condiciones</>;
     }
-    if (filters.current.priceRange[0] > 0 || filters.current.priceRange[1] < 2000) {
+    if (filters.current.priceRange[0] > 0 || filters.current.priceRange[1] < 9999) {
       return <>Filtrando por precio: <span className="text-[#FF6B00] font-bold">${filters.current.priceRange[0]}</span> - <span className="text-[#FF6B00] font-bold">${filters.current.priceRange[1]}</span></>;
     }
     return <>Mostrando <span className="text-[#FF6B00] font-bold">{allProducts.length}</span> productos</>;
@@ -225,7 +225,7 @@ const ShopPage = () => {
       subcategories: [], 
       categories: [],
       conditions: [],
-      priceRange: [0, 2000],
+      priceRange: [0, 9999],
       searchTerm: ''
     });
   };

@@ -519,17 +519,21 @@ const ProductView = ({ onShowLogin = () => {} }) => {
 
     const shareLines = [
       `${product.nombre}`,
+      product.condicion_detalle?.nombre ? `Condición: ${product.condicion_detalle.nombre}` : null,
       priceLine,
       descriptionLine,
     ];
 
-    const { garantia, regalo } = getWarrantyAndGiftInfo();
-    if (garantia) shareLines.push(`Garantia: ${garantia}`);
-    if (regalo) shareLines.push(`Regalo incluido: ${regalo}`);
-    if (referidoId) shareLines.push(`Codigo de referido: ${referidoId}`);
-    shareLines.push(shareUrl);
+    // Limpiar entradas vacías antes de continuar
+    const filteredShareLines = shareLines.filter(Boolean);
 
-    const composedText = shareLines.join('\n');
+    const { garantia, regalo } = getWarrantyAndGiftInfo();
+    if (garantia) filteredShareLines.push(`Garantia: ${garantia}`);
+    if (regalo) filteredShareLines.push(`Regalo incluido: ${regalo}`);
+    if (referidoId) filteredShareLines.push(`Codigo de referido: ${referidoId}`);
+    filteredShareLines.push(shareUrl);
+
+    const composedText = filteredShareLines.join('\n');
 
     try {
       const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);

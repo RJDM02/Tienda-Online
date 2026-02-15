@@ -23,6 +23,34 @@ import * as XLSX from 'xlsx';
 
 import { API_URL } from '../config/apiConfig';
 const AccountingManagerPage = () => {
+  // Helpers para agrupar visualmente las ventas pertenecientes al mismo pedido
+  const getDomicilioCosto = (item) => {
+    if (item.tipo === 'producto') {
+      return item.datos_producto?.domicilio_costo ?? 0;
+    }
+    return item.datos_variacion?.domicilio_costo ?? 0;
+  };
+
+  // Cada registro con domicilio_costo > 0 inicia un nuevo grupo; los siguientes con costo 0 pertenecen al mismo envío.
+  const addGroupLabels = (data) => {
+    const ordered = [...data].sort((a, b) => a.id - b.id);
+    let currentGroup = 0;
+    const map = new Map();
+
+    ordered.forEach((item) => {
+      const domicilioCosto = getDomicilioCosto(item);
+      if (currentGroup === 0 || domicilioCosto > 0) {
+        currentGroup += 1;
+      }
+      map.set(item.id, `Pedido ${currentGroup}`);
+    });
+
+    return data.map((item) => ({
+      ...item,
+      groupLabel: map.get(item.id) || 'Pedido'
+    }));
+  };
+
   const [accountingData, setAccountingData] = useState([]);
   const [filteredData, setFilteredData] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -52,13 +80,14 @@ const AccountingManagerPage = () => {
       try {
         const token = localStorage.getItem('authToken');
         const response = await axios.get(
-          `${API_URL}/listar_contabilidad_superadministrador/`,
+          `${API_URL}/listar_contabilidad_superadministrador/?agrupado=1`,
           { headers: { Authorization: `Bearer ${token}` } }
         );
         
-        setAccountingData(response.data);
-        setFilteredData(response.data);
-        calculateTotals(response.data);
+        const annotated = addGroupLabels(response.data);
+        setAccountingData(annotated);
+        setFilteredData(annotated);
+        calculateTotals(annotated);
         setLoading(false);
       } catch (err) {
         setError(err.message);
@@ -137,7 +166,8 @@ const AccountingManagerPage = () => {
     
     // Aplicar ordenamiento después de filtrar
     const sortedData = sortData(filtered, sortConfig);
-    setFilteredData(sortedData);
+    const annotated = addGroupLabels(sortedData);
+    setFilteredData(annotated);
     calculateTotals(sortedData);
   }, [accountingData, monthFilter, productFilter, dateRangeFilter, typeFilter, sortConfig]);
 
@@ -561,6 +591,9 @@ const AccountingManagerPage = () => {
                   <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     ID
                   </th>
+                  <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Pedido
+                  </th>
                   <th 
                     className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100"
                     onClick={() => requestSort('fecha')}
@@ -621,6 +654,11 @@ const AccountingManagerPage = () => {
                         #{item.id}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                        <span className="inline-flex px-3 py-1 rounded-full text-xs font-semibold bg-amber-100 text-amber-800">
+                          {item.groupLabel || 'Pedido'}
+                        </span>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                         {formatDate(item.fecha)}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
@@ -672,11 +710,15 @@ const AccountingManagerPage = () => {
                         {(item.tipo === 'producto' 
                           ? item.datos_producto?.precio_post_descuento >= 200 
                           : item.datos_variacion?.precio_post_descuento >= 200) ?
-                          formatCurrency(
-                            item.tipo === 'producto' 
+                          (() => {
+                            const domicilio = item.tipo === 'producto' 
                               ? item.datos_producto?.domicilio_costo || 0
-                              : item.datos_variacion?.domicilio_costo || 0
-                          ) :
+                              : item.datos_variacion?.domicilio_costo || 0;
+                            if (domicilio === 0) {
+                              return <span className="text-gray-400">—</span>;
+                            }
+                            return formatCurrency(domicilio);
+                          })() :
                           <span className="text-gray-400">-</span>
                         }
                       </td>

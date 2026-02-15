@@ -85,13 +85,13 @@ const Dashbar = ({ onFilterChange, userData, onEditProfile, selectedCategories =
   const [error, setError] = useState(null);
   const [expandedCategories, setExpandedCategories] = useState({});
   const [selectedSubcategories, setSelectedSubcategories] = useState([]);
-  const [localPriceRange, setLocalPriceRange] = useState([0, 2000]);
+  const [localPriceRange, setLocalPriceRange] = useState([0, 9999]);
   const [isCollapsed, setIsCollapsed] = useState(true);
   const [expandedSection, setExpandedSection] = useState(['price', 'categories', 'condition']);
 
   // Sincronizar con los valores iniciales de las props
   useEffect(() => {
-    setLocalPriceRange(priceRange || [0, 2000]);
+    setLocalPriceRange(priceRange || [0, 9999]);
   }, [priceRange]);
 
   useEffect(() => {
@@ -254,8 +254,8 @@ const Dashbar = ({ onFilterChange, userData, onEditProfile, selectedCategories =
   };
 
   const clearPriceFilter = () => {
-    setLocalPriceRange([0, 2000]);
-    onFilterChange({ priceRange: [0, 2000] });
+    setLocalPriceRange([0, 9999]);
+    onFilterChange({ priceRange: [0, 9999] });
   };
 
   if (error) {
@@ -412,7 +412,7 @@ const Dashbar = ({ onFilterChange, userData, onEditProfile, selectedCategories =
               {!isCollapsed && (
                 <>
                   <span className="ml-2 text-white text-sm">Precios</span>
-                  {(localPriceRange[0] > 0 || localPriceRange[1] < 2000) && (
+                  {(localPriceRange[0] > 0 || localPriceRange[1] < 9999) && (
                     <span className="ml-2 bg-orange-500 text-white text-xs px-2 py-0.5 rounded-full">
                       Filtrado
                     </span>
@@ -433,7 +433,7 @@ const Dashbar = ({ onFilterChange, userData, onEditProfile, selectedCategories =
                 onChangeCommitted={handlePriceChangeCommitted}
                 valueLabelDisplay="auto"
                 min={0}
-                max={2000}
+                max={9999}
                 step={10}
                 aria-labelledby="range-slider"
                 sx={{
@@ -467,7 +467,7 @@ const Dashbar = ({ onFilterChange, userData, onEditProfile, selectedCategories =
                   ${localPriceRange[1]}
                 </span>
               </div>
-              {(localPriceRange[0] > 0 || localPriceRange[1] < 2000) && (
+              {(localPriceRange[0] > 0 || localPriceRange[1] < 9999) && (
                 <button
                   onClick={clearPriceFilter}
                   className="mt-2 w-full text-xs text-orange-500 hover:text-orange-400 flex items-center justify-center py-1 bg-gray-800 rounded"

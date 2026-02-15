@@ -162,29 +162,69 @@ const AccountingManagerPage = () => {
     setConfirmModalVisible(true);
   };
 
+  const handleDesactivarTodas = () => {
+    setContabilidadToDeactivate('all');
+    setConfirmModalVisible(true);
+  };
+
   const confirmDeactivate = async () => {
     setProcessing(true);
     try {
       const token = localStorage.getItem('authToken');
-      await axios.delete(`${API_URL}/desactivar_contabilidad/${contabilidadToDeactivate}/`, {
-        headers: {
-          'Authorization': `Bearer ${token}`
+
+      if (contabilidadToDeactivate === 'all') {
+        const activas = (contabilidadData?.ventas_asociadas || []).filter(
+          (venta) => venta.estado_contabilidad
+        );
+
+        if (activas.length === 0) {
+          message.info('No hay contabilidades activas para desactivar');
+          return;
         }
-      });
-      
-      const updatedVentas = contabilidadData.ventas_asociadas.filter(
-        venta => venta.contabilidad_id !== contabilidadToDeactivate
-      );
-      
-      setContabilidadData({
-        ...contabilidadData,
-        ventas_asociadas: updatedVentas,
-        ganancia_total_pendiente: updatedVentas.reduce(
-          (total, venta) => total + venta.ganancia_cobrar, 0
-        )
-      });
-      
-      message.success('Contabilidad desactivada correctamente');
+
+        await Promise.all(
+          activas.map((venta) =>
+            axios.delete(`${API_URL}/desactivar_contabilidad/${venta.contabilidad_id}/`, {
+              headers: {
+                'Authorization': `Bearer ${token}`
+              }
+            })
+          )
+        );
+
+        const updatedVentas = contabilidadData.ventas_asociadas.filter(
+          (venta) => !activas.some((activa) => activa.contabilidad_id === venta.contabilidad_id)
+        );
+
+        setContabilidadData({
+          ...contabilidadData,
+          ventas_asociadas: updatedVentas,
+          ganancia_total_pendiente: updatedVentas.reduce(
+            (total, venta) => total + venta.ganancia_cobrar, 0
+          )
+        });
+        message.success('Todas las contabilidades activas fueron desactivadas');
+      } else {
+        await axios.delete(`${API_URL}/desactivar_contabilidad/${contabilidadToDeactivate}/`, {
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
+        });
+        
+        const updatedVentas = contabilidadData.ventas_asociadas.filter(
+          venta => venta.contabilidad_id !== contabilidadToDeactivate
+        );
+        
+        setContabilidadData({
+          ...contabilidadData,
+          ventas_asociadas: updatedVentas,
+          ganancia_total_pendiente: updatedVentas.reduce(
+            (total, venta) => total + venta.ganancia_cobrar, 0
+          )
+        });
+        
+        message.success('Contabilidad desactivada correctamente');
+      }
     } catch (error) {
       console.error('Error al desactivar la contabilidad:', error);
       message.error('Error al desactivar la contabilidad');
@@ -489,6 +529,22 @@ const AccountingManagerPage = () => {
                 <Text strong>Detalle de Ventas Asociadas</Text>
               </Divider>
 
+              {contabilidadData?.ventas_asociadas?.length > 0 && (
+                <div className="flex justify-end mb-3">
+                  <Button
+                    type="primary"
+                    danger
+                    icon={<DeleteOutlined />}
+                    onClick={handleDesactivarTodas}
+                    loading={processing}
+                    disabled={!contabilidadData.ventas_asociadas.some((venta) => venta.estado_contabilidad)}
+                    className="rounded-xl"
+                  >
+                    Desactivar todas
+                  </Button>
+                </div>
+              )}
+
               <Table
                 columns={contabilidadColumns}
                 dataSource={contabilidadData.ventas_asociadas}
@@ -524,18 +580,22 @@ const AccountingManagerPage = () => {
           )}
         </Modal>
 
-        {/* Modal de confirmación para desactivar */}
+        {/* Modal de confirmacion para desactivar */}
         <Modal
-          title="Confirmar Desactivación"
+          title={contabilidadToDeactivate === 'all' ? 'Confirmar desactivacion masiva' : 'Confirmar desactivacion'}
           open={confirmModalVisible}
           onOk={confirmDeactivate}
           onCancel={cancelDeactivate}
-          okText="Sí, desactivar"
+          okText="Si, desactivar"
           cancelText="Cancelar"
           confirmLoading={processing}
           okButtonProps={{ danger: true }}
         >
-          <p>¿Está seguro que desea desactivar esta contabilidad? Esta acción no se puede deshacer.</p>
+          <p>
+            {contabilidadToDeactivate === 'all'
+              ? 'Esta seguro que desea desactivar todas las contabilidades activas? Esta accion no se puede deshacer.'
+              : 'Esta seguro que desea desactivar esta contabilidad? Esta accion no se puede deshacer.'}
+          </p>
         </Modal>
       </div>
     </div>
@@ -543,3 +603,5 @@ const AccountingManagerPage = () => {
 };
 
 export default AccountingManagerPage;
+
+

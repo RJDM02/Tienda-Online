@@ -27,14 +27,55 @@ import {
   UserOutlined
 } from '@ant-design/icons';
 import axios from 'axios';
-import moment from 'moment';
-
+import dayjs from 'dayjs';
+import isSameOrAfter from 'dayjs/plugin/isSameOrAfter';
+import isSameOrBefore from 'dayjs/plugin/isSameOrBefore';
 import { API_URL } from '../config/apiConfig';
+
+dayjs.extend(isSameOrAfter);
+dayjs.extend(isSameOrBefore);
+
 const { Title, Text } = Typography;
 const { Option } = Select;
 const { RangePicker } = DatePicker;
 
 const AccountingAdminPage = () => {
+  // Helpers para agrupar pedidos visualmente usando la lógica de domicilio
+  const getDomicilioCosto = (item) => {
+    if (item.tipo === 'producto') {
+      return item.datos_producto?.domicilio_costo ?? 0;
+    }
+    return item.datos_variacion?.domicilio_costo ?? 0;
+  };
+
+  // Genera etiquetas de grupo para el conjunto actual:
+  // cada registro con domicilio_costo > 0 inicia un nuevo pedido; los siguientes con costo 0 pertenecen al mismo.
+  const addGroupLabels = (data) => {
+    const ordered = [...data].sort((a, b) => a.id - b.id);
+    let currentGroup = 0;
+    const map = new Map();
+
+    ordered.forEach((item) => {
+      const domicilioCosto = getDomicilioCosto(item);
+      if (currentGroup === 0 || domicilioCosto > 0) {
+        currentGroup += 1;
+      }
+      map.set(item.id, `Pedido ${currentGroup}`);
+    });
+
+    return data.map((item) => ({
+      ...item,
+      groupLabel: map.get(item.id) || 'Pedido'
+    }));
+  };
+
+  // Normaliza fechas a objetos dayjs; devuelve null si no es valida
+  const parseFecha = (fecha) => {
+    if (!fecha) return null;
+    const parsed = dayjs(fecha);
+    return parsed.isValid() ? parsed : null;
+  };
+
   const [accountingData, setAccountingData] = useState([]);
   const [filteredData, setFilteredData] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -58,7 +99,7 @@ const AccountingAdminPage = () => {
       try {
         const token = localStorage.getItem('authToken');
         const response = await axios.get(
-          `${API_URL}/listar_contabilidad_superadministrador/`,
+          `${API_URL}/listar_contabilidad_superadministrador/?agrupado=1`,
           {
             headers: {
               Authorization: `Bearer ${token}`
@@ -70,9 +111,10 @@ const AccountingAdminPage = () => {
           return new Date(b.fecha) - new Date(a.fecha);
         });
 
-        setAccountingData(response.data);
-        setFilteredData(response.data);
-        calculateTotals(response.data);
+        const annotated = addGroupLabels(sortedData);
+        setAccountingData(annotated);
+        setFilteredData(annotated);
+        calculateTotals(annotated);
         setLoading(false);
       } catch (err) {
         setError(err.message);
@@ -90,7 +132,8 @@ const AccountingAdminPage = () => {
     // Apply month filter
     if (monthFilter) {
       filtered = filtered.filter(item => {
-        const itemDate = moment(item.fecha);
+        const itemDate = parseFecha(item.fecha);
+        if (!itemDate) return false;
         return itemDate.month() === monthFilter.month() && 
                itemDate.year() === monthFilter.year();
       });
@@ -98,9 +141,14 @@ const AccountingAdminPage = () => {
     
     // Apply date range filter
     if (dateRangeFilter && dateRangeFilter.length === 2) {
+      const [start, end] = dateRangeFilter;
+      console.log('Filtro de rango activado:');
+      console.log('Start:', dateRangeFilter[0].format('YYYY-MM-DD HH:mm:ss'));
+      console.log('End:', dateRangeFilter[1].format('YYYY-MM-DD HH:mm:ss'));
       filtered = filtered.filter(item => {
-        const itemDate = moment(item.fecha);
-        return itemDate.isBetween(dateRangeFilter[0], dateRangeFilter[1], null, '[]');
+        const itemDate = parseFecha(item.fecha);
+        if (!itemDate) return false;
+        return itemDate.isSameOrAfter(start) && itemDate.isSameOrBefore(end);
       });
     }
     
@@ -115,13 +163,14 @@ const AccountingAdminPage = () => {
         }
       });
     }
-    
+    console.log('Registros después del filtro:', filtered.length);
      const sortedFilteredData = filtered.sort((a, b) => {
-      return new Date(b.fecha) - new Date(a.fecha);
+      return new Date(b.fecha) - new Date(a.fecha);    
     });
 
-    setFilteredData(filtered);
-    calculateTotals(filtered);
+    const annotated = addGroupLabels(sortedFilteredData);
+    setFilteredData(annotated);
+    calculateTotals(sortedFilteredData);
   }, [accountingData, monthFilter, productFilter, dateRangeFilter]);
 
   const calculateTotals = (data) => {
@@ -181,7 +230,16 @@ const AccountingAdminPage = () => {
   };
 
   const handleDateRangeChange = (dates) => {
-    setDateRangeFilter(dates);
+    if (dates && dates.length === 2) {
+      const [start, end] = dates;
+      // Normalizar a inicio/fin de día para incluir ambas fechas completas
+      setDateRangeFilter([
+        dayjs(start).startOf('day'),
+        dayjs(end).endOf('day'),
+      ]);
+    } else {
+      setDateRangeFilter(null);
+    }
     setMonthFilter(null); // Clear month filter when date range is selected
   };
 
@@ -195,14 +253,21 @@ const AccountingAdminPage = () => {
     setProductFilter('');
   };
 
-  const columns = [
-    {
-      title: 'ID',
-      dataIndex: 'id',
-      key: 'id',
-      width: 80,
-      render: (text) => <Text strong>#{text}</Text>
-    },
+    const columns = [
+      {
+        title: 'ID',
+        dataIndex: 'id',
+        key: 'id',
+        width: 80,
+        render: (text) => <Text strong>#{text}</Text>
+      },
+      {
+        title: 'Pedido',
+        dataIndex: 'groupLabel',
+        key: 'groupLabel',
+        width: 100,
+        render: (text) => <Tag color="gold">{text}</Tag>
+      },
     {
       title: 'Fecha',
       dataIndex: 'fecha',
@@ -214,7 +279,7 @@ const AccountingAdminPage = () => {
           <Text>{text}</Text>
         </div>
       ),
-      sorter: (a, b) => moment(a.fecha).unix() - moment(b.fecha).unix()
+      sorter: (a, b) => dayjs(a.fecha).unix() - dayjs(b.fecha).unix()
     },
     {
       title: 'Tipo',
@@ -354,12 +419,15 @@ const AccountingAdminPage = () => {
         const domicilio = record.tipo === 'producto' 
           ? record.datos_producto?.domicilio_costo 
           : record.datos_variacion?.domicilio_costo;
+        if (domicilio === 0) {
+          return <Text type="secondary">—</Text>;
+        }
         return domicilio ? (
-          <div className="flex items-center">
-            <TruckOutlined className="mr-1 text-orange-500" />
-            <Text className="text-orange-600 font-semibold">
-              ${domicilio.toFixed(2)}
-            </Text>
+            <div className="flex items-center">
+              <TruckOutlined className="mr-1 text-orange-500" />
+              <Text className="text-orange-600 font-semibold">
+                ${domicilio.toFixed(2)}
+              </Text>
           </div>
         ) : (
           <Text type="secondary">-</Text>
@@ -434,6 +502,19 @@ const AccountingAdminPage = () => {
                   onChange={handleDateRangeChange} 
                   value={dateRangeFilter}
                   className="w-full"
+                  allowClear={true}
+                  format="DD/MM/YYYY"
+                  disabledDate={(current) => {
+                    // Permitir todas las fechas (no deshabilitar ninguna)
+                    // Si quieres limitar a fechas pasadas, usa:
+                    // return current && current > dayjs().endOf('day');
+                    return false;
+                  }}
+                  // Forzar modo de entrada manual si es necesario
+                  inputReadOnly={false}
+                  // Deshabilitar cualquier valor por defecto
+                  defaultValue={null}
+                  placeholder={['Fecha inicio', 'Fecha fin']}
                 />
               </div>
             </Col>
@@ -598,41 +679,35 @@ const AccountingAdminPage = () => {
             summary={() => (
               <Table.Summary fixed>
                 <Table.Summary.Row className="bg-gradient-to-r from-gray-50 to-gray-100 font-bold">
-                  <Table.Summary.Cell index={0} colSpan={3}>
+                  <Table.Summary.Cell index={0} colSpan={6}>
                     <Text strong className="text-gray-800">TOTALES GENERALES</Text>
                   </Table.Summary.Cell>
                   <Table.Summary.Cell index={1}>
-                    <Text type="secondary">-</Text>
-                  </Table.Summary.Cell>
-                  <Table.Summary.Cell index={2}>
-                    <Text type="secondary">-</Text>
-                  </Table.Summary.Cell>
-                  <Table.Summary.Cell index={3}>
                     <Text className="text-red-600 font-bold">
                       ${totals.costo.toFixed(2)}
                     </Text>
                   </Table.Summary.Cell>
-                  <Table.Summary.Cell index={4}>
+                  <Table.Summary.Cell index={2}>
                     <Text className="text-blue-600 font-bold">
                       ${totals.precio_post_descuento.toFixed(2)}
                     </Text>
                   </Table.Summary.Cell>
-                  <Table.Summary.Cell index={5}>
+                  <Table.Summary.Cell index={3}>
                     <Text className="text-purple-600 font-bold">
                       ${totals.comision.toFixed(2)}
                     </Text>
                   </Table.Summary.Cell>
-                  <Table.Summary.Cell index={6}>
+                  <Table.Summary.Cell index={4}>
                     <Text className="text-cyan-600 font-bold">
                       ${totals.ganancia_cliente.toFixed(2)}
                     </Text>
                   </Table.Summary.Cell>
-                  <Table.Summary.Cell index={7}>
+                  <Table.Summary.Cell index={5}>
                     <Text className="text-orange-600 font-bold">
                       ${totals.domicilio_costo.toFixed(2)}
                     </Text>
                   </Table.Summary.Cell>
-                  <Table.Summary.Cell index={8}>
+                  <Table.Summary.Cell index={6}>
                     <Text className="text-green-600 font-bold">
                       ${totals.ganancia.toFixed(2)}
                     </Text>
