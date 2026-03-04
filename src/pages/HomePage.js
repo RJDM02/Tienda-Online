@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { ChevronLeft, ChevronRight, Mail, Phone, MessageCircle } from 'lucide-react';
 import FloatingWhatsAppButton from '../components/FloatingWhatsAppButton';
+import ChatWidget from '../components/ChatWidget';
 
 import { API_BASE_URL, API_URL } from '../config/apiConfig';
 const HomePage = () => {
@@ -345,6 +346,7 @@ const HomePage = () => {
           </div>
         </div>
       </footer>  
+      <ChatWidget />
       <FloatingWhatsAppButton />
     </div>
   );

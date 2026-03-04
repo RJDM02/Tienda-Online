@@ -4,6 +4,7 @@ import Dashbar from '../components/Dashbar';
 import Navbar from '../components/Navbar';
 import CardItem from '../components/CardItem';
 import FloatingWhatsAppButton from '../components/FloatingWhatsAppButton';
+import ChatWidget from '../components/ChatWidget';
 import { jwtDecode } from 'jwt-decode';
 
 import { API_URL } from '../config/apiConfig';
@@ -330,6 +331,7 @@ const ShopPage = () => {
           </div>
         </div>
       </div>
+      <ChatWidget />
       <FloatingWhatsAppButton />
     </div>
   );

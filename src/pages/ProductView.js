@@ -29,6 +29,7 @@ import { jwtDecode } from 'jwt-decode';
 import Navbar from '../components/Navbar';
 import CardItem from '../components/CardItem';
 import FloatingWhatsAppButton from '../components/FloatingWhatsAppButton';
+import ChatWidget from '../components/ChatWidget';
 import { useCart } from '../context/CartContext';
 
 import { API_URL, API_BASE_URL } from '../config/apiConfig';
@@ -1117,6 +1118,7 @@ const ProductView = ({ onShowLogin = () => {} }) => {
           </div>
         </Box>
       </Modal>
+      <ChatWidget />
       <FloatingWhatsAppButton />
     </div>
   );
