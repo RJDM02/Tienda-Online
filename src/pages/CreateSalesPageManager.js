@@ -101,7 +101,7 @@ const CreateSalesPageManager = () => {
       navigate('/login');
     }
 
-    // Inicializar precios con los precios originales de los productos
+    // Inicializar precios con el precio final que llega desde el carrito
     const initialPrices = {};
     cartItems.forEach(item => {
       initialPrices[item.id] = item.price;
@@ -331,7 +331,7 @@ const CreateSalesPageManager = () => {
                           {item.productData?.nombre || 'Producto'}
                         </Typography>
                         <Typography variant="body2" color="text.secondary">
-                          Precio original: ${item.price}
+                          Precio final sugerido: ${item.price}
                           {item.color && ` | Color: ${item.color}`}
                           {item.model && ` | Modelo: ${item.model}`}
                         </Typography>

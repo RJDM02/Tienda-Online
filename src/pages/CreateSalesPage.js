@@ -73,6 +73,7 @@ const CreateSalesPage = () => {
     clientPhone: '',
     managerPrice: '',
     puntos: 0,
+    cupon: '',
     referidoId: referralCodeFromCart // ← USAR EL CÓDIGO DEL CARRITO
   });
   
@@ -253,6 +254,9 @@ const CreateSalesPage = () => {
         }
 
         salesData.puntos = index === 0 ? puntosRedimidos : 0;
+        if (index === 0 && formData.cupon && formData.cupon.trim() !== '') {
+          salesData.cupon = formData.cupon.trim();
+        }
 
         if (item.isVariation) {
           salesData.variacion_id = item.variationId;
@@ -274,7 +278,8 @@ const CreateSalesPage = () => {
       setAvailablePoints(remainingPoints);
       setFormData(prev => ({
         ...prev,
-        puntos: 0
+        puntos: 0,
+        cupon: ''
       }));
       localStorage.removeItem('referralCode'); // Limpiar el código después de usarlo
       setSuccess(true);
@@ -543,6 +548,32 @@ const CreateSalesPage = () => {
                       : availablePoints < POINTS_THRESHOLD
                         ? `Necesitas al menos ${POINTS_THRESHOLD.toLocaleString('es-ES')} puntos para canjear.`
                         : `Puedes usar hasta ${availablePoints.toLocaleString('es-ES')} puntos en esta compra.`
+                  }
+                />
+                <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mt: 1 }}>
+                  Nota: 100 puntos equivalen a 1 USD de descuento (convertido segun la moneda seleccionada). Minimo para canjear: {POINTS_THRESHOLD.toLocaleString('es-ES')} puntos.
+                </Typography>
+              </Box>
+
+              <Box sx={{ mb: 3 }}>
+                <Typography variant="subtitle1" sx={{ fontWeight: 600, mb: 1 }}>
+                  Cupón
+                </Typography>
+                <TextField
+                  fullWidth
+                  label="Código de cupón"
+                  name="cupon"
+                  value={formData.cupon}
+                  onChange={handleChange}
+                  placeholder="Ej: CUPON2026"
+                  disabled={!currentUser || isManager}
+                  sx={styles.textField}
+                  helperText={
+                    !currentUser
+                      ? 'Inicia sesion para usar tus cupones.'
+                      : isManager
+                        ? 'Los cupones se aplican solo en compras de cliente.'
+                        : 'Opcional. Si tienes un cupon, escríbelo aquí.'
                   }
                 />
               </Box>

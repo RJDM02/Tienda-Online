@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import { Table, Spin, Alert, Tag, Button, Descriptions, Modal, Input } from 'antd';
+import React, { useState, useEffect, useMemo } from 'react';
+import { Table, Spin, Alert, Tag, Button, Descriptions, Modal, Input, message, DatePicker, Grid } from 'antd';
 import { 
   DollarOutlined, 
   EuroOutlined, 
@@ -8,12 +8,14 @@ import {
   GiftOutlined,
   SafetyCertificateOutlined,
   EditOutlined,
-  UserOutlined,
-  PhoneOutlined
+  RollbackOutlined
 } from '@ant-design/icons';
+import dayjs from 'dayjs';
 
 import { API_URL } from '../config/apiConfig';
 const RecordSalesPage = () => {
+  const screens = Grid.useBreakpoint();
+  const isMobile = !screens.md;
   const [sales, setSales] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -24,6 +26,17 @@ const RecordSalesPage = () => {
   const [newCosto, setNewCosto] = useState('');
   const [editLoading, setEditLoading] = useState(false);
   const [editError, setEditError] = useState(null);
+  const [returnModalVisible, setReturnModalVisible] = useState(false);
+  const [currentReturnSale, setCurrentReturnSale] = useState(null);
+  const [returnReason, setReturnReason] = useState('');
+  const [returnLoading, setReturnLoading] = useState(false);
+  const [returnError, setReturnError] = useState(null);
+  const [filters, setFilters] = useState({
+    cliente: '',
+    telefono: '',
+    producto: '',
+    fecha: null
+  });
 
   useEffect(() => {
     const fetchSalesData = async () => {
@@ -47,7 +60,7 @@ const RecordSalesPage = () => {
           return new Date(b.fecha) - new Date(a.fecha);
         });
         
-        setSales(data);
+        setSales(sortedSales);
       } catch (err) {
         setError(err.message);
       } finally {
@@ -113,6 +126,62 @@ const RecordSalesPage = () => {
     }
   };
 
+  const openReturnModal = (record) => {
+    setCurrentReturnSale(record);
+    setReturnReason('');
+    setReturnError(null);
+    setReturnModalVisible(true);
+  };
+
+  const closeReturnModal = () => {
+    setReturnModalVisible(false);
+    setCurrentReturnSale(null);
+    setReturnReason('');
+    setReturnError(null);
+  };
+
+  const handleConfirmReturn = async () => {
+    const cleanReason = returnReason.trim();
+    if (!cleanReason) {
+      setReturnError('Debe escribir el motivo de la devolucion');
+      return;
+    }
+
+    if (!currentReturnSale) {
+      setReturnError('No se encontro la venta a devolver');
+      return;
+    }
+
+    try {
+      setReturnLoading(true);
+      const token = localStorage.getItem('authToken');
+
+      const response = await fetch(`${API_URL}/gestionar_devolucion/${currentReturnSale.id}/`, {
+        method: 'PATCH',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          motivo: cleanReason
+        })
+      });
+
+      const payload = await response.json().catch(() => ({}));
+      if (!response.ok) {
+        throw new Error(payload.error || payload.message || 'Error al gestionar la devolucion');
+      }
+
+      setSales((prevSales) => prevSales.filter((sale) => sale.id !== currentReturnSale.id));
+      message.success('Devolucion gestionada correctamente');
+      closeReturnModal();
+    } catch (err) {
+      setReturnError(err.message);
+    } finally {
+      setReturnLoading(false);
+    }
+  };
+
   const getCurrencyIcon = (monedaNombre) => {
     switch (monedaNombre) {
       case 'Dolar':
@@ -153,6 +222,58 @@ const RecordSalesPage = () => {
     setDetailModalVisible(false);
     setSelectedSale(null);
   };
+
+  const handleFilterChange = (field, value) => {
+    setFilters((prev) => ({ ...prev, [field]: value }));
+  };
+
+  const clearFilters = () => {
+    setFilters({
+      cliente: '',
+      telefono: '',
+      producto: '',
+      fecha: null
+    });
+  };
+
+  const normalizedText = (value) => (value || '').toString().toLowerCase().trim();
+
+  const filteredSales = useMemo(() => {
+    const clienteFilter = normalizedText(filters.cliente);
+    const telefonoFilter = normalizedText(filters.telefono);
+    const productoFilter = normalizedText(filters.producto);
+
+    return sales.filter((sale) => {
+      const clienteValue = normalizedText(sale.cliente?.username || sale.nombre_cliente);
+      const telefonoValue = normalizedText(sale.cliente?.telefono || sale.telefono_cliente);
+      const productoValue = normalizedText([
+        sale.producto?.nombre,
+        sale.variacion?.item_info?.nombre,
+        sale.variacion?.modelo
+      ].filter(Boolean).join(' '));
+
+      if (clienteFilter && !clienteValue.includes(clienteFilter)) {
+        return false;
+      }
+
+      if (telefonoFilter && !telefonoValue.includes(telefonoFilter)) {
+        return false;
+      }
+
+      if (productoFilter && !productoValue.includes(productoFilter)) {
+        return false;
+      }
+
+      if (filters.fecha) {
+        const saleDate = dayjs(sale.fecha);
+        if (!saleDate.isValid() || !saleDate.isSame(filters.fecha, 'day')) {
+          return false;
+        }
+      }
+
+      return true;
+    });
+  }, [sales, filters]);
 
   const columns = [
     {
@@ -281,22 +402,36 @@ const RecordSalesPage = () => {
       title: 'Acciones',
       key: 'actions',
       fixed: 'right',
-      width: 180,
+      width: isMobile ? 170 : 300,
       render: (_, record) => (
-        <div className="flex space-x-2">
+        <div className="flex gap-2">
           <Button 
             onClick={() => handleShowDetails(record)}
             icon={<InfoCircleOutlined />}
+            size={isMobile ? 'small' : 'middle'}
             className="bg-blue-600 hover:bg-blue-700 text-white border-none shadow-md hover:shadow-lg transition-all duration-300"
+            title="Detalles"
           >
-            Detalles
+            {!isMobile && 'Detalles'}
           </Button>
           <Button 
             onClick={() => handleEditCosto(record)}
             icon={<EditOutlined />}
+            size={isMobile ? 'small' : 'middle'}
             className="bg-green-600 hover:bg-green-700 text-white border-none shadow-md hover:shadow-lg transition-all duration-300"
+            title="Editar"
           >
-            Editar
+            {!isMobile && 'Editar'}
+          </Button>
+          <Button
+            onClick={() => openReturnModal(record)}
+            icon={<RollbackOutlined />}
+            size={isMobile ? 'small' : 'middle'}
+            disabled={record.estado !== 'procesado'}
+            className="bg-red-600 hover:bg-red-700 text-white border-none shadow-md hover:shadow-lg transition-all duration-300"
+            title="Devolucion"
+          >
+            {!isMobile && 'Devolucion'}
           </Button>
         </div>
       ),
@@ -336,17 +471,53 @@ const RecordSalesPage = () => {
           <p className="text-gray-600">Registro completo de todas las ventas realizadas</p>
         </div>
 
+        {/* Filtros */}
+        <div className="bg-white rounded-2xl shadow-lg p-6 mb-6">
+          <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
+            <Input
+              placeholder="Filtrar por cliente"
+              value={filters.cliente}
+              onChange={(e) => handleFilterChange('cliente', e.target.value)}
+              allowClear
+            />
+            <Input
+              placeholder="Filtrar por telefono"
+              value={filters.telefono}
+              onChange={(e) => handleFilterChange('telefono', e.target.value)}
+              allowClear
+            />
+            <Input
+              placeholder="Filtrar por producto"
+              value={filters.producto}
+              onChange={(e) => handleFilterChange('producto', e.target.value)}
+              allowClear
+            />
+            <DatePicker
+              className="w-full"
+              value={filters.fecha}
+              onChange={(date) => handleFilterChange('fecha', date)}
+              format="DD/MM/YYYY"
+              placeholder="Filtrar por fecha"
+              allowClear
+            />
+            <Button onClick={clearFilters}>
+              Limpiar filtros
+            </Button>
+          </div>
+        </div>
+
         {/* Tabla */}
         <div className="bg-white rounded-2xl shadow-lg overflow-hidden">
           <Table 
             columns={columns} 
-            dataSource={sales} 
+            dataSource={filteredSales} 
             rowKey="id"
             bordered
             pagination={{ 
               pageSize: 10,
               className: 'px-6 py-4 bg-white rounded-b-2xl',
-              showSizeChanger: true
+              showSizeChanger: true,
+              showTotal: (total, range) => `${range[0]}-${range[1]} de ${total} registros`
             }}
             scroll={{ x: true }}
             className="rounded-2xl"
@@ -536,6 +707,55 @@ const RecordSalesPage = () => {
                 </Descriptions.Item>
               </Descriptions>
             </div>
+          </div>
+        </Modal>
+
+        <Modal
+          title={`Gestionar Devolucion - Venta #${currentReturnSale?.id || ''}`}
+          visible={returnModalVisible}
+          onCancel={closeReturnModal}
+          footer={[
+            <Button key="cancel-return" onClick={closeReturnModal}>
+              Cancelar
+            </Button>,
+            <Button
+              key="confirm-return"
+              type="primary"
+              danger
+              loading={returnLoading}
+              onClick={handleConfirmReturn}
+            >
+              Confirmar Devolucion
+            </Button>,
+          ]}
+        >
+          {returnError && (
+            <Alert
+              message="Error"
+              description={returnError}
+              type="error"
+              showIcon
+              className="mb-4 rounded-lg"
+            />
+          )}
+          <div className="space-y-3">
+            <div className="text-sm text-gray-700">
+              <strong>Producto:</strong>{' '}
+              {currentReturnSale?.producto?.nombre || currentReturnSale?.variacion?.item_info?.nombre || 'N/A'}
+            </div>
+            {currentReturnSale?.variacion?.modelo && (
+              <div className="text-sm text-gray-700">
+                <strong>Variacion:</strong> {currentReturnSale.variacion.modelo}
+              </div>
+            )}
+            <Input.TextArea
+              value={returnReason}
+              onChange={(e) => setReturnReason(e.target.value)}
+              placeholder="Escriba el motivo de la devolucion"
+              rows={4}
+              maxLength={500}
+              showCount
+            />
           </div>
         </Modal>
       </div>

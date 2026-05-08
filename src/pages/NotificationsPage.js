@@ -19,12 +19,13 @@ const NotificationsPage = () => {
   const isCourier = userData && (userData.rol === 'Mensajero');
   const isManager = userData && (userData.rol === 'Gestor de Venta');
   const isAdmin = userData && (userData.rol === 'Administrador');
+  const isRemesasAdmin = userData && (userData.rol === 'Administrador_Remesas');
   const isSuperAdmin = userData && (userData.rol === 'Super_Administrador');
 
   // Obtener el endpoint correcto según el rol
   const getEndpoint = () => {
     if (isSuperAdmin) return `${API_URL}/listar_notificaciones_super_administrador/`;
-    if (isAdmin) return `${API_URL}/listar_notificaciones_administrador/`;
+    if (isAdmin || isRemesasAdmin) return `${API_URL}/listar_notificaciones_administrador/`;
     if (isManager) return `${API_URL}/listar_notificaciones_gestor/`;
     if (isCourier) return `${API_URL}/listar_notificaciones_mensajero/`;
     return null;

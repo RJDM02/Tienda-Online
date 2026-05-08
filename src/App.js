@@ -39,11 +39,18 @@ import NotificationsPage from './pages/NotificationsPage';
 import StatisticsPage from './pages/StatisticsPage';
 import ProductInventoryAgingPage from './pages/ProductInventoryAgingPage';
 import AdminHomePage from './pages/AdminHomePage';
+import AdminReturnsPage from './pages/AdminReturnsPage';
 import AccountingAdminPageManager from './pages/AccountingAdminPageManager';
 import CreateSalesPageAdmin from './pages/CreateSalesPageAdmin';
 import CreateSalesPageManager from './pages/CreateSalesPageManager';
 import AccountingClientReferidosPage from './pages/AccountingClientReferidosPage';
 import InfoManagerPage from './pages/InfoManagerPage';
+import RemesaCreatePage from './pages/RemesaCreatePage';
+import RemesaHistoryPage from './pages/RemesaHistoryPage';
+import RemesaFundsPage from './pages/RemesaFundsPage';
+import RemesaManagePage from './pages/RemesaManagePage';
+import RemesaAccountingPage from './pages/RemesaAccountingPage';
+import RemesaClientCreatePage from './pages/RemesaClientCreatePage';
 import './App.css';
 
 function App() {
@@ -280,6 +287,14 @@ function App() {
               } 
             />
             <Route 
+              path="/admin-devoluciones" 
+              element={
+                <PrivateRoute allowedRoles={['Super_Administrador']}> 
+                  <AdminReturnsPage/>
+                </PrivateRoute>
+              } 
+            />
+            <Route 
               path="/record-ventas" 
               element={
                 <PrivateRoute allowedRoles={['Super_Administrador', 'Administrador']}> 
@@ -312,9 +327,9 @@ function App() {
               } 
             />
              <Route 
-              path="/notificaciones" 
+             path="/notificaciones" 
               element={
-                <PrivateRoute allowedRoles={['Super_Administrador', 'Administrador','Gestor de Venta','Mensajero']}> 
+                <PrivateRoute allowedRoles={['Super_Administrador', 'Administrador','Administrador_Remesas','Gestor de Venta','Mensajero']}> 
                   <NotificationsPage/>
                 </PrivateRoute>
               } 
@@ -350,6 +365,54 @@ function App() {
                   <CreateSalesPageManager/>
                 </PrivateRoute>
               } 
+            />
+            <Route
+              path="/remesa-crear"
+              element={
+                <PrivateRoute allowedRoles={['Super_Administrador', 'Administrador', 'Administrador_Remesas', 'Gestor de Venta']}>
+                  <RemesaCreatePage />
+                </PrivateRoute>
+              }
+            />
+            <Route
+              path="/remesa-gestionar"
+              element={
+                <PrivateRoute allowedRoles={['Super_Administrador', 'Administrador_Remesas']}>
+                  <RemesaManagePage />
+                </PrivateRoute>
+              }
+            />
+            <Route
+              path="/remesa-historial"
+              element={
+                <PrivateRoute allowedRoles={['Super_Administrador', 'Administrador_Remesas', 'Gestor de Venta', 'Cliente_Remesas']}>
+                  <RemesaHistoryPage />
+                </PrivateRoute>
+              }
+            />
+            <Route
+              path="/remesa-fondos"
+              element={
+                <PrivateRoute allowedRoles={['Super_Administrador', 'Administrador']}>
+                  <RemesaFundsPage />
+                </PrivateRoute>
+              }
+            />
+            <Route
+              path="/remesa-crear-cliente"
+              element={
+                <PrivateRoute allowedRoles={['Super_Administrador', 'Administrador_Remesas', 'Gestor de Venta']}>
+                  <RemesaClientCreatePage />
+                </PrivateRoute>
+              }
+            />
+            <Route
+              path="/remesa-contabilidad"
+              element={
+                <PrivateRoute allowedRoles={['Super_Administrador', 'Administrador', 'Administrador_Remesas', 'Gestor de Venta']}>
+                  <RemesaAccountingPage />
+                </PrivateRoute>
+              }
             />
           </Routes>
           

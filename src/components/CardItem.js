@@ -311,7 +311,10 @@ const CardItem = ({ product, searchTerm = '', userRole }) => {
       <div className="p-3 md:p-4 lg:p-6 flex-grow flex flex-col">
         <Link
           to={`/product/${product.id}`}
-          className="text-sm md:text-base lg:text-lg font-bold text-gray-900 mb-2 line-clamp-2 hover:text-[#FF6B00] transition-colors duration-200 cursor-pointer"
+          className="text-[0.78rem] sm:text-[0.82rem] md:text-sm lg:text-base font-semibold text-gray-900 mb-1 leading-[1.15] tracking-[-0.01em] break-words line-clamp-3 hover:text-[#FF6B00] transition-colors duration-200 cursor-pointer"
+          style={{
+            fontFamily: "'Roboto Condensed', 'Arial Narrow', 'Liberation Sans Narrow', 'Helvetica Neue', Arial, sans-serif",
+          }}
         >
           {highlightSearchTerm(product.nombre)}
         </Link>

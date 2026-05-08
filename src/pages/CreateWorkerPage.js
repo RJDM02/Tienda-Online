@@ -2,8 +2,32 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 
 import { API_URL } from '../config/apiConfig';
+
+const getApiErrorMessage = (errorData) => {
+  if (!errorData || typeof errorData !== 'object') {
+    return 'Error al crear trabajador';
+  }
+
+  if (typeof errorData.detail === 'string') return errorData.detail;
+  if (typeof errorData.message === 'string') return errorData.message;
+  if (typeof errorData.error === 'string') return errorData.error;
+
+  const validationErrors = errorData.error;
+  if (validationErrors && typeof validationErrors === 'object') {
+    const fieldMessages = Object.values(validationErrors)
+      .flatMap((value) => (Array.isArray(value) ? value : [value]))
+      .filter((value) => typeof value === 'string');
+
+    if (fieldMessages.length > 0) return fieldMessages[0];
+  }
+
+  return 'Error al crear trabajador';
+};
+
 const CreateWorkerPage = () => {
   const navigate = useNavigate();
+  const userData = JSON.parse(localStorage.getItem('userData') || '{}');
+  const isSuperAdmin = userData?.rol === 'Super_Administrador';
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [formData, setFormData] = useState({
@@ -41,6 +65,12 @@ const CreateWorkerPage = () => {
     const token = getAuthToken();
     if (!token) return;
 
+    if (!isSuperAdmin && ['Administrador', 'Administrador_Remesas', 'Super_Administrador'].includes(formData.rol)) {
+      setError('Solo un Super Administrador puede crear ese rol');
+      setLoading(false);
+      return;
+    }
+
     try {
       const response = await fetch(`${API_URL}/crear_trabajador/`, {
         method: 'POST',
@@ -66,8 +96,8 @@ const CreateWorkerPage = () => {
       }
 
       if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.detail || errorData.message || 'Error al crear trabajador');
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(getApiErrorMessage(errorData));
       }
 
       alert('¡Trabajador creado satisfactoriamente!');
@@ -171,8 +201,9 @@ const CreateWorkerPage = () => {
               required
             >
               <option value="">Selecciona un rol</option>
-              <option value="Super_Administrador">Super Administrador</option>
-              <option value="Administrador">Administrador</option>
+              {isSuperAdmin && <option value="Super_Administrador">Super Administrador</option>}
+              {isSuperAdmin && <option value="Administrador">Administrador</option>}
+              {isSuperAdmin && <option value="Administrador_Remesas">Administrador Remesas</option>}
               <option value="Gestor de Venta">Gestor de Venta</option>
               <option value="Mensajero">Mensajero</option>
             </select>

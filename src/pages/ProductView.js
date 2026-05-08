@@ -426,21 +426,25 @@ const ProductView = ({ onShowLogin = () => {} }) => {
 
   const getCurrentPrice = () => {
     if (selectedVariation) {
-      return parseFloat(selectedVariation.precio).toFixed(2);
+      const precioFinalVariacion = selectedVariation.precio_post_descuento ?? selectedVariation.precio;
+      return parseFloat(precioFinalVariacion).toFixed(2);
     }
     return product ? parseFloat(product.precio_post_descuento).toFixed(2) : '0.00';
   };
 
   const getOriginalPrice = () => {
     if (selectedVariation) {
-      return parseFloat(selectedVariation.item_info?.precio_base || selectedVariation.precio).toFixed(2);
+      return parseFloat(selectedVariation.precio).toFixed(2);
     }
     return product ? parseFloat(product.precio).toFixed(2) : '0.00';
   };
 
   const hasDiscount = () => {
     if (selectedVariation) {
-      return false;
+      const precioBase = parseFloat(selectedVariation.precio || 0);
+      const precioFinalRaw = selectedVariation.precio_post_descuento ?? selectedVariation.precio ?? 0;
+      const precioFinal = parseFloat(precioFinalRaw);
+      return precioFinal < precioBase;
     }
     return product?.descuento > 0;
   };
@@ -463,7 +467,7 @@ const ProductView = ({ onShowLogin = () => {} }) => {
         imagenes: product.imagenes,
         variacion: {
           id: selectedVariation.id,
-          precio_post_descuento: selectedVariation.precio,
+          precio_post_descuento: selectedVariation.precio_post_descuento ?? selectedVariation.precio,
           imagen: selectedVariation.imagen || (product.imagenes && product.imagenes[0]?.imagen),
           color: selectedVariation.color,
           modelo: selectedVariation.modelo,
@@ -714,9 +718,9 @@ const ProductView = ({ onShowLogin = () => {} }) => {
                       }}
                     />
                   )}
-                  {isManager || isAdmin && (
+                  {(isManager || isAdmin) && (
                     <Chip
-                      label={`Stock total: ${product.total_item}`}
+                      label={`Stock total: ${product.total_item > 5 ? 5 : product.total_item}`}
                       sx={{
                         backgroundColor: '#3b82f6',
                         color: 'white',
@@ -769,12 +773,12 @@ const ProductView = ({ onShowLogin = () => {} }) => {
                           <div>
                             <p className="text-sm text-blue-600">Stock total en sistema:</p>
                             <p className="text-lg font-bold text-blue-900">
-                              {product.total_item <= 5 ? product.total_item : '5 o más'} unidades
+                              {product.total_item <= 5 ? product.total_item : 5} unidades
                             </p>
                           </div>
                           <div>
                             <p className="text-sm text-blue-600">Disponibles actualmente:</p>
-                            <p className="text-lg font-bold text-blue-900">{availableStock <= 5 ? availableStock : '5 o más'} unidades</p>
+                            <p className="text-lg font-bold text-blue-900">{availableStock <= 5 ? availableStock : 5} unidades</p>
                           </div>
                         </div>
                       </div>
@@ -1125,3 +1129,4 @@ const ProductView = ({ onShowLogin = () => {} }) => {
 };
 
 export default ProductView;
+

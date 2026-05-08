@@ -300,7 +300,7 @@ const CreateAdminSalesPage = () => {
                       {item.productData?.nombre || 'Producto'}
                     </Typography>
                     <Typography variant="body2" color="text.secondary">
-                      Precio: ${item.price}
+                      Precio final: ${item.price}
                       {item.color && ` | Color: ${item.color}`}
                       {item.model && ` | Modelo: ${item.model}`}
                     </Typography>
