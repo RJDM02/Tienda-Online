@@ -47,6 +47,36 @@
   display: none;
 }
 
+.dashbar-category-image {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 auto;
+  width: 28px;
+  height: 28px;
+  overflow: hidden;
+  border: 1px solid rgba(255, 79, 20, 0.85);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.dashbar-category-image img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.dashbar-category-image span {
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+  color: #ff4f14;
+  font-size: 12px;
+  font-weight: 900;
+}
+
 @media (max-width: 768px) {
   .dashbar-shell {
     position: fixed !important;
@@ -121,6 +151,15 @@
   .dashbar-shell .h-full {
     padding: 30px 20px 112px;
     overscroll-behavior: contain;
+  }
+
+  .dashbar-category-image {
+    width: 34px;
+    height: 34px;
+  }
+
+  .dashbar-category-image span {
+    font-size: 14px;
   }
 
   .dashbar-mobile-actions {

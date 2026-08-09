@@ -74,6 +74,12 @@ const sortSubcategoriesWithCategory = (list) => {
   });
 };
 
+const getCategoryImageUrl = (imageUrl) => {
+  if (!imageUrl) return null;
+  if (/^https?:\/\//i.test(imageUrl)) return imageUrl;
+  return imageUrl.startsWith('/') ? imageUrl : `/${imageUrl}`;
+};
+
 const Dashbar = ({ onFilterChange, userData, onEditProfile, selectedCategories = [], selectedConditions = [], priceRange, mobileOpen = false, onCloseMobile }) => {
   const [categories, setCategories] = useState([]);
   const [subcategories, setSubcategories] = useState([]);
@@ -542,6 +548,7 @@ const Dashbar = ({ onFilterChange, userData, onEditProfile, selectedCategories =
                   {categories.map(category => {
                     const categorySubs = getSubcategoriesByCategory(category.id);
                     const hasSubcategories = categorySubs.length > 0;
+                    const categoryImageUrl = getCategoryImageUrl(category.imagen);
 
                     return (
                       <div 
@@ -575,20 +582,22 @@ const Dashbar = ({ onFilterChange, userData, onEditProfile, selectedCategories =
                             disabled={!hasSubcategories}
                           >
                             <div className="flex items-center space-x-2">
-                              {category.imagen && (
-                                <div className="w-6 h-6 flex-shrink-0 border border-orange-500 rounded-full overflow-hidden">
+                              <div className="dashbar-category-image">
+                                {categoryImageUrl && (
                                   <img
-                                    src={category.imagen}
-                                    alt={`Categoría ${category.nombre}`}
-                                    className="w-full h-full object-cover"
+                                    src={categoryImageUrl}
+                                    alt={`Categoria ${category.nombre}`}
                                     onError={(e) => {
-                                      e.target.style.display = 'none';
-                                      e.target.parentNode.classList.add('bg-gray-600');
-                                      e.target.parentNode.innerHTML = '<div class="w-full h-full flex items-center justify-center text-orange-500 text-xs font-bold">' + category.nombre.charAt(0) + '</div>';
+                                      e.currentTarget.style.display = 'none';
+                                      const fallback = e.currentTarget.nextElementSibling;
+                                      if (fallback) fallback.style.display = 'flex';
                                     }}
                                   />
-                                </div>
-                              )}
+                                )}
+                                <span style={{ display: categoryImageUrl ? 'none' : 'flex' }}>
+                                  {category.nombre?.charAt(0) || '?'}
+                                </span>
+                              </div>
                               <span className="text-white text-xs">{category.nombre}</span>
                             </div>
                             {hasSubcategories && (
