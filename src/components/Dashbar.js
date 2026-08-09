@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Slider, Checkbox } from '@mui/material';
 import { ChevronDown, ChevronUp, ChevronRight, ChevronLeft, Edit, User, Filter, DollarSign, Tags, X, Award } from 'lucide-react';
+import './Dashbar.css';
 
 import { API_URL } from '../config/apiConfig';
 const normalizeOrdenValue = (value) => {
@@ -73,7 +74,7 @@ const sortSubcategoriesWithCategory = (list) => {
   });
 };
 
-const Dashbar = ({ onFilterChange, userData, onEditProfile, selectedCategories = [], selectedConditions = [], priceRange }) => {
+const Dashbar = ({ onFilterChange, userData, onEditProfile, selectedCategories = [], selectedConditions = [], priceRange, mobileOpen = false, onCloseMobile }) => {
   const [categories, setCategories] = useState([]);
   const [subcategories, setSubcategories] = useState([]);
   const [conditions, setConditions] = useState([]);
@@ -86,7 +87,7 @@ const Dashbar = ({ onFilterChange, userData, onEditProfile, selectedCategories =
   const [expandedCategories, setExpandedCategories] = useState({});
   const [selectedSubcategories, setSelectedSubcategories] = useState([]);
   const [localPriceRange, setLocalPriceRange] = useState([0, 9999]);
-  const [isCollapsed, setIsCollapsed] = useState(true);
+  const [isCollapsed, setIsCollapsed] = useState(false);
   const [expandedSection, setExpandedSection] = useState(['price', 'categories', 'condition']);
 
   // Sincronizar con los valores iniciales de las props
@@ -260,7 +261,7 @@ const Dashbar = ({ onFilterChange, userData, onEditProfile, selectedCategories =
 
   if (error) {
     return (
-      <div className={`fixed left-0 bg-gray-900 shadow-2xl p-6 border-r border-gray-800 transition-all duration-300 ease-in-out ${isCollapsed ? 'w-16' : 'w-64'}`} 
+      <div className={`dashbar-shell fixed left-0 bg-gray-900 shadow-2xl p-6 border-r border-gray-800 transition-all duration-300 ease-in-out ${isCollapsed ? 'dashbar-collapsed w-16' : 'dashbar-expanded w-64'} ${mobileOpen ? 'dashbar-mobile-open' : ''}`} 
            style={{ height: 'calc(100vh - 64px)', top: '64px', zIndex: 50 }}>
         <div className="bg-red-900 border border-red-700 text-red-100 px-4 py-3 rounded">
           {error}
@@ -271,7 +272,7 @@ const Dashbar = ({ onFilterChange, userData, onEditProfile, selectedCategories =
 
   if (loading.categories || loading.subcategories || loading.conditions) {
     return (
-      <div className={`fixed left-0 bg-gray-900 shadow-2xl p-6 flex justify-center items-center border-r border-gray-800 transition-all duration-300 ease-in-out ${isCollapsed ? 'w-16' : 'w-64'}`}
+      <div className={`dashbar-shell fixed left-0 bg-gray-900 shadow-2xl p-6 flex justify-center items-center border-r border-gray-800 transition-all duration-300 ease-in-out ${isCollapsed ? 'dashbar-collapsed w-16' : 'dashbar-expanded w-64'} ${mobileOpen ? 'dashbar-mobile-open' : ''}`}
            style={{ height: 'calc(100vh - 64px)', top: '64px', zIndex: 50 }}>
         <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-orange-500"></div>
       </div>
@@ -279,7 +280,7 @@ const Dashbar = ({ onFilterChange, userData, onEditProfile, selectedCategories =
   }
 
   return (
-    <div className={`fixed left-0 bg-gray-900 shadow-2xl border-r border-gray-800 transition-all duration-300 ease-in-out ${isCollapsed ? 'w-16' : 'w-64'}`}
+    <div className={`dashbar-shell fixed left-0 shadow-2xl border-r transition-all duration-300 ease-in-out ${isCollapsed ? 'dashbar-collapsed w-16' : 'dashbar-expanded w-64'} ${mobileOpen ? 'dashbar-mobile-open' : ''}`}
          style={{ height: 'calc(100vh - 64px)', top: '64px', zIndex: 50 }}>
       
       <button 
@@ -289,6 +290,17 @@ const Dashbar = ({ onFilterChange, userData, onEditProfile, selectedCategories =
       >
         {isCollapsed ? <ChevronRight size={18} /> : <ChevronLeft size={18} />}
       </button>
+
+      {onCloseMobile && (
+        <button
+          type="button"
+          onClick={onCloseMobile}
+          className="dashbar-mobile-close"
+          aria-label="Cerrar filtros"
+        >
+          <X size={20} />
+        </button>
+      )}
 
       <div className="h-full overflow-y-auto p-4 pt-2">
         {!isCollapsed && userData && (
@@ -368,7 +380,7 @@ const Dashbar = ({ onFilterChange, userData, onEditProfile, selectedCategories =
           </button>
 
           {!isCollapsed && expandedSection.includes('condition') && (
-            <div className="bg-gray-800 rounded-lg p-3 border border-gray-700 mt-1 animate-fadeIn space-y-2">
+            <div className="dashbar-panel rounded-lg p-3 mt-1 animate-fadeIn space-y-2">
               {conditions.map(condition => (
                 <label key={condition.id} className="flex items-center cursor-pointer">
                   <Checkbox
@@ -426,7 +438,7 @@ const Dashbar = ({ onFilterChange, userData, onEditProfile, selectedCategories =
           </button>
 
           {!isCollapsed && expandedSection.includes('price') && (
-            <div className="bg-gray-800 rounded-lg p-3 border border-gray-700 mt-1 animate-fadeIn">
+            <div className="dashbar-panel rounded-lg p-3 mt-1 animate-fadeIn">
               <Slider
                 value={localPriceRange}
                 onChange={handlePriceChange}
@@ -516,8 +528,8 @@ const Dashbar = ({ onFilterChange, userData, onEditProfile, selectedCategories =
                     return (
                       <div 
                         key={category.id} 
-                        className={`bg-gray-800 rounded-lg border border-gray-700 overflow-hidden ${
-                          selectedCategories.includes(String(category.id)) ? 'border-orange-500' : ''
+                        className={`dashbar-panel rounded-lg overflow-hidden ${
+                          selectedCategories.includes(String(category.id)) ? 'dashbar-selected' : ''
                         }`}
                       >
                         <div className="flex items-center">

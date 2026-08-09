@@ -167,3 +167,107 @@
   flex-grow: 1 !important;
   min-width: 0 !important;
 }
+
+.vh-navbar.MuiAppBar-root {
+  border-bottom: 1px solid rgba(16, 16, 24, 0.08);
+  background: rgba(255, 255, 255, 0.94) !important;
+  color: #101018 !important;
+  box-shadow: 0 10px 30px rgba(16, 16, 24, 0.08) !important;
+  backdrop-filter: blur(14px);
+}
+
+.vh-navbar .vh-navbar-toolbar {
+  padding: 0 28px !important;
+}
+
+.vh-navbar-brand {
+  min-width: 260px;
+}
+
+.vh-navbar-logo img {
+  object-fit: contain;
+}
+
+.vh-navbar-title.MuiTypography-root {
+  color: #101018 !important;
+  font-weight: 900 !important;
+  letter-spacing: 0 !important;
+}
+
+.vh-navbar-search .MuiOutlinedInput-root {
+  height: 44px !important;
+  border-radius: 8px !important;
+  background: #fff !important;
+  box-shadow: inset 0 0 0 1px rgba(16, 16, 24, 0.14);
+}
+
+.vh-navbar-search .MuiOutlinedInput-notchedOutline {
+  border-color: transparent !important;
+}
+
+.vh-navbar-search .Mui-focused {
+  box-shadow: inset 0 0 0 2px #ff4f14;
+}
+
+.vh-navbar-search .MuiInputBase-input {
+  font-size: 16px !important;
+}
+
+.vh-navbar-actions .MuiIconButton-root,
+.vh-navbar-actions .MuiButton-root {
+  border-radius: 8px !important;
+}
+
+.vh-navbar-actions .MuiButton-root {
+  min-height: 38px;
+  padding: 0 12px;
+  color: #101018 !important;
+  font-weight: 800;
+}
+
+.vh-navbar-actions .MuiButton-root:hover,
+.vh-navbar-actions .MuiIconButton-root:hover {
+  background: rgba(255, 79, 20, 0.08) !important;
+  color: #ff4f14 !important;
+}
+
+@media (max-width: 900px) {
+  .vh-navbar .vh-navbar-toolbar {
+    padding: 0 14px !important;
+  }
+
+  .vh-navbar-brand {
+    min-width: auto;
+  }
+}
+
+@media (max-width: 600px) {
+  .vh-navbar.MuiAppBar-root {
+    min-height: 64px;
+  }
+
+  .vh-navbar .vh-navbar-toolbar {
+    gap: 8px;
+  }
+
+  .vh-navbar-logo {
+    margin-right: 0 !important;
+  }
+
+  .vh-navbar-search {
+    max-width: none !important;
+    margin: 0 4px !important;
+  }
+
+  .vh-navbar-search .MuiOutlinedInput-root {
+    height: 40px !important;
+  }
+
+  .vh-navbar-search .MuiInputBase-input {
+    font-size: 14px !important;
+  }
+
+  .vh-navbar-actions {
+    gap: 2px !important;
+  }
+}

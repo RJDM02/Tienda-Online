@@ -1,0 +1,93 @@
+.dashbar-shell {
+  border-color: rgba(255, 255, 255, 0.08) !important;
+  background:
+    linear-gradient(180deg, rgba(255, 79, 20, 0.08), transparent 260px),
+    #0b0d16 !important;
+  color: #fff;
+}
+
+.dashbar-expanded {
+  width: 256px !important;
+}
+
+.dashbar-collapsed {
+  width: 64px !important;
+}
+
+.dashbar-panel {
+  border: 1px solid rgba(255, 255, 255, 0.11);
+  background: rgba(255, 255, 255, 0.06);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04);
+}
+
+.dashbar-selected {
+  border-color: rgba(255, 79, 20, 0.72);
+  background: rgba(255, 79, 20, 0.08);
+}
+
+.dashbar-shell button {
+  border-radius: 8px;
+}
+
+.dashbar-shell .MuiCheckbox-root {
+  padding: 6px;
+}
+
+.dashbar-mobile-close {
+  display: none;
+}
+
+@media (max-width: 768px) {
+  .dashbar-shell {
+    position: fixed !important;
+    left: 0 !important;
+    right: 0 !important;
+    top: auto !important;
+    bottom: 0 !important;
+    z-index: 60 !important;
+    width: 100% !important;
+    height: min(78vh, 680px) !important;
+    transform: translateY(110%);
+    border-right: 0 !important;
+    border-top: 1px solid rgba(255, 255, 255, 0.12);
+    border-radius: 18px 18px 0 0;
+    transition: transform 220ms ease;
+  }
+
+  .dashbar-shell.dashbar-mobile-open {
+    transform: translateY(0);
+  }
+
+  .dashbar-shell > button:first-child {
+    display: none;
+  }
+
+  .dashbar-mobile-close {
+    position: absolute;
+    top: 14px;
+    right: 16px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 36px;
+    height: 36px;
+    color: #fff;
+    background: rgba(255, 255, 255, 0.08);
+  }
+
+  .dashbar-shell::before {
+    content: "";
+    position: absolute;
+    top: 8px;
+    left: 50%;
+    width: 56px;
+    height: 5px;
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.35);
+    transform: translateX(-50%);
+  }
+
+  .dashbar-shell .h-full {
+    padding-top: 28px;
+  }
+}

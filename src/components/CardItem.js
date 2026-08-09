@@ -7,6 +7,7 @@ import ShareIcon from '@mui/icons-material/Share';
 import { Chip, Tooltip, Snackbar, Alert } from '@mui/material';
 import { useCart } from '../context/CartContext';
 import { jwtDecode } from 'jwt-decode';
+import './CardItem.css';
 
 const CardItem = ({ product, searchTerm = '', userRole }) => {
   const navigate = useNavigate();
@@ -183,11 +184,11 @@ const CardItem = ({ product, searchTerm = '', userRole }) => {
   const showCommission = isManager || isAdmin;
 
   return (
-    <div className="bg-white rounded-xl md:rounded-2xl shadow-lg overflow-hidden hover:shadow-xl transition-all duration-300 transform hover:-translate-y-2 flex flex-col h-full group">
+    <div className="catalog-card bg-white rounded-xl md:rounded-2xl shadow-lg overflow-hidden hover:shadow-xl transition-all duration-300 transform hover:-translate-y-2 flex flex-col h-full group">
       {/* Imagen del producto con overlay */}
       <Link
         to={`/product/${product.id}`}
-        className="relative h-32 sm:h-40 md:h-48 bg-gradient-to-br from-gray-100 to-gray-200 overflow-hidden cursor-pointer block"
+        className="catalog-card-media relative h-32 sm:h-40 md:h-48 bg-gradient-to-br from-gray-100 to-gray-200 overflow-hidden cursor-pointer block"
       >
         <img
           src={productImage}
@@ -308,10 +309,10 @@ const CardItem = ({ product, searchTerm = '', userRole }) => {
       </Link>
 
       {/* Contenido de la tarjeta */}
-      <div className="p-3 md:p-4 lg:p-6 flex-grow flex flex-col">
+      <div className="catalog-card-body p-3 md:p-4 lg:p-6 flex-grow flex flex-col">
         <Link
           to={`/product/${product.id}`}
-          className="text-[0.78rem] sm:text-[0.82rem] md:text-sm lg:text-base font-semibold text-gray-900 mb-1 leading-[1.15] tracking-[-0.01em] break-words line-clamp-3 hover:text-[#FF6B00] transition-colors duration-200 cursor-pointer"
+          className="catalog-card-title text-[0.78rem] sm:text-[0.82rem] md:text-sm lg:text-base font-semibold text-gray-900 mb-1 leading-[1.15] tracking-[-0.01em] break-words line-clamp-3 hover:text-[#FF6B00] transition-colors duration-200 cursor-pointer"
           style={{
             fontFamily: "'Roboto Condensed', 'Arial Narrow', 'Liberation Sans Narrow', 'Helvetica Neue', Arial, sans-serif",
           }}
@@ -321,7 +322,7 @@ const CardItem = ({ product, searchTerm = '', userRole }) => {
         
         {/* Mostrar comisión si es gestor o admin */}
         {showCommission && product.comision && (
-          <div className="mb-2">
+          <div className="catalog-card-commission mb-2">
             <Chip
               label={`Comisión: $${product.comision}`}
               size="small"
@@ -340,7 +341,7 @@ const CardItem = ({ product, searchTerm = '', userRole }) => {
         )}
 
         {/* Subcategorías */}
-        <div className="flex flex-wrap gap-1 mb-3 md:mb-4">
+        <div className="catalog-card-tags flex flex-wrap gap-1 mb-3 md:mb-4">
           {product.subcategorias_detalle.slice(0, 1).map(subcat => (
             <Chip
               key={subcat.id}
@@ -378,7 +379,7 @@ const CardItem = ({ product, searchTerm = '', userRole }) => {
           )}
         </div>
         
-        <div className="mt-auto">
+        <div className="catalog-card-price mt-auto">
           {hasDiscount ? (
             <div className="space-y-1">
               <div className="flex items-center gap-1 flex-wrap">
@@ -401,7 +402,7 @@ const CardItem = ({ product, searchTerm = '', userRole }) => {
         </div>
       </div>
       
-      <div className="p-3 md:p-4 lg:p-6 pt-0">
+      <div className="catalog-card-actions p-3 md:p-4 lg:p-6 pt-0">
         <button
           onClick={handleAddToCart}
           disabled={!product.estado || product.total_item === 0}

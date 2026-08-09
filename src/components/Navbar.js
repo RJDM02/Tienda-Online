@@ -395,8 +395,8 @@ const adminRemesaItems = [
 
   return (
     <>
-      <AppBar position="fixed" style={{ zIndex: 1300 }}>
-        <Toolbar sx={{ 
+      <AppBar position="fixed" className="vh-navbar" style={{ zIndex: 1300 }}>
+        <Toolbar className="vh-navbar-toolbar" sx={{ 
           minHeight: '64px !important', 
           maxHeight: '64px !important',
           paddingX: { xs: 1, sm: 2 },
@@ -404,8 +404,8 @@ const adminRemesaItems = [
           justifyContent: 'space-between'
         }}>
           
-          <Box sx={{ display: 'flex', alignItems: 'center', flexShrink: 0 }}>
-            <Box onClick={goToHome} sx={{ cursor: 'pointer', display: 'flex', alignItems: 'center', mr: 2 }}>
+          <Box className="vh-navbar-brand" sx={{ display: 'flex', alignItems: 'center', flexShrink: 0 }}>
+            <Box className="vh-navbar-logo" onClick={goToHome} sx={{ cursor: 'pointer', display: 'flex', alignItems: 'center', mr: 2 }}>
               <img src={logo} alt="VIDEOJUEGOS HABANA logo" style={{ height: isMobile ? '40px' : '50px' }} />
             </Box>
             
@@ -418,15 +418,16 @@ const adminRemesaItems = [
                 display: { xs: 'none', sm: 'block' },
                 fontSize: { sm: '1rem', md: '1.25rem' }
               }}
+              className="navbar-title vh-navbar-title"
             >
               VIDEOJUEGOS HABANA
             </Typography>
           </Box>
 
           {showSearch && (
-            <Box sx={{ 
+            <Box className="search-field vh-navbar-search" sx={{ 
               flexGrow: 1,
-              maxWidth: { xs: '200px', sm: '300px', md: '400px' },
+              maxWidth: { xs: '220px', sm: '360px', md: '520px' },
               mx: 2
             }}>
               <form onSubmit={handleSearchSubmit}>
@@ -470,7 +471,7 @@ const adminRemesaItems = [
             </Box>
           )}
 
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+          <Box className="mobile-controls vh-navbar-actions" sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
             {/* Botón para Administrar Ventas (solo para Administradores y Super Administradores) */}
             {isAdmin && (
               <Tooltip title="Administrar Ventas">

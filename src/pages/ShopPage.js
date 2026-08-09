@@ -1,11 +1,13 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { useLocation, useNavigate, Link } from 'react-router-dom';
+import { SlidersHorizontal } from 'lucide-react';
 import Dashbar from '../components/Dashbar';
 import Navbar from '../components/Navbar';
 import CardItem from '../components/CardItem';
 import FloatingWhatsAppButton from '../components/FloatingWhatsAppButton';
 import ChatWidget from '../components/ChatWidget';
 import { jwtDecode } from 'jwt-decode';
+import './ShopPage.css';
 
 import { API_URL } from '../config/apiConfig';
 const ShopPage = () => {
@@ -18,6 +20,7 @@ const ShopPage = () => {
   const [hasMore, setHasMore] = useState(true);
   const [categoriesData, setCategoriesData] = useState([]);
   const [userData, setUserData] = useState(null);
+  const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false);
   const filters = useRef({
     subcategories: [],
     priceRange: [0, 9999],
@@ -232,51 +235,72 @@ const ShopPage = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-orange-50 to-amber-50 flex flex-col">
+    <div className="shop-page min-h-screen flex flex-col">
       <div className="fixed top-0 left-0 right-0 z-50">
         <Navbar onShowLogin={() => {}} />
       </div>
       
-      <div className="flex flex-1" style={{ marginTop: '64px' }}>
-        <div className="fixed left-0 z-40 h-full" style={{ top: '64px' }}>
+      {mobileFiltersOpen && (
+        <button
+          type="button"
+          className="shop-filter-backdrop"
+          aria-label="Cerrar filtros"
+          onClick={() => setMobileFiltersOpen(false)}
+        />
+      )}
+
+      <div className="shop-layout flex flex-1">
+        <div className="shop-sidebar">
           <Dashbar 
             onFilterChange={handleFilterChange} 
             userData={userData}
             selectedCategories={filters.current.categories}
             selectedConditions={filters.current.conditions}
             priceRange={filters.current.priceRange}
+            mobileOpen={mobileFiltersOpen}
+            onCloseMobile={() => setMobileFiltersOpen(false)}
           />
         </div>
         
         <div 
           ref={scrollContainerRef}
-          className="flex-1 ml-16 lg:ml-64 p-4 md:p-6 lg:p-8 overflow-y-auto"
-          style={{ maxHeight: 'calc(100vh - 64px)' }}
+          className="shop-main flex-1 overflow-y-auto"
         >
-          <div className="bg-white rounded-2xl shadow-lg p-4 md:p-6 lg:p-8">
-            <div className="mb-6 md:mb-8">
-              <h1 className="text-2xl md:text-3xl font-bold text-gray-900 mb-2">Tu Tienda de Confianza:</h1>
+          <div className="shop-catalog-panel">
+            <div className="shop-catalog-head">
+              <div>
+                <p className="shop-eyebrow">Catalogo</p>
+                <h1 className="shop-title">Tu Tienda de Confianza</h1>
+              </div>
               {filters.current.searchTerm ? (
-                <div className="flex items-center" dir="ltr">
-                  <p className="text-gray-600 text-sm md:text-base">
+                <div className="shop-search-state" dir="ltr">
+                  <p>
                     Resultados para: <span className="font-semibold text-orange-600">"{filters.current.searchTerm}"</span>
                   </p>
                   <button 
                     onClick={() => handleFilterChange({ searchTerm: '' })}
-                    className="ml-2 text-sm text-gray-500 hover:text-orange-600"
+                    className="shop-clear-search"
                   >
                     (Limpiar)
                   </button>
                 </div>
               ) : (
-                <p className="text-gray-600 text-sm md:text-base">Descubre los mejores productos, con los mejores precios.</p>
+                <p className="shop-subtitle">Encuentra tecnologia lista para entregar.</p>
               )}
             </div>
             
-            <div className="mb-4 md:mb-6 p-3 md:p-4 bg-gradient-to-r from-gray-50 to-gray-100 rounded-xl">
-              <p className="text-gray-700 font-medium text-sm md:text-base">
+            <div className="shop-results-bar">
+              <p>
                 {getFilterSummary()}
               </p>
+              <button
+                type="button"
+                className="shop-mobile-filter-button"
+                onClick={() => setMobileFiltersOpen(true)}
+              >
+                <SlidersHorizontal size={18} />
+                <span>Filtros</span>
+              </button>
             </div>
             
             {loading && !initialLoadComplete ? (
@@ -286,7 +310,7 @@ const ShopPage = () => {
               </div>
             ) : allProducts.length > 0 ? (
               <>
-                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-3 xl:grid-cols-4 gap-3 md:gap-4 lg:gap-6">
+                <div className="shop-products-grid">
                   {allProducts.map(product => (
                     <CardItem 
                       key={product.id} 
@@ -314,16 +338,16 @@ const ShopPage = () => {
                 <p className="text-gray-500 mb-6">Prueba ajustando los filtros de búsqueda</p>
                 <button
                   onClick={clearAllFilters}
-                  className="bg-black hover:bg-gray-800 text-white px-6 py-3 rounded-xl font-medium transition-all duration-200 shadow-lg hover:shadow-xl transform hover:-translate-y-1"
+                  className="shop-empty-button"
                 >
                   Limpiar todos los filtros
                 </button>
               </div>
             )}
             
-            <div className="mt-8 md:mt-12 text-center">
+            <div className="shop-back-home">
               <Link to="/">
-                <button className="bg-gradient-to-r from-gray-700 to-gray-900 hover:from-gray-800 hover:to-black text-white px-6 md:px-8 py-3 md:py-4 rounded-xl font-medium transition-all duration-200 shadow-lg hover:shadow-xl transform hover:-translate-y-1">
+                <button>
                   Volver al Inicio
                 </button>
               </Link>
