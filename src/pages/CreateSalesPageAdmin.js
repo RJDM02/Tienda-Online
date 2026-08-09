@@ -27,6 +27,7 @@ import axios from 'axios';
 import { jwtDecode } from 'jwt-decode';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import { styles, LoadingState, ErrorState, SectionTitle } from './CreateSalesPageStyles';
+import { formatLocalDateTime, mergeDatePart, mergeTimePart } from '../utils/localDateTime';
 import AdminNotifier2 from '../components/AdminNotifier2';
 import { API_URL } from '../config/apiConfig';
 
@@ -73,6 +74,7 @@ const CreateAdminSalesPage = () => {
     deliveryPointId: '',
     messengerId: '',
     discount: 0,
+    vuelto: '',
     clientType: 'registered', // 'registered' or 'unregistered'
     clientId: '',
     clientName: '',
@@ -157,13 +159,14 @@ const CreateAdminSalesPage = () => {
       clients.find(c => c.id === parseInt(formData.clientId)) : null;
 
     // Procesar cada item del carrito
-    const requests = cartItems.map((item) => {
+    const requests = cartItems.map((item, index) => {
       const salesData = {
         mensajero_id: formData.messengerId,
         moneda_id: formData.currencyId,
         domicilio_id: formData.deliveryPointId,
-        horario_deseado_entrega: formData.deliveryDateTime.toISOString(),
+        horario_deseado_entrega: formatLocalDateTime(formData.deliveryDateTime),
         descuento: parseFloat(formData.discount) || 0,
+        vuelto: index === 0 ? (parseFloat(formData.vuelto) || 0) : 0,
         punto_referencia: formData.referencePoint,
         nota: formData.note
       };
@@ -466,7 +469,7 @@ const CreateAdminSalesPage = () => {
                       label="Fecha de entrega"
                       value={formData.deliveryDateTime}
                       onChange={(newValue) => 
-                        setFormData(prev => ({ ...prev, deliveryDateTime: newValue }))
+                        setFormData(prev => ({ ...prev, deliveryDateTime: mergeDatePart(prev.deliveryDateTime, newValue) }))
                       }
                       minDate={new Date()}
                       renderInput={(params) => (
@@ -484,7 +487,7 @@ const CreateAdminSalesPage = () => {
                       label="Hora de entrega"
                       value={formData.deliveryDateTime}
                       onChange={(newValue) => 
-                        setFormData(prev => ({ ...prev, deliveryDateTime: newValue }))
+                        setFormData(prev => ({ ...prev, deliveryDateTime: mergeTimePart(prev.deliveryDateTime, newValue) }))
                       }
                       renderInput={(params) => (
                         <TextField 
@@ -520,6 +523,17 @@ const CreateAdminSalesPage = () => {
                 onChange={handleChange}
                 multiline
                 rows={4}
+                sx={styles.textField}
+              />
+
+              <TextField
+                fullWidth
+                label="Vuelto a entregar (opcional)"
+                name="vuelto"
+                value={formData.vuelto}
+                onChange={handleChange}
+                type="number"
+                inputProps={{ min: 0, step: "0.01" }}
                 sx={styles.textField}
               />
 

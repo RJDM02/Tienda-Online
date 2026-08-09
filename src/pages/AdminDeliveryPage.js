@@ -28,7 +28,7 @@ const AdminDeliveryPage = () => {
   const [openEditModal, setOpenEditModal] = useState(false);
   const [openDeleteModal, setOpenDeleteModal] = useState(false);
   const [currentDomicilio, setCurrentDomicilio] = useState(null);
-  const [newDomicilio, setNewDomicilio] = useState({ ubicacion: '', precio: '' });
+  const [newDomicilio, setNewDomicilio] = useState({ ubicacion: '', precio: '', orden: 0 });
 
   // Obtener token de autenticación
   const getAuthToken = () => {
@@ -140,7 +140,7 @@ const AdminDeliveryPage = () => {
 
       setSuccess('Domicilio creado exitosamente');
       setOpenCreateModal(false);
-      setNewDomicilio({ ubicacion: '', precio: '' });
+      setNewDomicilio({ ubicacion: '', precio: '', orden: 0 });
       fetchDomicilios();
     } catch (err) {
       setError(err.message);
@@ -167,7 +167,8 @@ const AdminDeliveryPage = () => {
         },
         body: JSON.stringify({
           ubicacion: currentDomicilio.ubicacion,
-          precio: currentDomicilio.precio
+          precio: currentDomicilio.precio,
+          orden: currentDomicilio.orden || 0
         })
       });
 
@@ -294,6 +295,9 @@ const AdminDeliveryPage = () => {
                     <th className="px-6 py-4 text-left text-sm font-semibold text-gray-700 uppercase tracking-wider">
                       Precio
                     </th>
+                    <th className="px-6 py-4 text-left text-sm font-semibold text-gray-700 uppercase tracking-wider">
+                      Orden
+                    </th>
                     <th className="px-6 py-4 text-center text-sm font-semibold text-gray-700 uppercase tracking-wider">
                       Acciones
                     </th>
@@ -321,6 +325,9 @@ const AdminDeliveryPage = () => {
                         <div className="text-sm font-semibold text-green-600 bg-green-50 px-3 py-1 rounded-full inline-block">
                           {formatPrice(domicilio.precio)}
                         </div>
+                      </td>
+                      <td className="px-6 py-4">
+                        <div className="text-sm font-medium text-gray-900">{domicilio.orden ?? 0}</div>
                       </td>
                       <td className="px-6 py-4">
                         <div className="flex items-center justify-center space-x-3">
@@ -436,6 +443,30 @@ const AdminDeliveryPage = () => {
                   },
                 }}
               />
+              <TextField
+                label="Orden"
+                variant="outlined"
+                type="number"
+                fullWidth
+                value={newDomicilio.orden}
+                onChange={(e) => setNewDomicilio({ ...newDomicilio, orden: e.target.value })}
+                margin="normal"
+                placeholder="Ej: 1"
+                sx={{
+                  '& .MuiOutlinedInput-root': {
+                    borderRadius: '12px',
+                    '&:hover fieldset': {
+                      borderColor: '#FF6B00',
+                    },
+                    '&.Mui-focused fieldset': {
+                      borderColor: '#FF6B00',
+                    },
+                  },
+                  '& .MuiInputLabel-root.Mui-focused': {
+                    color: '#FF6B00',
+                  },
+                }}
+              />
             </DialogContent>
             
             <DialogActions className="p-6 pt-2">
@@ -518,6 +549,29 @@ const AdminDeliveryPage = () => {
                     value={currentDomicilio.precio}
                     onChange={(e) => setCurrentDomicilio({ ...currentDomicilio, precio: e.target.value })}
                     required
+                    margin="normal"
+                    sx={{
+                      '& .MuiOutlinedInput-root': {
+                        borderRadius: '12px',
+                        '&:hover fieldset': {
+                          borderColor: '#FF6B00',
+                        },
+                        '&.Mui-focused fieldset': {
+                          borderColor: '#FF6B00',
+                        },
+                      },
+                      '& .MuiInputLabel-root.Mui-focused': {
+                        color: '#FF6B00',
+                      },
+                    }}
+                  />
+                  <TextField
+                    label="Orden"
+                    variant="outlined"
+                    type="number"
+                    fullWidth
+                    value={currentDomicilio.orden || 0}
+                    onChange={(e) => setCurrentDomicilio({ ...currentDomicilio, orden: e.target.value })}
                     margin="normal"
                     sx={{
                       '& .MuiOutlinedInput-root': {

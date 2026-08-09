@@ -36,6 +36,7 @@ const CreateWorkerPage = () => {
     username: '',
     rol: '',
     dir: '',
+    ubicacion: '',
     telefono: '',
     correo: ''
   });
@@ -84,6 +85,7 @@ const CreateWorkerPage = () => {
           username: formData.username,
           rol: formData.rol,
           dir: formData.dir,
+          ubicacion: formData.ubicacion,
           telefono: formData.telefono,
           correo: formData.correo || null
         })
@@ -230,7 +232,22 @@ const CreateWorkerPage = () => {
           {/* Campo de Teléfono */}
           <div className="space-y-2">
             <label className="text-sm font-medium text-gray-700 block">
-              Teléfono
+              Ubicacion</label>
+            <div className="relative">
+              <input
+                type="text"
+                name="ubicacion"
+                value={formData.ubicacion}
+                onChange={handleChange}
+                className="w-full pl-4 pr-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#FF6B00] focus:border-transparent transition-all duration-200 bg-gray-50 focus:bg-white"
+                placeholder="Zona o funcion para agrupar"
+              />
+            </div>
+          </div>
+
+          <div className="space-y-2">
+            <label className="text-sm font-medium text-gray-700 block">
+              Telefono
             </label>
             <div className="relative">
               <input
@@ -284,3 +301,4 @@ const CreateWorkerPage = () => {
 };
 
 export default CreateWorkerPage;
+

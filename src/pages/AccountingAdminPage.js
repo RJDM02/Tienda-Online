@@ -86,7 +86,8 @@ const AccountingAdminPage = () => {
     costo: 0,
     comision: 0,
     domicilio_costo: 0,
-    ganancia_cliente: 0
+    ganancia_cliente: 0,
+    vuelto: 0
   });
   
   // Filter states
@@ -180,10 +181,12 @@ const AccountingAdminPage = () => {
     let comisionTotal = 0;
     let domicilioTotal = 0;
     let gananciaClienteTotal = 0;
+    let vueltoTotal = 0;
 
     data.forEach(item => {
       gananciaTotal += item.ganancia;
       gananciaClienteTotal += item.ganancia_cliente || 0;
+      vueltoTotal += Number(item.vuelto || 0);
       
       if (item.tipo === 'producto') {
         precioTotal += item.datos_producto.precio_post_descuento;
@@ -220,7 +223,8 @@ const AccountingAdminPage = () => {
       costo: costoTotal,
       comision: comisionTotal,
       domicilio_costo: domicilioTotal,
-      ganancia_cliente: gananciaClienteTotal
+      ganancia_cliente: gananciaClienteTotal,
+      vuelto: vueltoTotal
     });
   };
 
@@ -435,6 +439,20 @@ const AccountingAdminPage = () => {
       },
     },
     {
+      title: 'Vuelto',
+      key: 'vuelto',
+      width: 100,
+      render: (_, record) => (
+        Number(record.vuelto || 0) > 0 ? (
+          <Text className="text-amber-600 font-semibold">
+            ${Number(record.vuelto).toFixed(2)}
+          </Text>
+        ) : (
+          <Text type="secondary">-</Text>
+        )
+      ),
+    },
+    {
       title: 'Ganancia',
       dataIndex: 'ganancia',
       key: 'ganancia',
@@ -629,6 +647,22 @@ const AccountingAdminPage = () => {
               />
             </Card>
           </Col>
+          <Col xs={24} sm={12} lg={6}>
+            <Card className="rounded-2xl shadow-lg bg-gradient-to-r from-amber-50 to-yellow-50 border-amber-200">
+              <Statistic
+                title={
+                  <div className="flex items-center text-amber-700">
+                    <DollarOutlined className="mr-2" />
+                    Vuelto
+                  </div>
+                }
+                value={totals.vuelto}
+                precision={2}
+                prefix="$"
+                valueStyle={{ color: '#d97706', fontSize: '24px' }}
+              />
+            </Card>
+          </Col>
         </Row>
 
         {/* Tabla Principal */}
@@ -708,6 +742,11 @@ const AccountingAdminPage = () => {
                     </Text>
                   </Table.Summary.Cell>
                   <Table.Summary.Cell index={6}>
+                    <Text className="text-amber-600 font-bold">
+                      ${totals.vuelto.toFixed(2)}
+                    </Text>
+                  </Table.Summary.Cell>
+                  <Table.Summary.Cell index={7}>
                     <Text className="text-green-600 font-bold">
                       ${totals.ganancia.toFixed(2)}
                     </Text>

@@ -25,6 +25,7 @@ import { jwtDecode } from 'jwt-decode';
 import { useCart } from '../context/CartContext';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import { styles, LoadingState, ErrorState, SectionTitle } from './CreateSalesPageStyles';
+import { formatLocalDateTime, mergeDatePart, mergeTimePart } from '../utils/localDateTime';
 import AdminNotifier2 from '../components/AdminNotifier2';
 
 import { API_URL } from '../config/apiConfig';
@@ -74,6 +75,7 @@ const CreateSalesPageManager = () => {
     deliveryPointId: '',
     clientName: '',
     clientPhone: '',
+    vuelto: '',
     warrantyId: '', // Nuevo campo para la garantía
   });
   
@@ -152,13 +154,14 @@ const CreateSalesPageManager = () => {
 
       // Procesar cada item del carrito de forma secuencial para evitar bloqueos
       // al vender variaciones que actualizan tambien el stock del producto padre.
-      for (const item of cartItems) {
+      for (const [index, item] of cartItems.entries()) {
         const salesData = {
           moneda_id: formData.currencyId,
           domicilio_id: formData.deliveryPointId,
-          horario_deseado_entrega: formData.deliveryDateTime.toISOString(),
+          horario_deseado_entrega: formatLocalDateTime(formData.deliveryDateTime),
           punto_referencia: formData.referencePoint,
           nota: formData.note,
+          vuelto: index === 0 ? (parseFloat(formData.vuelto) || 0) : 0,
           cantidad: 1,
           gestor_id: currentUser.user_id,
           precio_gestor: parseFloat(productPrices[item.id]) || 0,
@@ -428,7 +431,7 @@ const CreateSalesPageManager = () => {
                       label="Fecha de entrega"
                       value={formData.deliveryDateTime}
                       onChange={(newValue) => 
-                        setFormData(prev => ({ ...prev, deliveryDateTime: newValue }))
+                        setFormData(prev => ({ ...prev, deliveryDateTime: mergeDatePart(prev.deliveryDateTime, newValue) }))
                       }
                       minDate={new Date()}
                       renderInput={(params) => (
@@ -446,7 +449,7 @@ const CreateSalesPageManager = () => {
                       label="Hora de entrega"
                       value={formData.deliveryDateTime}
                       onChange={(newValue) => 
-                        setFormData(prev => ({ ...prev, deliveryDateTime: newValue }))
+                        setFormData(prev => ({ ...prev, deliveryDateTime: mergeTimePart(prev.deliveryDateTime, newValue) }))
                       }
                       renderInput={(params) => (
                         <TextField 
@@ -483,6 +486,17 @@ const CreateSalesPageManager = () => {
                 onChange={handleChange}
                 multiline
                 rows={4}
+                sx={styles.textField}
+              />
+
+              <TextField
+                fullWidth
+                label="Vuelto a entregar (opcional)"
+                name="vuelto"
+                value={formData.vuelto}
+                onChange={handleChange}
+                type="number"
+                inputProps={{ min: 0, step: "0.01" }}
                 sx={styles.textField}
               />
 

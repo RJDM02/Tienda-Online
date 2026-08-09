@@ -23,6 +23,7 @@ const CreateVariacionPage = () => {
     color: '',
     precio: '',
     modelo: '',
+    ubicacion: '',
     costo: '',
     cantidad: '',
     imagen: null,
@@ -144,6 +145,7 @@ const CreateVariacionPage = () => {
       formDataToSend.append('color', formData.color);
       formDataToSend.append('precio', formData.precio);
       formDataToSend.append('modelo', formData.modelo);
+      formDataToSend.append('ubicacion', formData.ubicacion);
       formDataToSend.append('costo', formData.costo);
       formDataToSend.append('cantidad', formData.cantidad);
       formDataToSend.append('condicion', formData.condicion);
@@ -188,6 +190,7 @@ const CreateVariacionPage = () => {
         color: '',
         precio: '',
         modelo: '',
+        ubicacion: '',
         costo: '',
         cantidad: '',
         imagen: null,
@@ -213,6 +216,7 @@ const CreateVariacionPage = () => {
       color: '',
       precio: '',
       modelo: '',
+      ubicacion: '',
       costo: '',
       cantidad: '',
       imagen: null,
@@ -346,6 +350,18 @@ const CreateVariacionPage = () => {
                   required
                   disabled={loading.form || loading.initialData}
                   placeholder="Ingresa el modelo"
+                  sx={textFieldStyles}
+                />
+
+                <TextField
+                  label="Ubicacion"
+                  variant="outlined"
+                  fullWidth
+                  name="ubicacion"
+                  value={formData.ubicacion}
+                  onChange={handleChange}
+                  disabled={loading.form || loading.initialData}
+                  placeholder="Ej: Rojo, vitrina 1, caja A"
                   sx={textFieldStyles}
                 />
               </div>

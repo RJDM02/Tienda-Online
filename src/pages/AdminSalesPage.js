@@ -23,6 +23,8 @@ const AdminSalesPage = () => {
   const [domicilios, setDomicilios] = useState([]);
   const [filteredSales, setFilteredSales] = useState([]);
   const [months, setMonths] = useState([]);
+  const [selectedSaleIds, setSelectedSaleIds] = useState([]);
+  const [bulkLoading, setBulkLoading] = useState(false);
 
   useEffect(() => {
     // Generar meses para el filtro
@@ -51,7 +53,7 @@ const AdminSalesPage = () => {
         return new Date(b.horario_deseado_entrega) - new Date(a.horario_deseado_entrega);
       });
       
-      setSales(response.data);
+      setSales(sortedSales);
       setLoading(false);
     } catch (error) {
       message.error('Error al cargar las ventas');
@@ -135,7 +137,8 @@ const AdminSalesPage = () => {
         // Parseamos conservando la zona para no perder la hora real que vino del backend
         horario_deseado_entrega: moment.parseZone(response.data.horario_deseado_entrega),
         estado: response.data.estado || 'Pendiente',
-        descuento: response.data.porcentaje_descuento || 0
+        descuento: response.data.porcentaje_descuento || 0,
+        vuelto: response.data.vuelto || 0
       });
       
       setEditingSaleId(saleId);
@@ -153,9 +156,9 @@ const AdminSalesPage = () => {
       setEditLoading(true);
       const token = localStorage.getItem('authToken');
       
-      // Garantizar que enviamos una ISO completa con zona horaria
+      // Enviar hora local para evitar corrimientos UTC en produccion.
       const horarioISO = values.horario_deseado_entrega 
-        ? values.horario_deseado_entrega.toISOString() 
+        ? values.horario_deseado_entrega.format('YYYY-MM-DDTHH:mm:ss') 
         : null;
       
       // ✅ 1. PRIMERO verificar si el usuario seleccionó "procesado"
@@ -204,6 +207,41 @@ const AdminSalesPage = () => {
     fetchSaleDetails(saleId);
   };
 
+  const handleBulkUpdate = async (estado) => {
+    if (!selectedSaleIds.length) {
+      message.warning('Seleccione al menos una venta');
+      return;
+    }
+
+    try {
+      setBulkLoading(true);
+      const token = localStorage.getItem('authToken');
+      const response = await axios.patch(`${API_URL}/editar_ventas_masivo/`, {
+        venta_ids: selectedSaleIds,
+        estado
+      }, {
+        headers: {
+          Authorization: `Bearer ${token}`
+        }
+      });
+
+      const errores = response.data?.errores || [];
+      if (errores.length) {
+        message.warning(`Se actualizaron algunas ventas, pero ${errores.length} fallaron`);
+      } else {
+        message.success('Ventas actualizadas correctamente');
+      }
+
+      setSelectedSaleIds([]);
+      setFilteredSales([]);
+      fetchSales();
+    } catch (error) {
+      message.error(error.response?.data?.message || 'Error al actualizar ventas seleccionadas');
+    } finally {
+      setBulkLoading(false);
+    }
+  };
+
   const handleCloseDetailModal = () => {
     setDetailModalVisible(false);
     setSaleDetails(null);
@@ -246,7 +284,7 @@ const AdminSalesPage = () => {
     
     if (values.domicilio) {
       filteredData = filteredData.filter(sale => 
-        sale.domicilio.ubicacion.toLowerCase().includes(values.domicilio.toLowerCase())
+        sale.domicilio?.ubicacion?.toLowerCase().includes(values.domicilio.toLowerCase())
       );
     }
     
@@ -282,7 +320,7 @@ const AdminSalesPage = () => {
       return new Date(b.horario_deseado_entrega) - new Date(a.horario_deseado_entrega);
     });
 
-    setFilteredSales(filteredData);
+    setFilteredSales(sortedFilteredData);
   };
 
   const resetFilters = () => {
@@ -301,6 +339,7 @@ const AdminSalesPage = () => {
               <div><strong>Nombre:</strong> {record.producto.nombre}</div>
               <div><strong>Precio:</strong> {record.producto.precio_post_descuento}</div>
               <div><strong>Precio Gestor:</strong> {record.precio_gestor || 0}</div>
+              <div><strong>Ubicacion:</strong> {record.producto.ubicacion || 'N/A'}</div>
             </>
           ) : (
             <>
@@ -309,6 +348,7 @@ const AdminSalesPage = () => {
               <div><strong>Modelo:</strong> {record.variacion.modelo}</div>
               <div><strong>Precio:</strong> {record.variacion.precio_post_descuento}</div>
               <div><strong>Precio Gestor:</strong> {record.precio_gestor || 0}</div> 
+              <div><strong>Ubicacion:</strong> {record.variacion.ubicacion || record.variacion.item_info?.ubicacion || 'N/A'}</div>
             </>
           )}
         </div>
@@ -320,6 +360,7 @@ const AdminSalesPage = () => {
       render: (_, record) => (
         <div>
           <div><strong>Ubicación:</strong> {record.domicilio.ubicacion}</div>
+          <div><strong>Orden:</strong> {record.domicilio.orden ?? 0}</div>
           <div><strong>Precio:</strong> {record.domicilio.precio}</div>
         </div>
       ),
@@ -381,9 +422,23 @@ const AdminSalesPage = () => {
       render: (_, record) => (
         <div>
           <strong>{record.costo_post_descuento} {record.moneda.nombre}</strong>
+          {Number(record.vuelto || 0) > 0 && (
+            <div><strong>Vuelto:</strong> {record.vuelto}</div>
+          )}
         </div>
       ),
       width: 120,
+    },
+    {
+      title: 'Mensajero',
+      key: 'mensajero',
+      render: (_, record) => (
+        <div>
+          <div><strong>Nombre:</strong> {record.mensajero?.nombre || 'Sin asignar'}</div>
+          <div><strong>Ubicacion:</strong> {record.mensajero?.ubicacion || 'N/A'}</div>
+        </div>
+      ),
+      width: 180,
     },
     {
       title: 'Acciones',
@@ -496,10 +551,37 @@ const AdminSalesPage = () => {
 
         {/* Tabla */}
         <div className="bg-white rounded-2xl shadow-lg overflow-hidden">
+          <div className="flex flex-wrap items-center gap-3 p-4 border-b border-gray-100">
+            <span className="text-sm text-gray-600">
+              {selectedSaleIds.length} seleccionadas
+            </span>
+            <Button
+              type="primary"
+              loading={bulkLoading}
+              disabled={!selectedSaleIds.length}
+              onClick={() => handleBulkUpdate('procesado')}
+              className="rounded-xl bg-black hover:bg-gray-800 border-none"
+            >
+              Aceptar seleccionadas
+            </Button>
+            <Button
+              danger
+              loading={bulkLoading}
+              disabled={!selectedSaleIds.length}
+              onClick={() => handleBulkUpdate('cancelado')}
+              className="rounded-xl"
+            >
+              Cancelar seleccionadas
+            </Button>
+          </div>
           <Table 
             columns={columns} 
             dataSource={filteredSales.length > 0 ? filteredSales : sales} 
             rowKey="id" 
+            rowSelection={{
+              selectedRowKeys: selectedSaleIds,
+              onChange: setSelectedSaleIds
+            }}
             loading={loading}
             scroll={{ x: 1500 }}
             bordered
@@ -713,6 +795,18 @@ const AdminSalesPage = () => {
               <Input 
                 type="number" 
                 min={0} 
+                className="rounded-xl"
+              />
+            </Form.Item>
+
+            <Form.Item
+              name="vuelto"
+              label="Vuelto a entregar"
+            >
+              <Input
+                type="number"
+                min={0}
+                step="0.01"
                 className="rounded-xl"
               />
             </Form.Item>

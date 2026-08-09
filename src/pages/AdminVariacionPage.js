@@ -49,6 +49,7 @@ const AdminVariacionPage = () => {
   const [editFormData, setEditFormData] = useState({
     color: '',
     modelo: '',
+    ubicacion: '',
     precio: '',
     cantidad: '',
     imagen: null,
@@ -153,6 +154,7 @@ const AdminVariacionPage = () => {
     setEditFormData({
       color: variacion.color,
       modelo: variacion.modelo,
+      ubicacion: variacion.ubicacion || '',
       precio: variacion.precio,
       cantidad: variacion.cantidad,
       imagen: null,
@@ -214,6 +216,7 @@ const AdminVariacionPage = () => {
       const formDataToSend = new FormData();
       formDataToSend.append('color', editFormData.color);
       formDataToSend.append('modelo', editFormData.modelo);
+      formDataToSend.append('ubicacion', editFormData.ubicacion);
       formDataToSend.append('precio', editFormData.precio);
       formDataToSend.append('cantidad', editFormData.cantidad);
       formDataToSend.append('comision', editFormData.comision);
@@ -360,6 +363,9 @@ const AdminVariacionPage = () => {
                       Modelo
                     </th>
                     <th className="px-6 py-4 text-left text-sm font-semibold text-gray-700 uppercase tracking-wider">
+                      Ubicacion
+                    </th>
+                    <th className="px-6 py-4 text-left text-sm font-semibold text-gray-700 uppercase tracking-wider">
                       Precio/Precio con Descuento
                     </th>
                     <th className="px-6 py-4 text-left text-sm font-semibold text-gray-700 uppercase tracking-wider">
@@ -412,6 +418,9 @@ const AdminVariacionPage = () => {
                         </td>
                         <td className="px-6 py-4">
                           <div className="text-sm font-medium text-gray-900">{variacion.modelo || 'N/A'}</div>
+                        </td>
+                        <td className="px-6 py-4">
+                          <div className="text-sm font-medium text-gray-900">{variacion.ubicacion || 'N/A'}</div>
                         </td>
                         <td className="px-6 py-4">
                           <div className="text-sm font-bold text-[#FF6B00]">${variacion.precio} / {variacion.precio_post_descuento}</div>
@@ -538,7 +547,7 @@ const AdminVariacionPage = () => {
                     ))
                   ) : (
                     <tr>
-                      <td colSpan={9} className="px-6 py-16">
+                      <td colSpan={10} className="px-6 py-16">
                         <div className="text-center">
                           <div className="text-gray-400 mb-4">
                             <AddCircleIcon sx={{ fontSize: 64 }} />
@@ -686,6 +695,30 @@ const AdminVariacionPage = () => {
                 fullWidth
                 required
                 margin="normal"
+                sx={{
+                  '& .MuiOutlinedInput-root': {
+                    borderRadius: '12px',
+                    '&:hover fieldset': {
+                      borderColor: '#FF6B00',
+                    },
+                    '&.Mui-focused fieldset': {
+                      borderColor: '#FF6B00',
+                    },
+                  },
+                  '& .MuiInputLabel-root.Mui-focused': {
+                    color: '#FF6B00',
+                  },
+                }}
+              />
+
+              <TextField
+                label="Ubicacion"
+                name="ubicacion"
+                value={editFormData.ubicacion}
+                onChange={handleEditChange}
+                fullWidth
+                margin="normal"
+                placeholder="Ej: Rojo, vitrina 1, caja A"
                 sx={{
                   '& .MuiOutlinedInput-root': {
                     borderRadius: '12px',

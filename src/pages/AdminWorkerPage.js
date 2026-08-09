@@ -43,6 +43,7 @@ const AdminWorkerPage = () => {
     username: '',
     rol: '',
     dir: '',
+    ubicacion: '',
     telefono: '',
     password: '',
     correo: ''
@@ -119,6 +120,7 @@ const AdminWorkerPage = () => {
         username: data.username,
         rol: data.rol,
         dir: data.dir,
+        ubicacion: data.ubicacion || '',
         telefono: data.telefono,
         correo: data.correo || '',
         password: ''
@@ -176,6 +178,7 @@ const AdminWorkerPage = () => {
         username: editForm.username,
         rol: editForm.rol,
         dir: editForm.dir,
+        ubicacion: editForm.ubicacion,
         telefono: editForm.telefono,
         correo: editForm.correo || null,
         ...(editForm.password && { password: editForm.password })
@@ -332,6 +335,9 @@ const AdminWorkerPage = () => {
                       Rol
                     </th>
                     <th className="px-6 py-4 text-left text-sm font-semibold text-gray-700 uppercase tracking-wider">
+                      Ubicacion
+                    </th>
+                    <th className="px-6 py-4 text-left text-sm font-semibold text-gray-700 uppercase tracking-wider">
                       Teléfono
                     </th>
                     <th className="px-6 py-4 text-left text-sm font-semibold text-gray-700 uppercase tracking-wider">
@@ -353,6 +359,9 @@ const AdminWorkerPage = () => {
                       </td>
                       <td className="px-6 py-4">
                         <div className="text-sm text-gray-900 text-left capitalize">{worker.rol.toLowerCase().replace('_', ' ')}</div>
+                      </td>
+                      <td className="px-6 py-4">
+                        <div className="text-sm text-gray-900 text-left">{worker.ubicacion || 'No especificada'}</div>
                       </td>
                       <td className="px-6 py-4">
                         <div className="text-sm text-gray-900 text-left">{worker.telefono}</div>
@@ -528,7 +537,30 @@ const AdminWorkerPage = () => {
               />
 
               <TextField
-                label="Teléfono"
+                label="Ubicacion"
+                variant="outlined"
+                fullWidth
+                value={editForm.ubicacion}
+                onChange={(e) => setEditForm({...editForm, ubicacion: e.target.value})}
+                margin="normal"
+                sx={{
+                  '& .MuiOutlinedInput-root': {
+                    borderRadius: '12px',
+                    '&:hover fieldset': {
+                      borderColor: '#FF6B00',
+                    },
+                    '&.Mui-focused fieldset': {
+                      borderColor: '#FF6B00',
+                    },
+                  },
+                  '& .MuiInputLabel-root.Mui-focused': {
+                    color: '#FF6B00',
+                  },
+                }}
+              />
+
+              <TextField
+                label="Telefono"
                 variant="outlined"
                 fullWidth
                 value={editForm.telefono}
