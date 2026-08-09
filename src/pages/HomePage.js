@@ -1,354 +1,334 @@
-import { useState, useEffect } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { ChevronLeft, ChevronRight, Mail, Phone, MessageCircle } from 'lucide-react';
 import FloatingWhatsAppButton from '../components/FloatingWhatsAppButton';
 import ChatWidget from '../components/ChatWidget';
+import { API_URL } from '../config/apiConfig';
+import './HomePage.css';
 
-import { API_BASE_URL, API_URL } from '../config/apiConfig';
+const fallbackHomeData = {
+  hero_eyebrow: 'VIDEOJUEGOS HABANA - TIENDA TECH',
+  hero_title: 'Tecnologia real,',
+  hero_title_highlight: 'entregada rapido.',
+  hero_subtitle: 'Portatiles, consolas y accesorios originales, con una presencia visual mas premium y una navegacion que se siente rapida, tecnica y confiable.',
+  hero_primary_button_text: 'Empiece su compra',
+  hero_primary_button_url: '/shop',
+  hero_secondary_button_text: 'Ver lo nuevo esta semana',
+  hero_secondary_button_url: '#nuevos',
+  spotlight_status: 'LIVE STOCK',
+  spotlight_price: 'DESDE $520',
+  spotlight_text: 'Consolas, laptops y perifericos listos para entrega.',
+  ticker_items: [
+    'Entrega en toda La Habana',
+    'Pago contra entrega',
+    'Garantia real en cada equipo',
+    'Soporte por WhatsApp',
+    'Cupones y sistema de puntos',
+    'Productos nuevos cada semana',
+  ],
+  products_eyebrow: 'Lo mas pedido',
+  products_title: 'Los favoritos de la casa',
+  products_link_text: 'Ver toda la tienda',
+  products_link_url: '/shop',
+  advantages_eyebrow: 'Por que comprar aqui',
+  advantages_title: 'Comprar con nosotros tiene ventajas reales',
+  advantages: [
+    {
+      chip: 'ENV.GRATIS',
+      titulo: 'Mensajeria gratis',
+      descripcion: 'En compras superiores a 200 USD, la entrega en toda La Habana corre por nuestra cuenta.',
+    },
+    {
+      chip: 'DESCTO',
+      titulo: 'Cupones y rebajas',
+      descripcion: 'Promociones activas, rebajas y lanzamientos semanales con visibilidad desde el inicio.',
+    },
+    {
+      chip: 'PUNTOS',
+      titulo: 'Sistema de puntos',
+      descripcion: 'Acumula beneficios por tus compras y aprovecha recompensas en proximos pedidos.',
+    },
+  ],
+  new_eyebrow: 'Recien llegado',
+  new_title: 'Nuevo esta semana',
+  new_meta: '5 productos anadidos',
+  faq_eyebrow: 'Dudas frecuentes',
+  faq_title: 'Lo que mas nos preguntan',
+  faq_intro: 'Este bloque aterriza dudas comunes sin romper el ritmo visual de la home.',
+  faqs: [],
+  footer_logo: 'VIDEOJUEGOS HABANA',
+  footer_copy: 'Tu tienda de confianza en La Habana. Tecnologia real, entrega rapida y precios justos.',
+  footer_links: [],
+  footer_hours_label: 'Horario',
+  footer_hours_days: 'Lun - Sab',
+  footer_hours_value: '9:00 AM - 5:00 PM',
+  footer_bottom_text: 'Videojuegos Habana. Todos los derechos reservados.',
+  terms_title: 'Terminos y condiciones',
+  terms_content: '',
+  conditions_title: 'Condiciones de compra',
+  conditions_content: '',
+};
+
+const resolveHref = (href) => href || '/shop';
+
+const ProductCard = ({ product, compact = false }) => {
+  const category = product?.subcategoria?.[0] || product?.categoria?.[0] || 'Producto';
+  const price = Number(product?.precio_post_descuento || product?.precio || 0);
+  const oldPrice = Number(product?.precio || 0);
+  const hasDiscount = oldPrice > price;
+
+  return (
+    <Link to={product?.enlace || `/product/${product?.id}`} className={compact ? 'vh-new-card' : 'vh-product-card'}>
+      <div
+        className={compact ? 'vh-new-card__media' : 'vh-product-card__media'}
+        style={product?.imagen ? { backgroundImage: `url(${product.imagen})` } : undefined}
+      >
+        {!compact && product?.ventas_totales > 0 && <span className="vh-badge">Top ventas</span>}
+      </div>
+      <div className={compact ? undefined : 'vh-product-card__body'}>
+        <p className={compact ? undefined : 'vh-product-card__category'}>{category}</p>
+        <h3>{product?.nombre}</h3>
+        {compact ? (
+          <span>${price.toFixed(2)}</span>
+        ) : (
+          <p className="vh-product-card__price">
+            ${price.toFixed(2)}
+            {hasDiscount && <span>${oldPrice.toFixed(2)}</span>}
+          </p>
+        )}
+      </div>
+    </Link>
+  );
+};
+
+const InfoModal = ({ title, content, onClose }) => {
+  if (!title && !content) return null;
+
+  return (
+    <div className="vh-modal" role="dialog" aria-modal="true">
+      <div className="vh-modal__panel">
+        <button className="vh-modal__close" type="button" onClick={onClose} aria-label="Cerrar">
+          x
+        </button>
+        <h2>{title}</h2>
+        <p>{content || 'Contenido pendiente de configurar.'}</p>
+      </div>
+    </div>
+  );
+};
+
 const HomePage = () => {
-  const [currentMainSlide, setCurrentMainSlide] = useState(0);
-  const [currentSecondarySlide, setCurrentSecondarySlide] = useState(0);
-  const [touchStartX, setTouchStartX] = useState(0);
-  const [touchEndX, setTouchEndX] = useState(0);
-  const [isMobile, setIsMobile] = useState(false);
-  const [homeData, setHomeData] = useState(null);
-  const [marqueePosition, setMarqueePosition] = useState(0);
-  const [marqueeWidth, setMarqueeWidth] = useState(0);
-  const [containerWidth, setContainerWidth] = useState(0);
-  
-  // Obtener datos de la API
+  const [homeData, setHomeData] = useState(fallbackHomeData);
+  const [topProducts, setTopProducts] = useState([]);
+  const [recentProducts, setRecentProducts] = useState([]);
+  const [openFaq, setOpenFaq] = useState(0);
+  const [modal, setModal] = useState(null);
+
   useEffect(() => {
-    const fetchData = async () => {
+    const fetchHomeData = async () => {
       try {
         const response = await fetch(`${API_URL}/listar_homepage/`);
         const data = await response.json();
-        setHomeData(data[0]);
+        setHomeData({ ...fallbackHomeData, ...(data?.[0] || {}) });
       } catch (error) {
-        console.error('Error fetching data:', error);
+        console.error('Error fetching home data:', error);
       }
     };
-    
-    fetchData();
+
+    const fetchProducts = async () => {
+      try {
+        const [topResponse, recentResponse] = await Promise.all([
+          fetch(`${API_URL}/home/productos_rotativos/?limit=5`),
+          fetch(`${API_URL}/home/productos_recientes/?limit=5`),
+        ]);
+        const [topData, recentData] = await Promise.all([
+          topResponse.json(),
+          recentResponse.json(),
+        ]);
+        setTopProducts(Array.isArray(topData) ? topData.slice(0, 4) : []);
+        setRecentProducts(Array.isArray(recentData) ? recentData.slice(0, 5) : []);
+      } catch (error) {
+        console.error('Error fetching home products:', error);
+      }
+    };
+
+    fetchHomeData();
+    fetchProducts();
   }, []);
 
-  // Configurar animación del texto que se mueve
-  useEffect(() => {
-    if (!homeData?.etiqueta) return;
+  const tickerItems = useMemo(() => {
+    const items = Array.isArray(homeData.ticker_items) ? homeData.ticker_items : [];
+    return items.length ? items : fallbackHomeData.ticker_items;
+  }, [homeData.ticker_items]);
 
-    const container = document.querySelector('.marquee-container');
-    const text = document.querySelector('.marquee-text');
-    
-    if (container && text) {
-      const containerRect = container.getBoundingClientRect();
-      const textRect = text.getBoundingClientRect();
-      
-      setContainerWidth(containerRect.width);
-      setMarqueeWidth(textRect.width);
-      setMarqueePosition(containerRect.width / 2 - textRect.width / 2);
-    }
-  }, [homeData?.etiqueta]);
-
-  // Animación del texto que se mueve
-  useEffect(() => {
-    if (marqueeWidth === 0 || containerWidth === 0) return;
-
-    const animationDuration = 15000;
-    const startPosition = containerWidth;
-    const endPosition = -marqueeWidth;
-    const distance = startPosition - endPosition;
-    const speed = distance / (animationDuration / 16);
-
-    let animationId;
-    let lastTimestamp = 0;
-
-    const animate = (timestamp) => {
-      if (!lastTimestamp) lastTimestamp = timestamp;
-      const delta = timestamp - lastTimestamp;
-      
-      setMarqueePosition(prev => {
-        const newPosition = prev - speed * (delta / 16);
-        if (newPosition <= endPosition) {
-          return startPosition;
-        }
-        return newPosition;
-      });
-
-      lastTimestamp = timestamp;
-      animationId = requestAnimationFrame(animate);
-    };
-
-    animationId = requestAnimationFrame(animate);
-
-    return () => {
-      cancelAnimationFrame(animationId);
-    };
-  }, [marqueeWidth, containerWidth]);
-
-  // Detectar si es móvil
-  useEffect(() => {
-    const checkMobile = () => {
-      setIsMobile(window.innerWidth < 768);
-    };
-    
-    checkMobile();
-    window.addEventListener('resize', checkMobile);
-    
-    return () => window.removeEventListener('resize', checkMobile);
-  }, []);
-  
-  // Auto-slide effects
-  useEffect(() => {
-    if (!homeData?.hero_caruseles) return;
-    const interval = setInterval(() => {
-      setCurrentMainSlide((prev) => (prev + 1) % homeData.hero_caruseles.length);
-    }, 3000);
-    return () => clearInterval(interval);
-  }, [homeData?.hero_caruseles]);
-
-  useEffect(() => {
-    if (!homeData?.place_caruseles) return;
-    const interval = setInterval(() => {
-      setCurrentSecondarySlide((prev) => (prev + 1) % homeData.place_caruseles.length);
-    }, 3500);
-    return () => clearInterval(interval);
-  }, [homeData?.place_caruseles]);
-
-  const nextMainSlide = () => {
-    if (!homeData?.hero_caruseles) return;
-    setCurrentMainSlide((prev) => (prev + 1) % homeData.hero_caruseles.length);
-  };
-
-  const prevMainSlide = () => {
-    if (!homeData?.hero_caruseles) return;
-    setCurrentMainSlide((prev) => (prev - 1 + homeData.hero_caruseles.length) % homeData.hero_caruseles.length);
-  };
-
-  const nextSecondarySlide = () => {
-    if (!homeData?.place_caruseles) return;
-    setCurrentSecondarySlide((prev) => (prev + 1) % homeData.place_caruseles.length);
-  };
-
-  const prevSecondarySlide = () => {
-    if (!homeData?.place_caruseles) return;
-    setCurrentSecondarySlide((prev) => (prev - 1 + homeData.place_caruseles.length) % homeData.place_caruseles.length);
-  };
-
-  // Funciones para manejar touch en el carrusel principal
-  const handleMainTouchStart = (e) => {
-    if (!isMobile) return;
-    setTouchStartX(e.targetTouches[0].clientX);
-  };
-
-  const handleMainTouchMove = (e) => {
-    if (!isMobile) return;
-    setTouchEndX(e.targetTouches[0].clientX);
-  };
-
-  const handleMainTouchEnd = () => {
-    if (!isMobile || !touchStartX || !touchEndX) return;
-    
-    const distance = touchStartX - touchEndX;
-    const threshold = 50;
-    
-    if (distance > threshold) {
-      nextMainSlide();
-    } else if (distance < -threshold) {
-      prevMainSlide();
-    }
-    
-    setTouchStartX(0);
-    setTouchEndX(0);
-  };
-
-  // Funciones para manejar touch en el carrusel secundario
-  const handleSecondaryTouchStart = (e) => {
-    if (!isMobile) return;
-    setTouchStartX(e.targetTouches[0].clientX);
-  };
-
-  const handleSecondaryTouchMove = (e) => {
-    if (!isMobile) return;
-    setTouchEndX(e.targetTouches[0].clientX);
-  };
-
-  const handleSecondaryTouchEnd = () => {
-    if (!isMobile || !touchStartX || !touchEndX) return;
-    
-    const distance = touchStartX - touchEndX;
-    const threshold = 50;
-    
-    if (distance > threshold) {
-      nextSecondarySlide();
-    } else if (distance < -threshold) {
-      prevSecondarySlide();
-    }
-    
-    setTouchStartX(0);
-    setTouchEndX(0);
-  };
-
-  // Componente reutilizable para los carruseles
-  const Carousel = ({ images, currentSlide, nextSlide, prevSlide, 
-                    onTouchStart, onTouchMove, onTouchEnd, className = '' }) => {
-    if (!images || images.length === 0) return null;
-
-    return (
-      <div className={`relative bg-[#FF6B00] w-full overflow-hidden ${className}`}>
-        {/* Contenedor de imágenes */}
-        <div 
-          className="absolute inset-0 w-full h-full flex items-center justify-center"
-          onTouchStart={onTouchStart}
-          onTouchMove={onTouchMove}
-          onTouchEnd={onTouchEnd}
-        >
-          <img 
-            src={`${API_BASE_URL}${images[currentSlide].imagen}`} 
-            alt={`Slide ${currentSlide + 1}`}
-            className={`${
-              isMobile ? 'max-w-full max-h-full object-contain' : 'w-full h-full object-cover'
-            } transition-opacity duration-500 ease-in-out`}
-            style={{ objectPosition: 'center' }}
-          />
-        </div>
-
-        {/* Controles - Solo visible en desktop */}
-        {!isMobile && (
-          <>
-            <button 
-              onClick={prevSlide}
-              className="absolute left-4 top-1/2 transform -translate-y-1/2 text-white z-30 hover:text-gray-200 transition-colors bg-black bg-opacity-30 rounded-full p-2"
-            >
-              <ChevronLeft size={32} />
-            </button>
-            <button 
-              onClick={nextSlide}
-              className="absolute right-4 top-1/2 transform -translate-y-1/2 text-white z-30 hover:text-gray-200 transition-colors bg-black bg-opacity-30 rounded-full p-2"
-            >
-              <ChevronRight size={32} />
-            </button>
-          </>
-        )}
-
-        {/* Indicadores de slide */}
-        <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 flex justify-center space-x-2">
-          {images.map((_, index) => (
-            <div
-              key={index}
-              className={`w-2 h-2 rounded-full transition-colors ${
-                index === currentSlide ? 'bg-white' : 'bg-white bg-opacity-50'
-              }`}
-            />
-          ))}
-        </div>
-      </div>
-    );
-  };
-
-  if (!homeData) {
-    return <div className="min-h-screen flex items-center justify-center">Cargando...</div>;
-  }
+  const advantages = Array.isArray(homeData.advantages) ? homeData.advantages : [];
+  const faqs = Array.isArray(homeData.faqs) ? homeData.faqs : [];
+  const footerGroups = Array.isArray(homeData.footer_links) ? homeData.footer_links : [];
 
   return (
-    <div className="min-h-screen flex flex-col bg-gray-100">
-      {/* Banner naranja */}
-      <div className="bg-[#FF6B00] text-white h-64 py-12 md:py-20 px-6 text-center w-full">
-        <h1 className="text-4xl md:text-5xl font-bold mb-2">VIDEOJUEGOS</h1>
-        <h2 className="text-2xl md:text-3xl font-light mb-2">H A B A N A</h2>
-        <Link 
-          to="/shop" 
-          className="inline-block bg-black text-white px-8 py-3 rounded-lg font-medium text-lg hover:bg-gray-800 transition-colors duration-300"
-        >
-          Empiece su compra
-        </Link>
-      </div>
-
-      {/* Separador negro con texto que se mueve */}
-      <div className="marquee-container bg-black h-12 w-full overflow-hidden relative flex items-center">
-        {homeData.etiqueta && (
-          <div 
-            className="marquee-text text-white text-lg whitespace-nowrap absolute"
-            style={{ left: `${marqueePosition}px` }}
-          >
-            {homeData.etiqueta}
-          </div>
-        )}
-      </div>
-
-      {/* Carrusel principal */}
-      <Carousel 
-        images={homeData.hero_caruseles} 
-        currentSlide={currentMainSlide}
-        nextSlide={nextMainSlide}
-        prevSlide={prevMainSlide}
-        onTouchStart={handleMainTouchStart}
-        onTouchMove={handleMainTouchMove}
-        onTouchEnd={handleMainTouchEnd}
-        className="h-48 md:h-80"
-      />
-
-      {/* Panel de contenido */}
-      <div className="flex-grow px-4 md:px-8 py-8">
-        <div className="bg-white rounded-lg shadow-md p-6 max-w-6xl mx-auto">
-          <div className="flex flex-col md:flex-row gap-6">
-            {/* Texto de bienvenida */}
-            <div className="flex-1">
-              <h2 className="text-2xl md:text-3xl font-bold text-gray-800 mb-3">Bienvenidos a:</h2>
-              <p className="text-[#FF6B00] font-medium mb-3">VIDEOJUEGOSHABANA</p>
-              <p className="text-gray-600 mb-3 text-left">
-                Su tienda de confianza en la Habana con domicilios incluidos en toda
-                la provincia Habana. Los mejores precios en productos que usted desee.
-              </p>
-              <p className="text-gray-600 text-left">
-                No dude en contactarnos y siempre se sera atendido como usted 
-                que es lo mas importante se merece.
-              </p>
+    <main className="vh-page">
+      <section className="vh-hero">
+        <div className="vh-hero__grid"></div>
+        <div className="vh-container vh-hero__inner">
+          <div>
+            <p className="vh-eyebrow">{homeData.hero_eyebrow}</p>
+            <h1 className="vh-hero__title">
+              {homeData.hero_title}
+              <span>{homeData.hero_title_highlight}</span>
+            </h1>
+            <p className="vh-hero__subtitle">{homeData.hero_subtitle}</p>
+            <div className="vh-hero__actions">
+              <Link to={resolveHref(homeData.hero_primary_button_url)} className="vh-btn vh-btn--primary">
+                {homeData.hero_primary_button_text}
+              </Link>
+              <a href={resolveHref(homeData.hero_secondary_button_url)} className="vh-btn vh-btn--ghost">
+                {homeData.hero_secondary_button_text}
+              </a>
             </div>
+          </div>
 
-            {/* Carrusel secundario - usando el mismo componente pero con place_caruseles */}
-            <div className="w-full md:w-64 rounded-lg overflow-hidden">
-              <Carousel 
-                images={homeData.place_caruseles} 
-                currentSlide={currentSecondarySlide}
-                nextSlide={nextSecondarySlide}
-                prevSlide={prevSecondarySlide}
-                onTouchStart={handleSecondaryTouchStart}
-                onTouchMove={handleSecondaryTouchMove}
-                onTouchEnd={handleSecondaryTouchEnd}
-                className="h-64"
-              />
+          <div className="vh-hero__spotlight">
+            <div className="vh-console-card">
+              <div className="vh-console-card__top">
+                <span className="vh-console-card__status">{homeData.spotlight_status}</span>
+                <span className="vh-console-card__price">{homeData.spotlight_price}</span>
+              </div>
+              <div className="vh-console-card__visual">
+                <div className="vh-console-glow"></div>
+                <div className="vh-device vh-device--left"></div>
+                <div className="vh-device vh-device--center"></div>
+                <div className="vh-device vh-device--right"></div>
+              </div>
+              <div className="vh-console-card__bottom">
+                <p>{homeData.spotlight_text}</p>
+              </div>
             </div>
           </div>
         </div>
-      </div>
-
-      {/* Pie de página negro */}
-      <footer className="bg-black text-white py-6 w-full mt-auto">
-        <div className="container mx-auto px-4">
-          <div className="flex justify-center space-x-8 md:space-x-12">
-            <div className="flex flex-col items-center">
-               <a href="mailto:rauljavierdominguezmaymir@gmail.com" className="flex flex-col items-center">
-              <Mail size={24} className="mb-1" />
-              <span className="text-xs md:text-sm">Email</span>
-              </a>
-            </div>
-            <div className="flex flex-col items-center">
-              <a href="tel:+5359709174" className="flex flex-col items-center">
-              <Phone size={24} className="mb-1" />
-              <span className="text-xs md:text-sm">Teléfono</span>
-              </a>
-            </div>
-            <div className="flex flex-col items-center">
-              <a href="https://wa.me/+5359709174" target="_blank" rel="noopener noreferrer" className="flex flex-col items-center">
-              <MessageCircle size={24} className="mb-1" />
-              <span className="text-xs md:text-sm">WhatsApp</span>
-              </a>
-            </div>
+        <div className="vh-ticker">
+          <span className="vh-ticker__dot"></span>
+          <div className="vh-ticker__track">
+            {tickerItems.map((item, index) => (
+              <span key={`${item}-${index}`}>{item}</span>
+            ))}
           </div>
         </div>
-      </footer>  
+      </section>
+
+      <section className="vh-products" id="productos">
+        <div className="vh-container">
+          <div className="vh-section-head">
+            <div>
+              <p className="vh-eyebrow vh-eyebrow--dark">{homeData.products_eyebrow}</p>
+              <h2>{homeData.products_title}</h2>
+            </div>
+            <Link to={resolveHref(homeData.products_link_url)}>{homeData.products_link_text} -></Link>
+          </div>
+
+          <div className="vh-products__grid">
+            {topProducts.map((product) => (
+              <ProductCard key={product.id} product={product} />
+            ))}
+          </div>
+        </div>
+      </section>
+
+      <section className="vh-advantages">
+        <div className="vh-container">
+          <p className="vh-eyebrow">{homeData.advantages_eyebrow}</p>
+          <h2>{homeData.advantages_title}</h2>
+          <div className="vh-advantages__grid">
+            {advantages.map((advantage, index) => (
+              <article className="vh-advantage-card" key={`${advantage.titulo}-${index}`}>
+                <span className="vh-chip">{advantage.chip}</span>
+                <h3>{advantage.titulo}</h3>
+                <p>{advantage.descripcion}</p>
+              </article>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      <section className="vh-new" id="nuevos">
+        <div className="vh-container">
+          <div className="vh-section-head">
+            <div>
+              <p className="vh-eyebrow vh-eyebrow--dark">{homeData.new_eyebrow}</p>
+              <h2>{homeData.new_title}</h2>
+            </div>
+            <p className="vh-meta">{homeData.new_meta}</p>
+          </div>
+
+          <div className="vh-new__rail">
+            {recentProducts.map((product) => (
+              <ProductCard key={product.id} product={product} compact />
+            ))}
+          </div>
+        </div>
+      </section>
+
+      <section className="vh-faqs">
+        <div className="vh-container vh-faqs__layout">
+          <div className="vh-faqs__intro">
+            <p className="vh-eyebrow vh-eyebrow--dark">{homeData.faq_eyebrow}</p>
+            <h2>{homeData.faq_title}</h2>
+            <p>{homeData.faq_intro}</p>
+          </div>
+          <div className="vh-faqs__list">
+            {faqs.map((faq, index) => (
+              <div className={`vh-faq-item ${openFaq === index ? 'vh-faq-item--open' : ''}`} key={`${faq.pregunta}-${index}`}>
+                <button className="vh-faq-item__question" type="button" onClick={() => setOpenFaq(openFaq === index ? -1 : index)}>
+                  <span>{faq.pregunta}</span>
+                  <span>{openFaq === index ? '-' : '+'}</span>
+                </button>
+                {openFaq === index && <p>{faq.respuesta}</p>}
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      <footer className="vh-footer">
+        <div className="vh-container vh-footer__top">
+          <div>
+            <p className="vh-footer__logo">{homeData.footer_logo}</p>
+            <p className="vh-footer__copy">{homeData.footer_copy}</p>
+          </div>
+          {footerGroups.map((group, index) => (
+            <div key={`${group.grupo}-${index}`}>
+              <p className="vh-footer__heading">{group.grupo}</p>
+              {(group.links || []).map((link, linkIndex) => (
+                <a href={link.url || '/'} key={`${link.texto}-${linkIndex}`}>
+                  {link.texto}
+                </a>
+              ))}
+            </div>
+          ))}
+          <div>
+            <p className="vh-footer__heading">{homeData.footer_hours_label}</p>
+            <p className="vh-footer__hours">{homeData.footer_hours_days}</p>
+            <p className="vh-footer__hours vh-footer__hours--strong">{homeData.footer_hours_value}</p>
+            <button type="button" className="vh-footer__button" onClick={() => setModal('terms')}>
+              {homeData.terms_title}
+            </button>
+            <button type="button" className="vh-footer__button" onClick={() => setModal('conditions')}>
+              {homeData.conditions_title}
+            </button>
+          </div>
+        </div>
+        <div className="vh-container vh-footer__bottom">
+          <p>{homeData.footer_bottom_text}</p>
+        </div>
+      </footer>
+
+      {modal === 'terms' && (
+        <InfoModal title={homeData.terms_title} content={homeData.terms_content} onClose={() => setModal(null)} />
+      )}
+      {modal === 'conditions' && (
+        <InfoModal title={homeData.conditions_title} content={homeData.conditions_content} onClose={() => setModal(null)} />
+      )}
       <ChatWidget />
       <FloatingWhatsAppButton />
-    </div>
+    </main>
   );
 };
 
