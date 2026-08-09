@@ -135,19 +135,30 @@ const HomePage = () => {
     };
 
     const fetchProducts = async () => {
+      let recentData = [];
+
       try {
-        const [topResponse, recentResponse] = await Promise.all([
-          fetch(`${API_URL}/home/productos_rotativos/?limit=5`),
-          fetch(`${API_URL}/home/productos_recientes/?limit=5`),
-        ]);
-        const [topData, recentData] = await Promise.all([
-          topResponse.json(),
-          recentResponse.json(),
-        ]);
-        setTopProducts(Array.isArray(topData) ? topData.slice(0, 4) : []);
-        setRecentProducts(Array.isArray(recentData) ? recentData.slice(0, 5) : []);
+        const recentResponse = await fetch(`${API_URL}/home/productos_recientes/?limit=5`);
+        if (recentResponse.ok) {
+          recentData = await recentResponse.json();
+          setRecentProducts(Array.isArray(recentData) ? recentData.slice(0, 5) : []);
+        }
       } catch (error) {
-        console.error('Error fetching home products:', error);
+        console.error('Error fetching recent products:', error);
+      }
+
+      try {
+        const topResponse = await fetch(`${API_URL}/home/productos_rotativos/?limit=5`);
+        if (topResponse.ok) {
+          const topData = await topResponse.json();
+          const products = Array.isArray(topData) && topData.length ? topData : recentData;
+          setTopProducts(Array.isArray(products) ? products.slice(0, 4) : []);
+        } else {
+          setTopProducts(Array.isArray(recentData) ? recentData.slice(0, 4) : []);
+        }
+      } catch (error) {
+        console.error('Error fetching top products:', error);
+        setTopProducts(Array.isArray(recentData) ? recentData.slice(0, 4) : []);
       }
     };
 
