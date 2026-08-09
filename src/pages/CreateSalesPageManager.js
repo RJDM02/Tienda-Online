@@ -150,8 +150,9 @@ const CreateSalesPageManager = () => {
       const selectedCurrency = currencies.find(c => c.id === parseInt(formData.currencyId));
       const selectedDeliveryPoint = deliveryPoints.find(d => d.id === parseInt(formData.deliveryPointId));
 
-      // Procesar cada item del carrito
-      const requests = cartItems.map((item) => {
+      // Procesar cada item del carrito de forma secuencial para evitar bloqueos
+      // al vender variaciones que actualizan tambien el stock del producto padre.
+      for (const item of cartItems) {
         const salesData = {
           moneda_id: formData.currencyId,
           domicilio_id: formData.deliveryPointId,
@@ -172,13 +173,9 @@ const CreateSalesPageManager = () => {
           salesData.producto_id = item.id;
         }
 
-        return axios.post(`${API_URL}/crear_venta/`, salesData, config)
-          .then(() => {
-            setProcessedItems(prev => prev + 1);
-          });
-      });
-
-      await Promise.all(requests);
+        await axios.post(`${API_URL}/crear_venta/`, salesData, config);
+        setProcessedItems(prev => prev + 1);
+      }
       
       // Éxito: vaciar carrito y mostrar mensaje
       clearCart();

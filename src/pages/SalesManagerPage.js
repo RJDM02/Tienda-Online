@@ -176,6 +176,11 @@ const SalesManagerPage = () => {
   };
 
   const calcularGananciaTotal = (pedido) => {
+    const gananciaBackend = toNumber(pedido.ganancia_gestor);
+    if (gananciaBackend > 0 || pedido.ganancia_gestor === 0 || pedido.ganancia_gestor === '0.00') {
+      return gananciaBackend;
+    }
+
     const comision = obtenerComision(pedido);
     const precioPostDescuento = toNumber(
       pedido.producto 
@@ -352,7 +357,7 @@ const SalesManagerPage = () => {
                             <div className="flex items-center justify-between">
                               <div>
                                 <h3 className="text-lg font-bold text-gray-900">Pedido #{pedido.id}</h3>
-                                <p className="text-sm text-gray-600">{pedido.producto?.nombre || pedido.variacion?.producto_padre?.nombre || 'Producto no especificado'}</p>
+                                <p className="text-sm text-gray-600">{pedido.producto?.nombre || pedido.variacion?.item_info?.nombre || pedido.variacion?.producto_padre?.nombre || 'Producto no especificado'}</p>
                               </div>
                               <div className={`px-3 py-1 rounded-lg border text-sm font-medium flex items-center space-x-2 ${statusConfig.color}`}>
                                 <StatusIcon sx={{ fontSize: 16 }} />
@@ -546,7 +551,7 @@ const SalesManagerPage = () => {
                     {filteredHistorial.map((venta) => {
                       const statusConfig = getStatusConfig(venta.estado);
                       const StatusIcon = statusConfig.icon;
-                      const productoNombre = venta.producto?.nombre || venta.variacion?.producto_padre?.nombre || 'Producto no especificado';
+                      const productoNombre = venta.producto?.nombre || venta.variacion?.item_info?.nombre || venta.variacion?.producto_padre?.nombre || 'Producto no especificado';
                       
                       return (
                         <div key={venta.id} className="bg-white rounded-2xl shadow-lg overflow-hidden hover:shadow-xl transition-all duration-200 transform hover:-translate-y-1">
