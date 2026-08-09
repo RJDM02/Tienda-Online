@@ -294,7 +294,7 @@
 
 .vh-products__grid {
   display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
+  grid-template-columns: repeat(5, minmax(0, 1fr));
   gap: 22px;
 }
 
@@ -610,10 +610,16 @@
 
 @media (max-width: 1100px) {
   .vh-hero__inner,
-  .vh-products__grid,
-  .vh-new__rail,
   .vh-footer__top {
     grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .vh-products__grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .vh-new__rail {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
   }
 
   .vh-advantages__grid {
@@ -631,11 +637,36 @@
   }
 
   .vh-hero__inner,
-  .vh-products__grid,
-  .vh-new__rail,
   .vh-faqs__layout,
   .vh-footer__top {
     grid-template-columns: 1fr;
+  }
+
+  .vh-products__grid,
+  .vh-new__rail {
+    display: grid;
+    grid-auto-flow: column;
+    grid-auto-columns: minmax(250px, 82vw);
+    grid-template-columns: none;
+    gap: 16px;
+    overflow-x: auto;
+    overflow-y: hidden;
+    scroll-snap-type: x mandatory;
+    scroll-padding-left: 14px;
+    padding: 2px 14px 18px;
+    margin-left: -14px;
+    margin-right: -14px;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .vh-products__grid::-webkit-scrollbar,
+  .vh-new__rail::-webkit-scrollbar {
+    display: none;
+  }
+
+  .vh-product-card,
+  .vh-new-card {
+    scroll-snap-align: start;
   }
 
   .vh-products,

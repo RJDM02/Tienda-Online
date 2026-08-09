@@ -152,13 +152,13 @@ const HomePage = () => {
         if (topResponse.ok) {
           const topData = await topResponse.json();
           const products = Array.isArray(topData) && topData.length ? topData : recentData;
-          setTopProducts(Array.isArray(products) ? products.slice(0, 4) : []);
+          setTopProducts(Array.isArray(products) ? products.slice(0, 5) : []);
         } else {
-          setTopProducts(Array.isArray(recentData) ? recentData.slice(0, 4) : []);
+          setTopProducts(Array.isArray(recentData) ? recentData.slice(0, 5) : []);
         }
       } catch (error) {
         console.error('Error fetching top products:', error);
-        setTopProducts(Array.isArray(recentData) ? recentData.slice(0, 4) : []);
+        setTopProducts(Array.isArray(recentData) ? recentData.slice(0, 5) : []);
       }
     };
 
