@@ -176,9 +176,12 @@ const SalesManagerPage = () => {
   };
 
   const calcularGananciaTotal = (pedido) => {
-    const gananciaBackend = toNumber(pedido.ganancia_gestor);
-    if (gananciaBackend > 0 || pedido.ganancia_gestor === 0 || pedido.ganancia_gestor === '0.00') {
-      return gananciaBackend;
+    if (
+      pedido.ganancia_gestor !== null &&
+      pedido.ganancia_gestor !== undefined &&
+      pedido.ganancia_gestor !== ''
+    ) {
+      return toNumber(pedido.ganancia_gestor);
     }
 
     const comision = obtenerComision(pedido);
