@@ -63,6 +63,7 @@
     border-radius: 28px 28px 0 0;
     transition: transform 220ms ease;
     box-shadow: 0 -30px 70px rgba(0, 0, 0, 0.45) !important;
+    pointer-events: auto;
   }
 
   .dashbar-shell.dashbar-mobile-open {

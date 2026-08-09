@@ -361,19 +361,8 @@ const Dashbar = ({ onFilterChange, userData, onEditProfile, selectedCategories =
                 >
                   <Edit size={16} />
                 </button>
-        )}
-
-        {!isCollapsed && onCloseMobile && (
-          <div className="dashbar-mobile-actions">
-            <button type="button" className="dashbar-clear-all" onClick={clearAllFilters}>
-              Limpiar
-            </button>
-            <button type="button" className="dashbar-apply" onClick={onCloseMobile}>
-              Aplicar filtros
-            </button>
-          </div>
-        )}
-      </div>
+              )}
+            </div>
           </div>
         )}
 
@@ -669,6 +658,17 @@ const Dashbar = ({ onFilterChange, userData, onEditProfile, selectedCategories =
             </div>
           )}
         </div>
+
+        {!isCollapsed && onCloseMobile && (
+          <div className="dashbar-mobile-actions">
+            <button type="button" className="dashbar-clear-all" onClick={clearAllFilters}>
+              Limpiar
+            </button>
+            <button type="button" className="dashbar-apply" onClick={onCloseMobile}>
+              Aplicar filtros
+            </button>
+          </div>
+        )}
       </div>
     </div>
   );
