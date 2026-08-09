@@ -2,7 +2,9 @@ import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { ChevronLeft, ChevronRight, Mail, Phone, MessageCircle } from 'lucide-react';
 import FloatingWhatsAppButton from '../components/FloatingWhatsAppButton';
+import ChatWidget from '../components/ChatWidget';
 
+import { API_BASE_URL, API_URL } from '../config/apiConfig';
 const HomePage = () => {
   const [currentMainSlide, setCurrentMainSlide] = useState(0);
   const [currentSecondarySlide, setCurrentSecondarySlide] = useState(0);
@@ -18,7 +20,7 @@ const HomePage = () => {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const response = await fetch('https://videojuegoshabana.com/api/listar_homepage/');
+        const response = await fetch(`${API_URL}/listar_homepage/`);
         const data = await response.json();
         setHomeData(data[0]);
       } catch (error) {
@@ -200,7 +202,7 @@ const HomePage = () => {
           onTouchEnd={onTouchEnd}
         >
           <img 
-            src={`https://videojuegoshabana.com${images[currentSlide].imagen}`} 
+            src={`${API_BASE_URL}${images[currentSlide].imagen}`} 
             alt={`Slide ${currentSlide + 1}`}
             className={`${
               isMobile ? 'max-w-full max-h-full object-contain' : 'w-full h-full object-cover'
@@ -330,13 +332,13 @@ const HomePage = () => {
               </a>
             </div>
             <div className="flex flex-col items-center">
-              <a href="tel:+5352904461" className="flex flex-col items-center">
+              <a href="tel:+5359709174" className="flex flex-col items-center">
               <Phone size={24} className="mb-1" />
               <span className="text-xs md:text-sm">Teléfono</span>
               </a>
             </div>
             <div className="flex flex-col items-center">
-              <a href="https://wa.me/+5352904461" target="_blank" rel="noopener noreferrer" className="flex flex-col items-center">
+              <a href="https://wa.me/+5359709174" target="_blank" rel="noopener noreferrer" className="flex flex-col items-center">
               <MessageCircle size={24} className="mb-1" />
               <span className="text-xs md:text-sm">WhatsApp</span>
               </a>
@@ -344,6 +346,7 @@ const HomePage = () => {
           </div>
         </div>
       </footer>  
+      <ChatWidget />
       <FloatingWhatsAppButton />
     </div>
   );

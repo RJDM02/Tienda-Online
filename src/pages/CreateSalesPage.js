@@ -24,7 +24,26 @@ import { useCart } from '../context/CartContext';
 import AdminNotifier from '../components/AdminNotifier';
 import { styles, LoadingState, ErrorState, SectionTitle } from './CreateSalesPageStyles';
 
+import { API_URL } from '../config/apiConfig';
 const POINTS_THRESHOLD = 500;
+
+const parseErrorMessage = (error) => {
+  const status = error.response?.status;
+  if (status === 500) return `Error ${status}`;
+  const prod = error.response?.data?.producto;
+  const vari = error.response?.data?.variacion;
+  const disponible = error.response?.data?.disponible;
+  const solicitada = error.response?.data?.solicitada;
+  if (prod || vari) {
+    return `${error.response?.data?.error || 'Error'} (${prod || vari} - disponible ${disponible ?? '0'}, solicitada ${solicitada ?? '1'})`;
+  }
+  return (
+    error.response?.data?.error ||
+    error.response?.data?.message ||
+    error.message ||
+    'Error al procesar la venta. Intente nuevamente.'
+  );
+};
 
 const CreateSalesPage = () => {
   const location = useLocation();
@@ -54,6 +73,7 @@ const CreateSalesPage = () => {
     clientPhone: '',
     managerPrice: '',
     puntos: 0,
+    cupon: '',
     referidoId: referralCodeFromCart // ← USAR EL CÓDIGO DEL CARRITO
   });
   
@@ -65,7 +85,7 @@ const CreateSalesPage = () => {
   useEffect(() => {
     const fetchUserPoints = async (authToken) => {
       try {
-        const response = await axios.get('https://videojuegoshabana.com/api/obtener_puntos/', {
+        const response = await axios.get(`${API_URL}/obtener_puntos/`, {
           headers: { 'Authorization': `Bearer ${authToken}` }
         });
         const fetchedPoints = Number(response.data?.puntos ?? 0);
@@ -130,8 +150,8 @@ const CreateSalesPage = () => {
     const fetchData = async () => {
       try {
         const [currenciesResponse, deliveryPointsResponse] = await Promise.all([
-          axios.get('https://videojuegoshabana.com/api/listar_moneda/'),
-          axios.get('https://videojuegoshabana.com/api/listar_domicilio/')
+          axios.get(`${API_URL}/listar_moneda/`),
+          axios.get(`${API_URL}/listar_domicilio/`)
         ]);
         
         setCurrencies(currenciesResponse.data);
@@ -234,6 +254,9 @@ const CreateSalesPage = () => {
         }
 
         salesData.puntos = index === 0 ? puntosRedimidos : 0;
+        if (index === 0 && formData.cupon && formData.cupon.trim() !== '') {
+          salesData.cupon = formData.cupon.trim();
+        }
 
         if (item.isVariation) {
           salesData.variacion_id = item.variationId;
@@ -241,7 +264,7 @@ const CreateSalesPage = () => {
           salesData.producto_id = item.id;
         }
 
-        return axios.post('https://videojuegoshabana.com/api/crear_venta/', salesData, config)
+        return axios.post(`${API_URL}/crear_venta/`, salesData, config)
           .then(() => {
             setProcessedItems(prev => prev + 1);
           });
@@ -255,7 +278,8 @@ const CreateSalesPage = () => {
       setAvailablePoints(remainingPoints);
       setFormData(prev => ({
         ...prev,
-        puntos: 0
+        puntos: 0,
+        cupon: ''
       }));
       localStorage.removeItem('referralCode'); // Limpiar el código después de usarlo
       setSuccess(true);
@@ -273,9 +297,7 @@ const CreateSalesPage = () => {
       }, 3000);
     } catch (error) {
       console.error('Error:', error);
-      setError(error.response?.data?.message || 
-              error.message || 
-              'Error al procesar la venta. Intente nuevamente.');
+      setError(parseErrorMessage(error));
     } finally {
       setSubmitting(false);
     }
@@ -329,7 +351,8 @@ const CreateSalesPage = () => {
   }
 
   if (error) {
-    return <ErrorState error={error} onReload={handleReload} />;
+    const goShop = () => navigate('/shop');
+    return <ErrorState error={error} onGoShop={goShop} onReload={handleReload} />;
   }
 
   return (
@@ -468,11 +491,14 @@ const CreateSalesPage = () => {
                   required
                   sx={styles.select}
                 >
-                  {currencies.map(currency => (
-                    <MenuItem key={currency.id} value={currency.id}>
-                      {currency.nombre} (Cambio: {currency.cambio})
-                    </MenuItem>
-                  ))}
+                  {currencies
+                    .filter(currency => currency.cambio > 0) // ← FILTRO AQUÍ
+                    .map(currency => (
+                      <MenuItem key={currency.id} value={currency.id}>
+                        {currency.nombre} (Cambio: {currency.cambio})
+                      </MenuItem>
+                    ))
+                  }
                 </Select>
               </FormControl>
 
@@ -522,6 +548,32 @@ const CreateSalesPage = () => {
                       : availablePoints < POINTS_THRESHOLD
                         ? `Necesitas al menos ${POINTS_THRESHOLD.toLocaleString('es-ES')} puntos para canjear.`
                         : `Puedes usar hasta ${availablePoints.toLocaleString('es-ES')} puntos en esta compra.`
+                  }
+                />
+                <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mt: 1 }}>
+                  Nota: 100 puntos equivalen a 1 USD de descuento (convertido segun la moneda seleccionada). Minimo para canjear: {POINTS_THRESHOLD.toLocaleString('es-ES')} puntos.
+                </Typography>
+              </Box>
+
+              <Box sx={{ mb: 3 }}>
+                <Typography variant="subtitle1" sx={{ fontWeight: 600, mb: 1 }}>
+                  Cupón
+                </Typography>
+                <TextField
+                  fullWidth
+                  label="Código de cupón"
+                  name="cupon"
+                  value={formData.cupon}
+                  onChange={handleChange}
+                  placeholder="Ej: CUPON2026"
+                  disabled={!currentUser || isManager}
+                  sx={styles.textField}
+                  helperText={
+                    !currentUser
+                      ? 'Inicia sesion para usar tus cupones.'
+                      : isManager
+                        ? 'Los cupones se aplican solo en compras de cliente.'
+                        : 'Opcional. Si tienes un cupon, escríbelo aquí.'
                   }
                 />
               </Box>

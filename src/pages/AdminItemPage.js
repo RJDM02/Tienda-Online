@@ -1,3 +1,4 @@
+import { API_URL } from '../config/apiConfig';
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {  
@@ -86,7 +87,7 @@ const AdminItemPage = () => {
   };
 
   // Construir URL de la API con los filtros actuales
-  const buildApiUrl = (baseUrl = 'https://videojuegoshabana.com/api/listar_item_all/') => {
+  const buildApiUrl = (baseUrl = `${API_URL}/listar_item_all/`) => {
     const params = new URLSearchParams();
     
     // Agregar cada filtro si tiene valor
@@ -120,35 +121,35 @@ const AdminItemPage = () => {
 
     try {
       // Obtener categorías
-      const categoriesResponse = await fetch('https://videojuegoshabana.com/api/listar_categoria/', {
+      const categoriesResponse = await fetch(`${API_URL}/listar_categoria/`, {
         headers: {
           'Authorization': `Bearer ${token}`
         }
       });
       
       // Obtener subcategorías
-      const subcategoriesResponse = await fetch('https://videojuegoshabana.com/api/listar_subcategoria/', {
+      const subcategoriesResponse = await fetch(`${API_URL}/listar_subcategoria/`, {
         headers: {
           'Authorization': `Bearer ${token}`
         }
       });
       
       // Obtener condiciones
-      const conditionsResponse = await fetch('https://videojuegoshabana.com/api/listar_condicion/', {
+      const conditionsResponse = await fetch(`${API_URL}/listar_condicion/`, {
         headers: {
           'Authorization': `Bearer ${token}`
         }
       });
       
       // Obtener garantías
-      const garantiasResponse = await fetch('https://videojuegoshabana.com/api/listar_garantia/', {
+      const garantiasResponse = await fetch(`${API_URL}/listar_garantia/`, {
         headers: {
           'Authorization': `Bearer ${token}`
         }
       });
       
       // Obtener regalos
-      const regalosResponse = await fetch('https://videojuegoshabana.com/api/listar_regalo/', {
+      const regalosResponse = await fetch(`${API_URL}/listar_regalo/`, {
         headers: {
           'Authorization': `Bearer ${token}`
         }
@@ -338,30 +339,42 @@ const AdminItemPage = () => {
     descuento: 0,
     estado: false,
     garantia: '',
-    regalo: '',
+    regalo: [],
     condicion: '',
     sub_categoria: [],
     comision: 0,
     video: null,
     currentVideoUrl: '',
-    videoPreview: null
+    videoPreview: null,
+    upc: '',
+    ubicacion: ''
   });
   const [videoError, setVideoError] = useState('');
 
   // Abrir modal de edición
   const handleOpenEditModal = (item) => {
     setCurrentItem(item);
-    setOldDiscount(item.descuento || 0);
+    
+    // Calcular el valor monetario del descuento actual
+    const currentDiscountValue = item.descuento ? (item.precio * item.descuento) / 100 : 0;
+    setOldDiscount(currentDiscountValue);
+    
     setEditForm({
       nombre: item.nombre,
       descripcion: item.descripcion || '',
       cantidad: item.cantidad,
       precio: item.precio,
       costo: item.costo || 0,
-      descuento: item.descuento,
+      descuento: currentDiscountValue, // Mostrar el valor monetario ($12.00)
       estado: item.estado,
       garantia: item.garantia?.id || '',
-      regalo: item.regalo?.id || '',
+      regalo: Array.isArray(item.regalo)
+        ? item.regalo
+        : item.regalos
+        ? item.regalos.map((r) => r.id)
+        : item.regalo
+        ? [item.regalo]
+        : [],
       condicion: item.condicion_detalle?.id || '',
       sub_categoria: item.subcategorias_detalle
         ? item.subcategorias_detalle.map(sub => sub.id)
@@ -369,7 +382,9 @@ const AdminItemPage = () => {
       comision: item.comision || 0,
       video: null,
       currentVideoUrl: item.video || '',
-      videoPreview: null
+      videoPreview: null,
+      upc: item.upc || '',
+      ubicacion: item.ubicacion || ''
     });
     setVideoError('');
     setOpenEditModal(true);
@@ -491,13 +506,17 @@ const AdminItemPage = () => {
       formData.append('cantidad', editForm.cantidad);
       formData.append('precio', editForm.precio);
       formData.append('costo', editForm.costo);
-      formData.append('descuento', editForm.descuento);
-      formData.append('estado', editForm.estado);
-      formData.append('comision', editForm.comision);
+    formData.append('descuento', editForm.descuento);
+    formData.append('estado', editForm.estado);
+    formData.append('comision', editForm.comision);
+    formData.append('upc', editForm.upc);
+    formData.append('ubicacion', editForm.ubicacion);
       
       // Agregar garantía, regalo y condición
       if (editForm.garantia) formData.append('garantia', editForm.garantia);
-      if (editForm.regalo) formData.append('regalo', editForm.regalo);
+      if (editForm.regalo && editForm.regalo.length) {
+        editForm.regalo.forEach((id) => formData.append('regalo', id));
+      }
       if (editForm.condicion) formData.append('condicion', editForm.condicion);
       if (editForm.sub_categoria && editForm.sub_categoria.length) {
         editForm.sub_categoria.forEach(subcategoriaId => {
@@ -511,7 +530,7 @@ const AdminItemPage = () => {
         formData.append('remove_video', 'true');
       }
       
-      const response = await fetch(`https://videojuegoshabana.com/api/editar_item/${currentItem.id}/`, {
+      const response = await fetch(`${API_URL}/editar_item/${currentItem.id}/`, {
         method: 'PATCH',
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -531,19 +550,23 @@ const AdminItemPage = () => {
       }
       // Enviar notificación de descuento si aplica
       if (editForm.descuento !== oldDiscount) {
-        await DiscountAlert.sendDiscountNotification(
-          {
-            ...currentItem,
-            nombre: editForm.nombre,
-            precio: editForm.precio,
-            descuento: editForm.descuento,
-            // Calcular precio con descuento
-            precio_post_descuento: editForm.precio - editForm.descuento
-          },
-          oldDiscount,
-          editForm.descuento
-        );
-      }
+      // Calcular el porcentaje para la notificación (solo para mostrar)
+      const discountPercentage = editForm.precio > 0 
+        ? (editForm.descuento / editForm.precio) * 100 
+        : 0;
+        
+      await DiscountAlert.sendDiscountNotification(
+        {
+          ...currentItem,
+          nombre: editForm.nombre,
+          precio: editForm.precio,
+          descuento: discountPercentage, // Porcentaje para la notificación
+          precio_post_descuento: editForm.precio - editForm.descuento
+        },
+        oldDiscount,
+        editForm.descuento
+      );
+    }
       setSuccess('Producto actualizado correctamente');
       fetchItems();
       handleCloseEditModal();
@@ -560,7 +583,7 @@ const AdminItemPage = () => {
     if (!token || !currentItem) return;
 
     try {
-      const response = await fetch(`https://videojuegoshabana.com/api/eliminar_item/${currentItem.id}/`, {
+      const response = await fetch(`${API_URL}/eliminar_item/${currentItem.id}/`, {
         method: 'DELETE',
         headers: {
           'Authorization': `Bearer ${token}`
@@ -989,6 +1012,12 @@ const AdminItemPage = () => {
                       Precio Final
                     </th>
                     <th className="px-6 py-4 text-left text-sm font-semibold text-gray-700 uppercase tracking-wider">
+                      SKU
+                    </th>
+                    <th className="px-6 py-4 text-left text-sm font-semibold text-gray-700 uppercase tracking-wider">
+                      Ubicación
+                    </th>
+                    <th className="px-6 py-4 text-left text-sm font-semibold text-gray-700 uppercase tracking-wider">
                       Variaciones
                     </th>
                   </tr>
@@ -1048,6 +1077,11 @@ const AdminItemPage = () => {
                           <div>
                             <div className="text-sm font-medium text-gray-900">{item.nombre}</div>
                             <div className="text-sm text-gray-500">ID: {item.id}</div>
+                            {item.upc && (
+                              <div className="text-xs text-gray-400 mt-1">
+                                SKU: {item.upc}
+                              </div>
+                            )}
                             <div className="text-xs text-gray-400 mt-1">
                               {item.subcategorias_detalle?.map(sc => sc.nombre).join(', ')}
                             </div>
@@ -1174,6 +1208,22 @@ const AdminItemPage = () => {
                       {/* Precio Final */}
                       <td className="px-6 py-4">
                         <div className="text-sm font-bold text-[#FF6B00]">${item.precio_post_descuento}</div>
+                      </td>
+
+                      {/* UPC */}
+                      <td className="px-6 py-4">
+                        <div className="text-sm text-gray-900 font-mono">
+                          {item.upc || (
+                            <span className="text-gray-400 italic">Sin SKU</span>
+                          )}
+                        </div>
+                      </td>
+
+                      {/* Ubicación */}
+                      <td className="px-6 py-4">
+                        <div className="text-sm text-gray-900">
+                          {item.ubicacion || <span className="text-gray-400 italic">Sin ubicación</span>}
+                        </div>
                       </td>
 
                       {/* Variaciones */}
@@ -1412,6 +1462,30 @@ const AdminItemPage = () => {
                   },
                 }}
               />
+
+              <TextField
+                label="Ubicación (opcional)"
+                name="ubicacion"
+                value={editForm.ubicacion}
+                onChange={handleEditChange}
+                fullWidth
+                margin="normal"
+                placeholder="Ej: Almacén central, pasillo 3"
+                sx={{
+                  '& .MuiOutlinedInput-root': {
+                    borderRadius: '12px',
+                    '&:hover fieldset': {
+                      borderColor: '#FF6B00',
+                    },
+                    '&.Mui-focused fieldset': {
+                      borderColor: '#FF6B00',
+                    },
+                  },
+                  '& .MuiInputLabel-root.Mui-focused': {
+                    color: '#FF6B00',
+                  },
+                }}
+              />
               
               <div className="grid grid-cols-2 gap-4">
                 <TextField
@@ -1461,6 +1535,31 @@ const AdminItemPage = () => {
                   }}
                 />
               </div>
+
+              {/* Campo UPC */}
+              <TextField
+                label="SKU (C�digo de Barras)"
+                name="upc"
+                value={editForm.upc}
+                onChange={handleEditChange}
+                fullWidth
+                margin="normal"
+                placeholder="Ingrese el c�digo SKU"
+                sx={{
+                  '& .MuiOutlinedInput-root': {
+                    borderRadius: '12px',
+                    '&:hover fieldset': {
+                      borderColor: '#FF6B00',
+                    },
+                    '&.Mui-focused fieldset': {
+                      borderColor: '#FF6B00',
+                    },
+                  },
+                  '& .MuiInputLabel-root.Mui-focused': {
+                    color: '#FF6B00',
+                  },
+                }}
+              />
               
               {isSuperAdmin && (
                 <TextField
@@ -1578,9 +1677,13 @@ const AdminItemPage = () => {
                   <InputLabel>Regalo</InputLabel>
                   <Select
                     name="regalo"
+                    multiple
                     value={editForm.regalo}
                     onChange={handleEditChange}
                     label="Regalo"
+                    renderValue={(selected) =>
+                      selected.map((id) => regalosData.find((r) => r.id === id)?.nombre || id).join(', ')
+                    }
                     sx={{
                       borderRadius: '12px',
                       '& .MuiOutlinedInput-root': {
@@ -1596,9 +1699,6 @@ const AdminItemPage = () => {
                       },
                     }}
                   >
-                    <MenuItem value="">
-                      <em>Ninguno</em>
-                    </MenuItem>
                     {regalosData.map(regalo => (
                       <MenuItem key={regalo.id} value={regalo.id}>
                         {regalo.nombre}

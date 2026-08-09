@@ -1,3 +1,4 @@
+import { API_BASE_URL, API_URL } from '../config/apiConfig';
 // NewProductAlert.js
 import emailjs from '@emailjs/browser';
 
@@ -12,7 +13,7 @@ const NewProductAlert = {
       }
 
       // Obtener el último ID
-      const lastIdResponse = await fetch('https://videojuegoshabana.com/api/ultimo_item_id/', {
+      const lastIdResponse = await fetch(`${API_URL}/ultimo_item_id/`, {
         headers: {
           'Authorization': `Bearer ${token}`
         }
@@ -25,7 +26,7 @@ const NewProductAlert = {
 
       const lastIdData = await lastIdResponse.json();
       const nuevoId = lastIdData.ultimo_id;
-      const productUrl = `https://videojuegoshabana.com/product/${nuevoId}`;
+      const productUrl = `${API_BASE_URL}/product/${nuevoId}`;
 
       // Configuración inicial de EmailJS
       emailjs.init('43JY6cqNgcoQxmrtm');

@@ -18,6 +18,7 @@ import icon2 from '../assets/icon2.png';
 import icon3 from '../assets/icon3.png';
 import icon4 from '../assets/icon4.png';
 
+import { API_URL } from '../config/apiConfig';
 const AdminClientPage = () => {
   const navigate = useNavigate();
   const [clients, setClients] = useState([]);
@@ -66,7 +67,7 @@ const AdminClientPage = () => {
     setError(null);
 
     try {
-      const response = await fetch('https://videojuegoshabana.com/api/listar_cliente_all/', {
+      const response = await fetch(`${API_URL}/listar_cliente_all/`, {
         headers: {
           'Authorization': `Bearer ${token}`
         }
@@ -97,7 +98,7 @@ const AdminClientPage = () => {
     if (!token) return;
 
     try {
-      const response = await fetch(`https://videojuegoshabana.com/api/listar_cliente_detalle/${id}/`, {
+      const response = await fetch(`${API_URL}/listar_cliente_detalle/${id}/`, {
         headers: {
           'Authorization': `Bearer ${token}`
         }
@@ -138,7 +139,7 @@ const AdminClientPage = () => {
     }
 
     try {
-      const response = await fetch(`https://videojuegoshabana.com/api/desactivar_cliente/${id}/`, {
+      const response = await fetch(`${API_URL}/desactivar_cliente/${id}/`, {
         method: 'DELETE',
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -181,7 +182,7 @@ const AdminClientPage = () => {
         imagen: editForm.imagen
       };
 
-      const response = await fetch(`https://videojuegoshabana.com/api/editar_cliente/${currentClient.id}/`, {
+      const response = await fetch(`${API_URL}/editar_cliente/${currentClient.id}/`, {
         method: 'PATCH',
         headers: {
           'Authorization': `Bearer ${token}`,

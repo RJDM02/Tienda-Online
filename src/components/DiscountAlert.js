@@ -1,3 +1,4 @@
+import { API_BASE_URL } from '../config/apiConfig';
 // DiscountAlert.js
 import emailjs from '@emailjs/browser';
 
@@ -16,7 +17,7 @@ const DiscountAlert = {
       const templateParams = {
         product_name: productData.nombre || 'Producto sin nombre',
         product_id: productData.id || 'N/A',
-        product_url: `https://videojuegoshabana.com/product/${productData.id || ''}`,
+        product_url: `${API_BASE_URL}/product/${productData.id || ''}`,
         discount_amount: `${newDiscount || 0}`,
         old_discount: `${oldDiscount || 0}`,
         discount_change: `${newDiscount - oldDiscount}`,

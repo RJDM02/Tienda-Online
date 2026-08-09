@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { Button, TextField, CircularProgress, Alert, Snackbar, Box } from '@mui/material';
 import CloudUploadIcon from '@mui/icons-material/CloudUpload';
 
+import { API_URL } from '../config/apiConfig';
 const CreateCategoryPage = () => {
   const [name, setName] = useState('');
   const [image, setImage] = useState(null);
@@ -42,7 +43,7 @@ const CreateCategoryPage = () => {
       formData.append('nombre', name);
       formData.append('imagen', image);
 
-      const response = await fetch('https://videojuegoshabana.com/api/crear_categoria/', {
+      const response = await fetch(`${API_URL}/crear_categoria/`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`,

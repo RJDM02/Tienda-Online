@@ -4,6 +4,7 @@ import { Snackbar, Alert } from '@mui/material';
 import AccountBalanceWalletIcon from '@mui/icons-material/AccountBalanceWallet';
 import LocationOnIcon from '@mui/icons-material/LocationOn';
 
+import { API_URL } from '../config/apiConfig';
 const InfoManagerPage = () => {
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState('divisas');
@@ -34,7 +35,7 @@ const InfoManagerPage = () => {
 
     setLoading((prev) => ({ ...prev, divisas: true }));
     try {
-      const response = await fetch('https://videojuegoshabana.com/api/listar_moneda/', {
+      const response = await fetch(`${API_URL}/listar_moneda/`, {
         method: 'GET',
         headers: {
           Authorization: `Bearer ${token}`,
@@ -67,7 +68,7 @@ const InfoManagerPage = () => {
 
     setLoading((prev) => ({ ...prev, domicilios: true }));
     try {
-      const response = await fetch('https://videojuegoshabana.com/api/listar_domicilio/', {
+      const response = await fetch(`${API_URL}/listar_domicilio/`, {
         method: 'GET',
         headers: {
           Authorization: `Bearer ${token}`,

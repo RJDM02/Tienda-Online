@@ -29,8 +29,10 @@ import { jwtDecode } from 'jwt-decode';
 import Navbar from '../components/Navbar';
 import CardItem from '../components/CardItem';
 import FloatingWhatsAppButton from '../components/FloatingWhatsAppButton';
+import ChatWidget from '../components/ChatWidget';
 import { useCart } from '../context/CartContext';
 
+import { API_URL, API_BASE_URL } from '../config/apiConfig';
 const style = {
   position: 'absolute',
   top: '50%',
@@ -107,7 +109,7 @@ const ProductView = ({ onShowLogin = () => {} }) => {
       setLoadingRelated(true);
       const encodedCategory = encodeURIComponent(categoryName);
       const response = await fetch(
-        `https://videojuegoshabana.com/api/listar_item_activo/?categoria=${encodedCategory}`
+        `${API_URL}/listar_item_activo/?categoria=${encodedCategory}`
       );
       
       if (!response.ok) {
@@ -135,7 +137,7 @@ const ProductView = ({ onShowLogin = () => {} }) => {
 
   const fetchComments = async () => {
     try {
-      const response = await fetch(`https://videojuegoshabana.com/api/listar_detalle_item/${id}/`);
+      const response = await fetch(`${API_URL}/listar_detalle_item/${id}/`);
       if (!response.ok) {
         throw new Error('Error al cargar comentarios');
       }
@@ -178,7 +180,7 @@ const ProductView = ({ onShowLogin = () => {} }) => {
     const fetchProductDetails = async () => {
       try {
         setLoading(true);
-        const response = await fetch(`https://videojuegoshabana.com/api/listar_detalle_item/${id}/`);
+        const response = await fetch(`${API_URL}/listar_detalle_item/${id}/`);
         
         if (!response.ok) {
           throw new Error('Producto no encontrado');
@@ -285,7 +287,7 @@ const ProductView = ({ onShowLogin = () => {} }) => {
         commentData.producto_id = product.id;
       }
 
-      const response = await fetch('https://videojuegoshabana.com/api/crear_comentario/', {
+      const response = await fetch(`${API_URL}/crear_comentario/`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -424,21 +426,25 @@ const ProductView = ({ onShowLogin = () => {} }) => {
 
   const getCurrentPrice = () => {
     if (selectedVariation) {
-      return parseFloat(selectedVariation.precio).toFixed(2);
+      const precioFinalVariacion = selectedVariation.precio_post_descuento ?? selectedVariation.precio;
+      return parseFloat(precioFinalVariacion).toFixed(2);
     }
     return product ? parseFloat(product.precio_post_descuento).toFixed(2) : '0.00';
   };
 
   const getOriginalPrice = () => {
     if (selectedVariation) {
-      return parseFloat(selectedVariation.item_info?.precio_base || selectedVariation.precio).toFixed(2);
+      return parseFloat(selectedVariation.precio).toFixed(2);
     }
     return product ? parseFloat(product.precio).toFixed(2) : '0.00';
   };
 
   const hasDiscount = () => {
     if (selectedVariation) {
-      return false;
+      const precioBase = parseFloat(selectedVariation.precio || 0);
+      const precioFinalRaw = selectedVariation.precio_post_descuento ?? selectedVariation.precio ?? 0;
+      const precioFinal = parseFloat(precioFinalRaw);
+      return precioFinal < precioBase;
     }
     return product?.descuento > 0;
   };
@@ -461,7 +467,7 @@ const ProductView = ({ onShowLogin = () => {} }) => {
         imagenes: product.imagenes,
         variacion: {
           id: selectedVariation.id,
-          precio_post_descuento: selectedVariation.precio,
+          precio_post_descuento: selectedVariation.precio_post_descuento ?? selectedVariation.precio,
           imagen: selectedVariation.imagen || (product.imagenes && product.imagenes[0]?.imagen),
           color: selectedVariation.color,
           modelo: selectedVariation.modelo,
@@ -488,8 +494,9 @@ const ProductView = ({ onShowLogin = () => {} }) => {
     }
   };
 
-  const handleShare = () => {
-    // Obtener referido_id del token si existe
+  const handleShare = async () => {
+    if (!product) return;
+
     const getReferidoId = () => {
       try {
         const token = localStorage.getItem('authToken');
@@ -502,64 +509,80 @@ const ProductView = ({ onShowLogin = () => {} }) => {
       }
       return null;
     };
-    
-    const referidoId = getReferidoId();
-    const images = getProductImages();
-    const mainImage = images.length > 0 ? images[0] : '';
-    const { garantia, regalo } = getWarrantyAndGiftInfo();
-    
-    let shareText = `${product.nombre}\nPrecio: $${getCurrentPrice()}`;
-    
-    if (garantia) {
-      shareText += `\nGarantía: ${garantia}`;
-    }
-    if (regalo) {
-      shareText += `\nRegalo incluido: ${regalo}`;
-    }
-    
-    // Construir URL con parámetro de referido si existe
-    let productUrl = `${window.location.origin}/product/${product.id}`;
-    if (referidoId) {
-      productUrl += `?ref=${referidoId}`;
-    }
-    
-    shareText += `\n\n${product.descripcion?.substring(0, 500) || 'Producto destacado'}...\n\n${productUrl}`;
-    
-    if (mainImage) {
-      shareText += `\nImagen del producto: ${mainImage}`;
-    }
-    
-    const isMobileDevice = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
-    
-    if (isMobileDevice && navigator.share) {
-      navigator.share({
-        title: `${product.nombre} - $${getCurrentPrice()}`,
-        text: shareText,
-        url: productUrl,
-      }).catch(err => {
-        console.log('Error al compartir:', err);
-        shareFallback(shareText);
-      });
-    } else {
-      shareFallback(shareText);
-    }
-  };
 
-  const shareFallback = (shareText) => {
-    // Extraer la URL limpia del texto para evitar duplicados
-    const urlMatch = shareText.match(/(https?:\/\/[^\s]+)/);
-    const cleanUrl = urlMatch ? urlMatch[0] : `${window.location.origin}/product/${product.id}`;
-    const cleanShareText = shareText.replace(cleanUrl, '').trim();
-    
-    if (window.location.href.includes('web.whatsapp.com')) {
-      window.open(`https://web.whatsapp.com/send?text=${encodeURIComponent(cleanShareText + '\n\n' + cleanUrl)}`, '_blank');
-    } 
-    else if (/Android|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)) {
-      window.open(`whatsapp://send?text=${encodeURIComponent(cleanShareText + '\n\n' + cleanUrl)}`, '_blank');
-    }
-    else {
-      navigator.clipboard.writeText(cleanShareText + '\n\n' + cleanUrl);
-      alert('El texto se ha copiado al portapapeles. Pégalo en WhatsApp manualmente.');
+    const referidoId = getReferidoId();
+    const shareBaseUrl = API_BASE_URL
+      ? `${API_BASE_URL}/api/share/product/${product.id}`
+      : `${window.location.origin}/share/product/${product.id}`;
+    const shareUrl = referidoId ? `${shareBaseUrl}?ref=${referidoId}` : shareBaseUrl;
+
+    const priceLine = hasDiscount()
+      ? `Precio: $${getCurrentPrice()} (antes $${getOriginalPrice()})`
+      : `Precio: $${getCurrentPrice()}`;
+
+    const descriptionLine = `${product.descripcion?.substring(0, 200) || 'Producto destacado'}...`;
+
+    const shareLines = [
+      `${product.nombre}`,
+      product.condicion_detalle?.nombre ? `Condición: ${product.condicion_detalle.nombre}` : null,
+      priceLine,
+      descriptionLine,
+    ];
+
+    // Limpiar entradas vacías antes de continuar
+    const filteredShareLines = shareLines.filter(Boolean);
+
+    const { garantia, regalo } = getWarrantyAndGiftInfo();
+    if (garantia) filteredShareLines.push(`Garantia: ${garantia}`);
+    if (regalo) filteredShareLines.push(`Regalo incluido: ${regalo}`);
+    if (referidoId) filteredShareLines.push(`Codigo de referido: ${referidoId}`);
+    filteredShareLines.push(shareUrl);
+
+    const composedText = filteredShareLines.join('\n');
+
+    try {
+      const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+      if (isMobile) {
+        if (navigator.share) {
+          await navigator.share({
+            title: product.nombre,
+            text: composedText,
+            url: shareUrl,
+          });
+          return;
+        }
+
+        if (navigator.userAgent.match(/WhatsApp/i)) {
+          window.open(`whatsapp://send?text=${encodeURIComponent(composedText)}`);
+          return;
+        }
+      }
+
+      if (navigator.userAgent.match(/FBAN|FBAV/i)) {
+        window.open(`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(shareUrl)}&quote=${encodeURIComponent(composedText)}`, '_blank');
+        return;
+      }
+
+      if (navigator.userAgent.match(/Twitter/i)) {
+        window.open(`https://twitter.com/intent/tweet?text=${encodeURIComponent(composedText)}&url=${encodeURIComponent(shareUrl)}`, '_blank');
+        return;
+      }
+
+      if (navigator.clipboard) {
+        await navigator.clipboard.writeText(composedText);
+        alert('Informacion del producto copiada al portapapeles');
+      } else {
+        const textArea = document.createElement('textarea');
+        textArea.value = composedText;
+        document.body.appendChild(textArea);
+        textArea.select();
+        document.execCommand('copy');
+        document.body.removeChild(textArea);
+        alert('Informacion del producto copiada al portapapeles');
+      }
+    } catch (err) {
+      console.error('Error al compartir:', err);
+      window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(composedText)}`, '_blank');
     }
   };
 
@@ -695,9 +718,9 @@ const ProductView = ({ onShowLogin = () => {} }) => {
                       }}
                     />
                   )}
-                  {isManager || isAdmin && (
+                  {(isManager || isAdmin) && (
                     <Chip
-                      label={`Stock total: ${product.total_item}`}
+                      label={`Stock total: ${product.total_item > 5 ? 5 : product.total_item}`}
                       sx={{
                         backgroundColor: '#3b82f6',
                         color: 'white',
@@ -750,12 +773,12 @@ const ProductView = ({ onShowLogin = () => {} }) => {
                           <div>
                             <p className="text-sm text-blue-600">Stock total en sistema:</p>
                             <p className="text-lg font-bold text-blue-900">
-                              {product.total_item <= 5 ? product.total_item : '5 o más'} unidades
+                              {product.total_item <= 5 ? product.total_item : 5} unidades
                             </p>
                           </div>
                           <div>
                             <p className="text-sm text-blue-600">Disponibles actualmente:</p>
-                            <p className="text-lg font-bold text-blue-900">{availableStock <= 5 ? availableStock : '5 o más'} unidades</p>
+                            <p className="text-lg font-bold text-blue-900">{availableStock <= 5 ? availableStock : 5} unidades</p>
                           </div>
                         </div>
                       </div>
@@ -1099,9 +1122,11 @@ const ProductView = ({ onShowLogin = () => {} }) => {
           </div>
         </Box>
       </Modal>
+      <ChatWidget />
       <FloatingWhatsAppButton />
     </div>
   );
 };
 
 export default ProductView;
+

@@ -24,6 +24,7 @@ import PersonPinIcon from '@mui/icons-material/PersonPin';
 import MonetizationOnIcon from '@mui/icons-material/MonetizationOn';
 import FilterListIcon from '@mui/icons-material/FilterList';
 
+import { API_URL } from '../config/apiConfig';
 const SalesManagerPage = () => {
   const [managerData, setManagerData] = useState({
     nombre: '',
@@ -36,6 +37,7 @@ const SalesManagerPage = () => {
   const [success, setSuccess] = useState(null);
   const [activeTab, setActiveTab] = useState('pendientes');
   const [monthFilter, setMonthFilter] = useState('all');
+  const [quincenaFilter, setQuincenaFilter] = useState('all');
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -47,7 +49,7 @@ const SalesManagerPage = () => {
           return;
         }
 
-        const response = await fetch('https://videojuegoshabana.com/api/listar_datos_gestor/', {
+        const response = await fetch(`${API_URL}/listar_datos_gestor/`, {
           headers: {
             'Authorization': `Bearer ${token}`
           }
@@ -84,29 +86,30 @@ const SalesManagerPage = () => {
     fetchManagerData();
   }, [navigate]);
 
-  // Función para filtrar el historial por mes
-  const filterByMonth = (month) => {
-    if (month === 'all') {
-      setFilteredHistorial(managerData.historial_venta);
-      return;
-    }
-    
-    const filtered = managerData.historial_venta.filter(venta => {
-      if (!venta.fecha) return false;
-      const saleDate = new Date(venta.fecha);
-      return saleDate.getMonth() === parseInt(month);
-    });
-    
-    const sortedFiltered = filtered.sort((a, b) => {
-      return new Date(b.fecha) - new Date(a.fecha);
-    });
+  // Funcion para filtrar el historial por mes y quincena
+  const filterHistorial = (month, quincena) => {
+    const filtered = (managerData.historial_venta || [])
+      .filter(venta => {
+        if (!venta.fecha) return false;
+        const saleDate = new Date(venta.fecha);
+        const matchesMonth = month === 'all' ? true : saleDate.getMonth() === parseInt(month, 10);
+        const day = saleDate.getDate();
+        const matchesQuincena = quincena === 'all'
+          ? true
+          : quincena === '1'
+            ? day <= 15
+            : day > 15;
+
+        return matchesMonth && matchesQuincena;
+      })
+      .sort((a, b) => new Date(b.fecha) - new Date(a.fecha));
 
     setFilteredHistorial(filtered);
   };
 
   useEffect(() => {
-    filterByMonth(monthFilter);
-  }, [monthFilter, managerData.historial_venta]);
+    filterHistorial(monthFilter, quincenaFilter);
+  }, [monthFilter, quincenaFilter, managerData.historial_venta]);
 
   const getStatusConfig = (estado) => {
     switch (estado) {
@@ -151,19 +154,41 @@ const SalesManagerPage = () => {
   };
 
   // Función para calcular la ganancia total de un pedido/venta
+  const toNumber = (value) => {
+    const parsed = parseFloat(value);
+    return Number.isNaN(parsed) ? 0 : parsed;
+  };
+
+  const obtenerComision = (pedido) => {
+    if (pedido.producto) {
+      return toNumber(pedido.producto.producto_comision ?? pedido.producto.comision);
+    }
+
+    if (pedido.variacion) {
+      return toNumber(
+        pedido.variacion.variacion_comision ??
+        pedido.variacion.comision ??
+        pedido.variacion_comision
+      );
+    }
+
+    return toNumber(pedido.variacion_comision ?? 0);
+  };
+
   const calcularGananciaTotal = (pedido) => {
-    const comision = pedido.producto 
-      ? (pedido.producto.producto_comision || pedido.producto.comision || 0)
-      : (pedido.variacion?.variacion_comision || 0);
-    
-    const precioPostDescuento = parseFloat(
+    const gananciaBackend = toNumber(pedido.ganancia_gestor);
+    if (gananciaBackend > 0 || pedido.ganancia_gestor === 0 || pedido.ganancia_gestor === '0.00') {
+      return gananciaBackend;
+    }
+
+    const comision = obtenerComision(pedido);
+    const precioPostDescuento = toNumber(
       pedido.producto 
-        ? (pedido.producto.precio_post_descuento || 0)
-        : (pedido.variacion?.precio_post_descuento || 0)
+        ? pedido.producto.precio_post_descuento
+        : pedido.variacion?.precio_post_descuento
     );
-    
-    const precioGestor = parseFloat(pedido.precio_gestor || 0);
-    
+    const precioGestor = toNumber(pedido.precio_gestor);
+
     return comision + (precioGestor - precioPostDescuento);
   };
 
@@ -201,18 +226,15 @@ const SalesManagerPage = () => {
 
   // FUNCIÓN CORREGIDA: Mostrar precios correctamente
   const renderPriceInfo = (pedido) => {
-    const comision = pedido.producto 
-      ? (pedido.producto.producto_comision || pedido.producto.comision || 0)
-      : (pedido.variacion?.variacion_comision || 0);
-    
-    const precioPostDescuento = parseFloat(
+    const comision = obtenerComision(pedido);
+    const precioPostDescuento = toNumber(
       pedido.producto 
-        ? (pedido.producto.precio_post_descuento || 0)
-        : (pedido.variacion?.precio_post_descuento || 0)
+        ? pedido.producto.precio_post_descuento
+        : pedido.variacion?.precio_post_descuento
     );
-    
-    const precioGestor = parseFloat(pedido.precio_gestor || 0);
+    const precioGestor = toNumber(pedido.precio_gestor);
     const gananciaTotal = calcularGananciaTotal(pedido);
+    const currencyName = pedido.moneda?.nombre || 'Dolares (USD)';
 
     return (
       <>
@@ -222,12 +244,12 @@ const SalesManagerPage = () => {
         {/* Precio gestor corregido */}
         <p className="text-gray-600 text-sm">Precio gestor: {precioGestor.toFixed(2)}</p>
         
-        <p className="text-gray-600 text-sm">Comisión: {comision} {'Dolares (USD)'}</p>
+        <p className="text-gray-600 text-sm">Comisión: {comision.toFixed(2)} {currencyName}</p>
         <p className="text-gray-800 font-bold text-lg">Total: {pedido.costo_post_descuento}</p>
         <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-2 mt-2">
           <p className="text-yellow-800 font-bold flex items-center">
             <MonetizationOnIcon sx={{ fontSize: 16, marginRight: '4px' }} />
-            Ganancia total: {gananciaTotal.toFixed(2)} {'Dolares (USD)'}
+            Ganancia total: {gananciaTotal.toFixed(2)} {currencyName}
           </p>
         </div>
       </>
@@ -335,7 +357,7 @@ const SalesManagerPage = () => {
                             <div className="flex items-center justify-between">
                               <div>
                                 <h3 className="text-lg font-bold text-gray-900">Pedido #{pedido.id}</h3>
-                                <p className="text-sm text-gray-600">{pedido.producto?.nombre || pedido.variacion?.producto_padre?.nombre || 'Producto no especificado'}</p>
+                                <p className="text-sm text-gray-600">{pedido.producto?.nombre || pedido.variacion?.item_info?.nombre || pedido.variacion?.producto_padre?.nombre || 'Producto no especificado'}</p>
                               </div>
                               <div className={`px-3 py-1 rounded-lg border text-sm font-medium flex items-center space-x-2 ${statusConfig.color}`}>
                                 <StatusIcon sx={{ fontSize: 16 }} />
@@ -483,6 +505,25 @@ const SalesManagerPage = () => {
                           ))}
                         </Select>
                       </FormControl>
+                      <FormControl sx={{ minWidth: 200 }} size="small">
+                        <InputLabel id="quincena-filter-label">
+                          <div className="flex items-center">
+                            <FilterListIcon sx={{ fontSize: 18, mr: 1 }} />
+                            Filtrar por quincena
+                          </div>
+                        </InputLabel>
+                        <Select
+                          labelId="quincena-filter-label"
+                          value={quincenaFilter}
+                          label="Filtrar por quincena"
+                          onChange={(e) => setQuincenaFilter(e.target.value)}
+                          sx={{ borderRadius: '12px' }}
+                        >
+                          <MenuItem value="all">Todas las quincenas</MenuItem>
+                          <MenuItem value="1">1ra quincena (1 - 15)</MenuItem>
+                          <MenuItem value="2">2da quincena (16 - fin de mes)</MenuItem>
+                        </Select>
+                      </FormControl>
                     </div>
                   </div>
                 </div>
@@ -510,7 +551,7 @@ const SalesManagerPage = () => {
                     {filteredHistorial.map((venta) => {
                       const statusConfig = getStatusConfig(venta.estado);
                       const StatusIcon = statusConfig.icon;
-                      const productoNombre = venta.producto?.nombre || venta.variacion?.producto_padre?.nombre || 'Producto no especificado';
+                      const productoNombre = venta.producto?.nombre || venta.variacion?.item_info?.nombre || venta.variacion?.producto_padre?.nombre || 'Producto no especificado';
                       
                       return (
                         <div key={venta.id} className="bg-white rounded-2xl shadow-lg overflow-hidden hover:shadow-xl transition-all duration-200 transform hover:-translate-y-1">
@@ -673,3 +714,4 @@ const SalesManagerPage = () => {
 };
 
 export default SalesManagerPage;
+

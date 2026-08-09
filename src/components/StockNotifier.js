@@ -1,6 +1,7 @@
 import React from 'react';
 import emailjs from '@emailjs/browser';
 
+import { API_URL } from '../config/apiConfig';
 const StockNotifier = {
   sendLowStockNotification: async (notification) => {
     try {
@@ -10,7 +11,7 @@ const StockNotifier = {
       }
 
       // 2. Obtener la lista de administradores y super administradores
-      const response = await fetch('https://videojuegoshabana.com/api/listar_admin_superadmin/');
+      const response = await fetch(`${API_URL}/listar_admin_superadmin/`);
 
       if (!response.ok) {
         throw new Error('Error al obtener la lista de administradores');

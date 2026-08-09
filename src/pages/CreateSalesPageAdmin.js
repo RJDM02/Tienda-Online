@@ -28,6 +28,26 @@ import { jwtDecode } from 'jwt-decode';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import { styles, LoadingState, ErrorState, SectionTitle } from './CreateSalesPageStyles';
 import AdminNotifier2 from '../components/AdminNotifier2';
+import { API_URL } from '../config/apiConfig';
+
+const parseErrorMessage = (error) => {
+  const status = error.response?.status;
+  if (status === 500) return `Error ${status}`;
+  const prod = error.response?.data?.producto;
+  const vari = error.response?.data?.variacion;
+  const disponible = error.response?.data?.disponible;
+  const solicitada = error.response?.data?.solicitada;
+  if (prod || vari) {
+    return `${error.response?.data?.error || 'Error'} (${prod || vari} - disponible ${disponible ?? '0'}, solicitada ${solicitada ?? '1'})`;
+  }
+  return (
+    error.response?.data?.error ||
+    error.response?.data?.message ||
+    error.message ||
+    'Error al procesar la venta. Intente nuevamente.'
+  );
+};
+
 const CreateAdminSalesPage = () => {
   const location = useLocation();
   const navigate = useNavigate();
@@ -91,10 +111,10 @@ const CreateAdminSalesPage = () => {
           messengersResponse, 
           clientsResponse
         ] = await Promise.all([
-          axios.get('https://videojuegoshabana.com/api/listar_moneda/', config),
-          axios.get('https://videojuegoshabana.com/api/listar_domicilio/', config),
-          axios.get('https://videojuegoshabana.com/api/listar_mensajero/', config),
-          axios.get('https://videojuegoshabana.com/api/listar_cliente_all/', config)
+          axios.get(`${API_URL}/listar_moneda/`, config),
+          axios.get(`${API_URL}/listar_domicilio/`, config),
+          axios.get(`${API_URL}/listar_mensajero/`, config),
+          axios.get(`${API_URL}/listar_cliente_all/`, config)
         ]);
         
         setCurrencies(currenciesResponse.data);
@@ -163,7 +183,7 @@ const CreateAdminSalesPage = () => {
         salesData.producto_id = item.id;
       }
 
-      return axios.post('https://videojuegoshabana.com/api/crear_venta_admin/', salesData, config)
+      return axios.post(`${API_URL}/crear_venta_admin/`, salesData, config)
         .then(() => {
           setProcessedItems(prev => prev + 1);
         });
@@ -205,9 +225,7 @@ const CreateAdminSalesPage = () => {
     }, 3000);
   } catch (error) {
     console.error('Error:', error);
-    setError(error.response?.data?.message || 
-            error.message || 
-            'Error al procesar la venta. Intente nuevamente.');
+    setError(parseErrorMessage(error));
   } finally {
     setSubmitting(false);
   }
@@ -239,7 +257,8 @@ const CreateAdminSalesPage = () => {
   }
 
   if (error) {
-    return <ErrorState error={error} onReload={handleReload} />;
+    const goShop = () => navigate('/shop');
+    return <ErrorState error={error} onGoShop={goShop} onReload={handleReload} />;
   }
 
   return (
@@ -281,7 +300,7 @@ const CreateAdminSalesPage = () => {
                       {item.productData?.nombre || 'Producto'}
                     </Typography>
                     <Typography variant="body2" color="text.secondary">
-                      Precio: ${item.price}
+                      Precio final: ${item.price}
                       {item.color && ` | Color: ${item.color}`}
                       {item.model && ` | Modelo: ${item.model}`}
                     </Typography>

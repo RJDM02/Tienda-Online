@@ -20,6 +20,7 @@ import DeleteIcon from '@mui/icons-material/Delete';
 import CloudUploadIcon from '@mui/icons-material/CloudUpload';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 
+import { API_URL } from '../config/apiConfig';
 const AdminItemImagesPage = () => {
   const { id } = useParams(); // Obtenemos el ID del producto de la URL
   const [productName, setProductName] = useState('Producto #' + id); // Nombre temporal hasta cargar
@@ -56,7 +57,7 @@ const AdminItemImagesPage = () => {
 
     try {
       // Solo obtenemos las imágenes ya que el nombre del producto lo mostramos del ID
-      const response = await fetch(`https://videojuegoshabana.com/api/listar_imagen/${id}/`, {
+      const response = await fetch(`${API_URL}/listar_imagen/${id}/`, {
         headers: {
           'Authorization': `Bearer ${token}`
         }
@@ -103,7 +104,7 @@ const AdminItemImagesPage = () => {
       const formData = new FormData();
       formData.append('imagen', imageFile);
 
-      const response = await fetch(`https://videojuegoshabana.com/api/subir_imagen/${id}/`, {
+      const response = await fetch(`${API_URL}/subir_imagen/${id}/`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`
@@ -136,7 +137,7 @@ const AdminItemImagesPage = () => {
     setError(null);
 
     try {
-      const response = await fetch(`https://videojuegoshabana.com/api/eliminar_imagen/${imageToDelete}/`, {
+      const response = await fetch(`${API_URL}/eliminar_imagen/${imageToDelete}/`, {
         method: 'DELETE',
         headers: {
           'Authorization': `Bearer ${token}`

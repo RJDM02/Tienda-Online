@@ -6,6 +6,7 @@ import icon2 from '../assets/icon2.png';
 import icon3 from '../assets/icon3.png';
 import icon4 from '../assets/icon4.png';
 
+import { API_URL } from '../config/apiConfig';
 const RegisterPage = ({ onShowLogin }) => {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
@@ -59,7 +60,7 @@ const RegisterPage = ({ onShowLogin }) => {
     setErrors({}); // Limpiar errores previos
 
     try {
-      const response = await fetch('https://videojuegoshabana.com/api/crear_cliente/', {
+      const response = await fetch(`${API_URL}/crear_cliente/`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

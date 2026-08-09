@@ -16,6 +16,7 @@ import {
 import CloudUploadIcon from '@mui/icons-material/CloudUpload';
 import NewVariationAlert from '../components/NewVariationAlert';
 
+import { API_BASE_URL, API_URL } from '../config/apiConfig';
 const CreateVariacionPage = () => {
   const { itemId } = useParams();
   const [formData, setFormData] = useState({
@@ -26,7 +27,7 @@ const CreateVariacionPage = () => {
     cantidad: '',
     imagen: null,
     garantia: '',
-    regalo: '',
+    regalo: [],
     condicion: '',
     comision: ''
   });
@@ -51,21 +52,21 @@ const CreateVariacionPage = () => {
         }
 
         // Obtener garantías
-        const garantiaResponse = await fetch('https://videojuegoshabana.com/api/listar_garantia/', {
+        const garantiaResponse = await fetch(`${API_URL}/listar_garantia/`, {
           headers: {
             'Authorization': `Bearer ${token}`
           }
         });
         
         // Obtener regalos
-        const regaloResponse = await fetch('https://videojuegoshabana.com/api/listar_regalo/', {
+        const regaloResponse = await fetch(`${API_URL}/listar_regalo/`, {
           headers: {
             'Authorization': `Bearer ${token}`
           }
         });
 
         // Obtener condiciones
-        const condicionResponse = await fetch('https://videojuegoshabana.com/api/listar_condicion/', {
+        const condicionResponse = await fetch(`${API_URL}/listar_condicion/`, {
           headers: {
             'Authorization': `Bearer ${token}`
           }
@@ -96,7 +97,7 @@ const CreateVariacionPage = () => {
     const { name, value } = e.target;
     setFormData(prev => ({
       ...prev,
-      [name]: value
+      [name]: name === 'regalo' ? value : value
     }));
   };
 
@@ -153,15 +154,15 @@ const CreateVariacionPage = () => {
         formDataToSend.append('garantia', formData.garantia);
       }
       
-      if (formData.regalo) {
-        formDataToSend.append('regalo', formData.regalo);
+      if (formData.regalo && formData.regalo.length) {
+        formData.regalo.forEach((id) => formDataToSend.append('regalo', id));
       }
       
       if (formData.imagen) {
         formDataToSend.append('imagen', formData.imagen);
       }
 
-      const response = await fetch('https://videojuegoshabana.com/api/crear_variacion_item/', {
+      const response = await fetch(`${API_URL}/crear_variacion_item/`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`
@@ -178,7 +179,7 @@ const CreateVariacionPage = () => {
         modelo: formData.modelo,
         precio: formData.precio,
         comision: formData.comision,
-        url: `https://videojuegoshabana.com/product/${itemId}`
+        url: `${API_BASE_URL}/product/${itemId}`
       });
       setSuccess(true);
       
@@ -191,7 +192,7 @@ const CreateVariacionPage = () => {
         cantidad: '',
         imagen: null,
         garantia: '',
-        regalo: '',
+        regalo: [],
         condicion: '',
         comision: ''
       });
@@ -216,7 +217,7 @@ const CreateVariacionPage = () => {
       cantidad: '',
       imagen: null,
       garantia: '',
-      regalo: '',
+      regalo: [],
       condicion: '',
       comision: ''
     });
@@ -470,14 +471,13 @@ const CreateVariacionPage = () => {
                   </InputLabel>
                   <Select
                     name="regalo"
+                    multiple
                     value={formData.regalo}
                     onChange={handleChange}
                     disabled={loading.form || loading.initialData}
+                    renderValue={(selected) => selected.map((id) => regalos.find(r => r.id === id)?.nombre || id).join(', ')}
                     sx={selectStyles}
                   >
-                    <MenuItem value="">
-                      <em>Ninguno</em>
-                    </MenuItem>
                     {regalos.map(regalo => (
                       <MenuItem key={regalo.id} value={regalo.id}>
                         {regalo.nombre}

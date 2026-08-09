@@ -14,6 +14,7 @@ import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
 import AccountBalanceWalletIcon from '@mui/icons-material/AccountBalanceWallet';
 
+import { API_URL } from '../config/apiConfig';
 const AdminDivisaPage = () => {
   const navigate = useNavigate();
   const [monedas, setMonedas] = useState([]);
@@ -48,7 +49,7 @@ const AdminDivisaPage = () => {
     setError(null);
 
     try {
-      const response = await fetch('https://videojuegoshabana.com/api/listar_moneda/', {
+      const response = await fetch(`${API_URL}/listar_moneda/`, {
         method: 'GET',
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -81,7 +82,7 @@ const AdminDivisaPage = () => {
     if (!token) return;
 
     try {
-      const response = await fetch(`https://videojuegoshabana.com/api/listar_detalle_moneda/${id}/`, {
+      const response = await fetch(`${API_URL}/listar_detalle_moneda/${id}/`, {
         method: 'GET',
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -117,7 +118,7 @@ const AdminDivisaPage = () => {
     setError(null);
 
     try {
-      const response = await fetch('https://videojuegoshabana.com/api/crear_moneda/', {
+      const response = await fetch(`${API_URL}/crear_moneda/`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -158,7 +159,7 @@ const AdminDivisaPage = () => {
     setError(null);
 
     try {
-      const response = await fetch(`https://videojuegoshabana.com/api/editar_moneda/${currentMoneda.id}/`, {
+      const response = await fetch(`${API_URL}/editar_moneda/${currentMoneda.id}/`, {
         method: 'PATCH',
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -197,7 +198,7 @@ const AdminDivisaPage = () => {
     if (!token || !currentMoneda) return;
 
     try {
-      const response = await fetch(`https://videojuegoshabana.com/api/eliminar_moneda/${currentMoneda.id}/`, {
+      const response = await fetch(`${API_URL}/eliminar_moneda/${currentMoneda.id}/`, {
         method: 'DELETE',
         headers: {
           'Authorization': `Bearer ${token}`,

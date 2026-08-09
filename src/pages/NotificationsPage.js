@@ -5,6 +5,7 @@ import axios from 'axios';
 import dayjs from 'dayjs';
 import StockNotifier from '../components/StockNotifier';
 
+import { API_URL } from '../config/apiConfig';
 const NotificationsPage = () => {
   const [notifications, setNotifications] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -18,14 +19,15 @@ const NotificationsPage = () => {
   const isCourier = userData && (userData.rol === 'Mensajero');
   const isManager = userData && (userData.rol === 'Gestor de Venta');
   const isAdmin = userData && (userData.rol === 'Administrador');
+  const isRemesasAdmin = userData && (userData.rol === 'Administrador_Remesas');
   const isSuperAdmin = userData && (userData.rol === 'Super_Administrador');
 
   // Obtener el endpoint correcto según el rol
   const getEndpoint = () => {
-    if (isSuperAdmin) return 'https://videojuegoshabana.com/api/listar_notificaciones_super_administrador/';
-    if (isAdmin) return 'https://videojuegoshabana.com/api/listar_notificaciones_administrador/';
-    if (isManager) return 'https://videojuegoshabana.com/api/listar_notificaciones_gestor/';
-    if (isCourier) return 'https://videojuegoshabana.com/api/listar_notificaciones_mensajero/';
+    if (isSuperAdmin) return `${API_URL}/listar_notificaciones_super_administrador/`;
+    if (isAdmin || isRemesasAdmin) return `${API_URL}/listar_notificaciones_administrador/`;
+    if (isManager) return `${API_URL}/listar_notificaciones_gestor/`;
+    if (isCourier) return `${API_URL}/listar_notificaciones_mensajero/`;
     return null;
   };
 
@@ -62,7 +64,7 @@ const NotificationsPage = () => {
   // Delete notification
   const handleDeleteNotification = async (id) => {
     try {
-      await axios.delete(`https://videojuegoshabana.com/api/eliminar_notificacion/${id}/`, {
+      await axios.delete(`${API_URL}/eliminar_notificacion/${id}/`, {
         headers: {
           Authorization: `Bearer ${token}`,
         },

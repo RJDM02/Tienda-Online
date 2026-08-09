@@ -27,6 +27,25 @@ import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import { styles, LoadingState, ErrorState, SectionTitle } from './CreateSalesPageStyles';
 import AdminNotifier2 from '../components/AdminNotifier2';
 
+import { API_URL } from '../config/apiConfig';
+
+const parseErrorMessage = (error) => {
+  const status = error.response?.status;
+  if (status === 500) return `Error ${status}`;
+  const prod = error.response?.data?.producto;
+  const vari = error.response?.data?.variacion;
+  const disponible = error.response?.data?.disponible;
+  const solicitada = error.response?.data?.solicitada;
+  if (prod || vari) {
+    return `${error.response?.data?.error || 'Error'} (${prod || vari} - disponible ${disponible ?? '0'}, solicitada ${solicitada ?? '1'})`;
+  }
+  return (
+    error.response?.data?.error ||
+    error.response?.data?.message ||
+    error.message ||
+    'Error al procesar la venta. Intente nuevamente.'
+  );
+};
 const CreateSalesPageManager = () => {
   const location = useLocation();
   const navigate = useNavigate();
@@ -82,7 +101,7 @@ const CreateSalesPageManager = () => {
       navigate('/login');
     }
 
-    // Inicializar precios con los precios originales de los productos
+    // Inicializar precios con el precio final que llega desde el carrito
     const initialPrices = {};
     cartItems.forEach(item => {
       initialPrices[item.id] = item.price;
@@ -97,9 +116,9 @@ const CreateSalesPageManager = () => {
         } : {};
         
         const [currenciesResponse, deliveryPointsResponse, warrantiesResponse] = await Promise.all([
-          axios.get('https://videojuegoshabana.com/api/listar_moneda/'),
-          axios.get('https://videojuegoshabana.com/api/listar_domicilio/'),
-          axios.get('https://videojuegoshabana.com/api/listar_garantia/', config) // Nueva llamada para garantías
+          axios.get(`${API_URL}/listar_moneda/`),
+          axios.get(`${API_URL}/listar_domicilio/`),
+          axios.get(`${API_URL}/listar_garantia/`, config) // Nueva llamada para garantías
         ]);
         
         setCurrencies(currenciesResponse.data);
@@ -131,8 +150,9 @@ const CreateSalesPageManager = () => {
       const selectedCurrency = currencies.find(c => c.id === parseInt(formData.currencyId));
       const selectedDeliveryPoint = deliveryPoints.find(d => d.id === parseInt(formData.deliveryPointId));
 
-      // Procesar cada item del carrito
-      const requests = cartItems.map((item) => {
+      // Procesar cada item del carrito de forma secuencial para evitar bloqueos
+      // al vender variaciones que actualizan tambien el stock del producto padre.
+      for (const item of cartItems) {
         const salesData = {
           moneda_id: formData.currencyId,
           domicilio_id: formData.deliveryPointId,
@@ -153,13 +173,9 @@ const CreateSalesPageManager = () => {
           salesData.producto_id = item.id;
         }
 
-        return axios.post('https://videojuegoshabana.com/api/crear_venta/', salesData, config)
-          .then(() => {
-            setProcessedItems(prev => prev + 1);
-          });
-      });
-
-      await Promise.all(requests);
+        await axios.post(`${API_URL}/crear_venta/`, salesData, config);
+        setProcessedItems(prev => prev + 1);
+      }
       
       // Éxito: vaciar carrito y mostrar mensaje
       clearCart();
@@ -194,9 +210,7 @@ const CreateSalesPageManager = () => {
       }, 3000);
     } catch (error) {
       console.error('Error:', error);
-      setError(error.response?.data?.message || 
-              error.message || 
-              'Error al procesar la venta. Intente nuevamente.');
+      setError(parseErrorMessage(error));
     } finally {
       setSubmitting(false);
     }
@@ -235,7 +249,8 @@ const CreateSalesPageManager = () => {
   }
 
   if (error) {
-    return <ErrorState error={error} onReload={handleReload} />;
+    const goShop = () => navigate('/shop');
+    return <ErrorState error={error} onGoShop={goShop} onReload={handleReload} />;
   }
 
   return (
@@ -313,7 +328,7 @@ const CreateSalesPageManager = () => {
                           {item.productData?.nombre || 'Producto'}
                         </Typography>
                         <Typography variant="body2" color="text.secondary">
-                          Precio original: ${item.price}
+                          Precio final sugerido: ${item.price}
                           {item.color && ` | Color: ${item.color}`}
                           {item.model && ` | Modelo: ${item.model}`}
                         </Typography>
@@ -355,11 +370,14 @@ const CreateSalesPageManager = () => {
                   required
                   sx={styles.select}
                 >
-                  {currencies.map(currency => (
-                    <MenuItem key={currency.id} value={currency.id}>
-                      {currency.nombre} (Cambio: {currency.cambio})
-                    </MenuItem>
-                  ))}
+                  {currencies
+                    .filter(currency => currency.cambio > 0) // ← FILTRO AQUÍ
+                    .map(currency => (
+                      <MenuItem key={currency.id} value={currency.id}>
+                        {currency.nombre} (Cambio: {currency.cambio})
+                      </MenuItem>
+                    ))
+                  }
                 </Select>
               </FormControl>
 

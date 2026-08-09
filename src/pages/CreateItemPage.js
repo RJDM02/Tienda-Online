@@ -5,6 +5,8 @@ import CloudUploadIcon from '@mui/icons-material/CloudUpload';
 import DeleteIcon from '@mui/icons-material/Delete';
 import VideocamIcon from '@mui/icons-material/Videocam';
 import NewProductAlert from '../components/NewProductAlert ';
+
+import { API_URL } from '../config/apiConfig';
 const CreateItemPage = () => {
     const [formData, setFormData] = useState({
         nombre: '',
@@ -16,10 +18,12 @@ const CreateItemPage = () => {
         descuento: 0,
         imagenes_upload: [],
         garantia: '',
-        regalo: '',
+        regalo: [],
         condicion: '',
         comision: 0,
-        video: null
+        video: null,
+        ubicacion: '',
+        upc: '' // Nuevo campo agregado
     });
     const [previews, setPreviews] = useState([]);
     const [videoPreview, setVideoPreview] = useState(null);
@@ -32,9 +36,11 @@ const CreateItemPage = () => {
     const [error, setError] = useState('');
     const [success, setSuccess] = useState(false);
     const navigate = useNavigate();
+    
     // Obtener datos del usuario del localStorage
     const userData = JSON.parse(localStorage.getItem('userData') || '{}');
     const isSuperAdmin = userData && (userData.rol === 'Super_Administrador');
+
     useEffect(() => {
         const obtenerDatosIniciales = async () => {
             setLoading(true);
@@ -46,28 +52,28 @@ const CreateItemPage = () => {
                 }
 
                 // Obtener subcategorías
-                const subCatResponse = await fetch('https://videojuegoshabana.com/api/listar_subcategoria/', {
+                const subCatResponse = await fetch(`${API_URL}/listar_subcategoria/`, {
                     headers: {
                         'Authorization': `Bearer ${token}`
                     }
                 });
 
                 // Obtener garantías
-                const garantiaResponse = await fetch('https://videojuegoshabana.com/api/listar_garantia/', {
+                const garantiaResponse = await fetch(`${API_URL}/listar_garantia/`, {
                     headers: {
                         'Authorization': `Bearer ${token}`
                     }
                 });
 
                 // Obtener regalos
-                const regaloResponse = await fetch('https://videojuegoshabana.com/api/listar_regalo/', {
+                const regaloResponse = await fetch(`${API_URL}/listar_regalo/`, {
                     headers: {
                         'Authorization': `Bearer ${token}`
                     }
                 });
 
                 // Obtener condiciones
-                const condicionResponse = await fetch('https://videojuegoshabana.com/api/listar_condicion/', {
+                const condicionResponse = await fetch(`${API_URL}/listar_condicion/`, {
                     headers: {
                         'Authorization': `Bearer ${token}`
                     }
@@ -100,7 +106,7 @@ const CreateItemPage = () => {
         const { name, value } = e.target;
         setFormData({
             ...formData,
-            [name]: value
+            [name]: name === 'regalo' ? value : value
         });
     };
 
@@ -243,6 +249,8 @@ const CreateItemPage = () => {
             data.append('descuento', formData.descuento);
             data.append('comision', formData.comision);
             data.append('condicion', formData.condicion);
+            data.append('ubicacion', formData.ubicacion);
+            data.append('upc', formData.upc); // Agregar el campo UPC al FormData
             
             // Agregar video si existe
             if (formData.video) {
@@ -254,8 +262,8 @@ const CreateItemPage = () => {
                 data.append('garantia', formData.garantia);
             }
             
-            if (formData.regalo) {
-                data.append('regalo', formData.regalo);
+            if (formData.regalo && formData.regalo.length) {
+                formData.regalo.forEach((id) => data.append('regalo', id));
             }
             
             formData.sub_categoria.forEach(id => {
@@ -266,7 +274,7 @@ const CreateItemPage = () => {
                 data.append(`imagenes_upload`, file);
             });
 
-            const response = await fetch('https://videojuegoshabana.com/api/crear_item/', {
+            const response = await fetch(`${API_URL}/crear_item/`, {
                 method: 'POST',
                 headers: {
                     'Authorization': `Bearer ${token}`
@@ -279,7 +287,7 @@ const CreateItemPage = () => {
                 throw new Error(errorData.detail || errorData.message || 'Error al crear el producto');
             }
 
-             // Enviar notificación SOLO con los datos requeridos
+            // Enviar notificación SOLO con los datos requeridos
             await NewProductAlert.sendNewProductNotification({
                 nombre: formData.nombre,
                 precio: formData.precio,
@@ -300,10 +308,12 @@ const CreateItemPage = () => {
                 descuento: 0,
                 imagenes_upload: [],
                 garantia: '',
-                regalo: '',
+                regalo: [],
                 condicion: '',
                 comision: 0,
-                video: null
+                video: null,
+                ubicacion: '',
+                upc: '' // Resetear el campo UPC también
             });
             setPreviews([]);
             setVideoPreview(null);
@@ -330,10 +340,12 @@ const CreateItemPage = () => {
             descuento: 0,
             imagenes_upload: [],
             garantia: '',
-            regalo: '',
+            regalo: [],
             condicion: '',
             comision: 0,
-            video: null
+            video: null,
+            ubicacion: '',
+            upc: '' // Limpiar el campo UPC también
         });
         setPreviews([]);
         setVideoPreview(null);
@@ -427,6 +439,20 @@ const CreateItemPage = () => {
                             />
                             
                             <TextField
+                                label="SKU (Código UPC)"
+                                variant="outlined"
+                                fullWidth
+                                name="upc"
+                                value={formData.upc}
+                                onChange={handleChange}
+                                disabled={loading}
+                                placeholder="Ingresa el código SKU/UPC del producto"
+                                inputProps={{ maxLength: 50 }}
+                                helperText={`${formData.upc.length}/50 caracteres`}
+                                sx={textFieldStyles}
+                            />
+                            
+                            <TextField
                                 label="Descripción"
                                 variant="outlined"
                                 fullWidth
@@ -438,6 +464,18 @@ const CreateItemPage = () => {
                                 required
                                 disabled={loading}
                                 placeholder="Describe tu producto"
+                                sx={textFieldStyles}
+                            />
+
+                            <TextField
+                                label="Ubicación (opcional)"
+                                variant="outlined"
+                                fullWidth
+                                name="ubicacion"
+                                value={formData.ubicacion}
+                                onChange={handleChange}
+                                disabled={loading}
+                                placeholder="Ej: Almacén central, Pasillo 3"
                                 sx={textFieldStyles}
                             />
                         </div>
@@ -562,9 +600,18 @@ const CreateItemPage = () => {
                                     </InputLabel>
                                     <Select
                                         name="regalo"
+                                        multiple
                                         value={formData.regalo}
                                         onChange={handleChange}
                                         disabled={loading}
+                                        renderValue={(selected) => (
+                                            <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
+                                                {selected.map((value) => {
+                                                    const regalo = regalos.find((r) => r.id === value);
+                                                    return <Chip key={value} label={regalo ? regalo.nombre : value} />;
+                                                })}
+                                            </Box>
+                                        )}
                                         sx={{
                                             borderRadius: '8px',
                                             fontSize: '14px',
@@ -581,9 +628,6 @@ const CreateItemPage = () => {
                                             }
                                         }}
                                     >
-                                        <MenuItem value="">
-                                            <em>Ninguno</em>
-                                        </MenuItem>
                                         {regalos.map(regalo => (
                                             <MenuItem key={regalo.id} value={regalo.id}>
                                                 {regalo.nombre}

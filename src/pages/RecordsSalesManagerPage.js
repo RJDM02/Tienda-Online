@@ -8,6 +8,7 @@ import {
 } from '@ant-design/icons';
 import axios from 'axios';
 
+import { API_URL } from '../config/apiConfig';
 const { Option } = Select;
 
 const RecordsSalesManagerPage = () => {
@@ -23,7 +24,7 @@ const RecordsSalesManagerPage = () => {
         setLoading(true);
         const token = localStorage.getItem('authToken');
         const response = await axios.get(
-          'https://videojuegoshabana.com/api/listar_contabilidad_gestores/', 
+          `${API_URL}/listar_contabilidad_gestores/`, 
           {
             headers: {
               'Authorization': `Bearer ${token}`

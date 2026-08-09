@@ -1,3 +1,4 @@
+import { API_URL } from '../config/apiConfig';
 import { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { 
@@ -52,9 +53,10 @@ const AdminVariacionPage = () => {
     cantidad: '',
     imagen: null,
     garantia: '',
-    regalo: '',
+    regalo: [],
     condicion: '',
-    comision: ''
+    comision: '',
+    upc: ''
   });
   const [previewImage, setPreviewImage] = useState('');
   const [imageFile, setImageFile] = useState(null);
@@ -67,21 +69,21 @@ const AdminVariacionPage = () => {
         const token = localStorage.getItem('authToken');
         
         // Obtener garantías
-        const garantiaResponse = await fetch('https://videojuegoshabana.com/api/listar_garantia/', {
+        const garantiaResponse = await fetch(`${API_URL}/listar_garantia/`, {
           headers: {
             'Authorization': `Bearer ${token}`
           }
         });
         
         // Obtener regalos
-        const regaloResponse = await fetch('https://videojuegoshabana.com/api/listar_regalo/', {
+        const regaloResponse = await fetch(`${API_URL}/listar_regalo/`, {
           headers: {
             'Authorization': `Bearer ${token}`
           }
         });
 
         // Obtener condiciones
-        const condicionResponse = await fetch('https://videojuegoshabana.com/api/listar_condicion/', {
+        const condicionResponse = await fetch(`${API_URL}/listar_condicion/`, {
           headers: {
             'Authorization': `Bearer ${token}`
           }
@@ -117,7 +119,7 @@ const AdminVariacionPage = () => {
         throw new Error('No estás autenticado');
       }
 
-      const response = await fetch(`https://videojuegoshabana.com/api/listar_variaciones_x_item/${itemId}/`, {
+      const response = await fetch(`${API_URL}/listar_variaciones_x_item/${itemId}/`, {
         headers: {
           'Authorization': `Bearer ${token}`
         }
@@ -155,7 +157,13 @@ const AdminVariacionPage = () => {
       cantidad: variacion.cantidad,
       imagen: null,
       garantia: variacion.garantia?.id || '',
-      regalo: variacion.regalo?.id || '',
+      regalo: Array.isArray(variacion.regalo)
+        ? variacion.regalo
+        : variacion.regalos
+        ? variacion.regalos.map((r) => r.id)
+        : variacion.regalo
+        ? [variacion.regalo]
+        : [],
       condicion: variacion.condicion_detalle?.id || '',
       comision: variacion.comision || '0.00'
     });
@@ -175,7 +183,7 @@ const AdminVariacionPage = () => {
     const { name, value } = e.target;
     setEditFormData(prev => ({
       ...prev,
-      [name]: value
+      [name]: name === 'regalo' ? value : value
     }));
   };
 
@@ -209,14 +217,15 @@ const AdminVariacionPage = () => {
       formDataToSend.append('precio', editFormData.precio);
       formDataToSend.append('cantidad', editFormData.cantidad);
       formDataToSend.append('comision', editFormData.comision);
+      formDataToSend.append('upc', editFormData.upc);
       
       // Agregar garantía, regalo y condición solo si tienen valor
       if (editFormData.garantia) {
         formDataToSend.append('garantia', editFormData.garantia);
       }
       
-      if (editFormData.regalo) {
-        formDataToSend.append('regalo', editFormData.regalo);
+      if (editFormData.regalo && editFormData.regalo.length) {
+        editFormData.regalo.forEach((id) => formDataToSend.append('regalo', id));
       }
       
       if (editFormData.condicion) {
@@ -227,7 +236,7 @@ const AdminVariacionPage = () => {
         formDataToSend.append('imagen', imageFile);
       }
 
-      const response = await fetch(`https://videojuegoshabana.com/api/editar_detalle_variacion/${currentVariacion.id}/`, {
+      const response = await fetch(`${API_URL}/editar_detalle_variacion/${currentVariacion.id}/`, {
         method: 'PATCH',
         headers: {
           'Authorization': `Bearer ${token}`
@@ -253,7 +262,7 @@ const AdminVariacionPage = () => {
   const handleDeleteVariacion = async () => {
     try {
       const token = localStorage.getItem('authToken');
-      const response = await fetch(`https://videojuegoshabana.com/api/eliminar_variacion/${currentVariacion.id}/`, {
+      const response = await fetch(`${API_URL}/eliminar_variacion/${currentVariacion.id}/`, {
         method: 'DELETE',
         headers: {
           'Authorization': `Bearer ${token}`
@@ -345,7 +354,7 @@ const AdminVariacionPage = () => {
                       Imagen
                     </th>
                     <th className="px-6 py-4 text-left text-sm font-semibold text-gray-700 uppercase tracking-wider">
-                      Color
+                      Color / SKU
                     </th>
                     <th className="px-6 py-4 text-left text-sm font-semibold text-gray-700 uppercase tracking-wider">
                       Modelo
@@ -393,6 +402,11 @@ const AdminVariacionPage = () => {
                             <div>
                               <div className="text-sm font-medium text-gray-900">{variacion.color}</div>
                               <div className="text-sm text-gray-500">ID: {variacion.id}</div>
+                              {variacion.upc && (
+                                <div className="text-xs text-gray-400 mt-1 font-mono">
+                                  SKU: {variacion.upc}
+                                </div>
+                              )}
                             </div>
                           </div>
                         </td>
@@ -687,6 +701,31 @@ const AdminVariacionPage = () => {
                   },
                 }}
               />
+
+              {/* Campo UPC */}
+              <TextField
+                label="SKU (C�digo de Barras)"
+                name="upc"
+                value={editFormData.upc}
+                onChange={handleEditChange}
+                fullWidth
+                margin="normal"
+                placeholder="Ingrese el c�digo SKU"
+                sx={{
+                  '& .MuiOutlinedInput-root': {
+                    borderRadius: '12px',
+                    '&:hover fieldset': {
+                      borderColor: '#FF6B00',
+                    },
+                    '&.Mui-focused fieldset': {
+                      borderColor: '#FF6B00',
+                    },
+                  },
+                  '& .MuiInputLabel-root.Mui-focused': {
+                    color: '#FF6B00',
+                  },
+                }}
+              />
               
               <div className="grid grid-cols-2 gap-4">
                 <TextField
@@ -845,9 +884,13 @@ const AdminVariacionPage = () => {
                   <InputLabel>Regalo</InputLabel>
                   <Select
                     name="regalo"
+                    multiple
                     value={editFormData.regalo}
                     onChange={handleEditChange}
                     label="Regalo"
+                    renderValue={(selected) =>
+                      selected.map((id) => regalos.find((r) => r.id === id)?.nombre || id).join(', ')
+                    }
                     sx={{
                       borderRadius: '12px',
                       '& .MuiOutlinedInput-root': {
@@ -863,9 +906,6 @@ const AdminVariacionPage = () => {
                       },
                     }}
                   >
-                    <MenuItem value="">
-                      <em>Ninguno</em>
-                    </MenuItem>
                     {regalos.map(regalo => (
                       <MenuItem key={regalo.id} value={regalo.id}>
                         {regalo.nombre}

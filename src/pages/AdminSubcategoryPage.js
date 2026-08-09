@@ -19,6 +19,22 @@ import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
 import AddIcon from '@mui/icons-material/Add';
 
+import { API_URL } from '../config/apiConfig';
+const normalizeOrdenValue = (value) => {
+  if (value === null || value === undefined || value === '') {
+    return null;
+  }
+  const numericValue = Number(value);
+  return Number.isNaN(numericValue) ? null : numericValue;
+};
+
+const compareNullableNumbers = (a, b) => {
+  if (a === null && b === null) return 0;
+  if (a === null) return 1;
+  if (b === null) return -1;
+  return a - b;
+};
+
 const AdminSubcategoriesPage = () => {
   const navigate = useNavigate();
   const [subcategories, setSubcategories] = useState([]);
@@ -35,7 +51,8 @@ const AdminSubcategoriesPage = () => {
   // Formulario de edición
   const [editForm, setEditForm] = useState({
     nombre: '',
-    categoria: ''
+    categoria: '',
+    orden: ''
   });
 
   // Obtener token de autenticación
@@ -58,7 +75,7 @@ const AdminSubcategoriesPage = () => {
 
     try {
       // Obtener categorías
-      const categoriesResponse = await fetch('https://videojuegoshabana.com/api/listar_categoria/', {
+      const categoriesResponse = await fetch(`${API_URL}/listar_categoria/`, {
         headers: {
           'Authorization': `Bearer ${token}`
         }
@@ -75,10 +92,13 @@ const AdminSubcategoriesPage = () => {
       }
 
       const categoriesData = await categoriesResponse.json();
-      setCategories(categoriesData);
+      const sortedCategories = [...categoriesData].sort((a, b) =>
+        compareNullableNumbers(normalizeOrdenValue(a.orden), normalizeOrdenValue(b.orden))
+      );
+      setCategories(sortedCategories);
 
       // Obtener subcategorías
-      const subcategoriesResponse = await fetch('https://videojuegoshabana.com/api/listar_subcategoria/', {
+      const subcategoriesResponse = await fetch(`${API_URL}/listar_subcategoria/`, {
         headers: {
           'Authorization': `Bearer ${token}`
         }
@@ -95,7 +115,38 @@ const AdminSubcategoriesPage = () => {
       }
 
       const subcategoriesData = await subcategoriesResponse.json();
-      setSubcategories(subcategoriesData);
+      const sortedSubcategories = [...subcategoriesData].sort((a, b) => {
+        const aCategoryOrden = normalizeOrdenValue(a.categoria?.orden);
+        const bCategoryOrden = normalizeOrdenValue(b.categoria?.orden);
+        const categoryOrderComparison = compareNullableNumbers(aCategoryOrden, bCategoryOrden);
+        if (categoryOrderComparison !== 0) {
+          return categoryOrderComparison;
+        }
+
+        const categoryNameComparison = (a.categoria?.nombre || '').localeCompare(
+          b.categoria?.nombre || '',
+          undefined,
+          { sensitivity: 'base' }
+        );
+        if (categoryNameComparison !== 0) {
+          return categoryNameComparison;
+        }
+
+        const aOrden = normalizeOrdenValue(a.orden);
+        const bOrden = normalizeOrdenValue(b.orden);
+        const subcategoryOrderComparison = compareNullableNumbers(aOrden, bOrden);
+        if (subcategoryOrderComparison !== 0) {
+          return subcategoryOrderComparison;
+        }
+
+        const nameComparison = (a.nombre || '').localeCompare(b.nombre || '', undefined, { sensitivity: 'base' });
+        if (nameComparison !== 0) {
+          return nameComparison;
+        }
+
+        return (a.id || 0) - (b.id || 0);
+      });
+      setSubcategories(sortedSubcategories);
     } catch (err) {
       setError(err.message);
     } finally {
@@ -109,7 +160,7 @@ const AdminSubcategoriesPage = () => {
     if (!token) return;
 
     try {
-      const response = await fetch(`https://videojuegoshabana.com/api/listar_detalle_subcategoria/${id}/`, {
+      const response = await fetch(`${API_URL}/listar_detalle_subcategoria/${id}/`, {
         headers: {
           'Authorization': `Bearer ${token}`
         }
@@ -127,9 +178,11 @@ const AdminSubcategoriesPage = () => {
 
       const data = await response.json();
       setCurrentSubcategory(data);
+      const ordenValue = normalizeOrdenValue(data.orden);
       setEditForm({
         nombre: data.nombre,
-        categoria: data.categoria.id
+        categoria: data.categoria.id,
+        orden: ordenValue === null ? '' : ordenValue
       });
       setEditModalOpen(true);
     } catch (err) {
@@ -147,7 +200,7 @@ const AdminSubcategoriesPage = () => {
     }
 
     try {
-      const response = await fetch(`https://videojuegoshabana.com/api/eliminar_subcategoria/${id}/`, {
+      const response = await fetch(`${API_URL}/eliminar_subcategoria/${id}/`, {
         method: 'DELETE',
         headers: {
           'Authorization': `Bearer ${token}`
@@ -181,7 +234,8 @@ const AdminSubcategoriesPage = () => {
     setError(null);
 
     try {
-      const response = await fetch(`https://videojuegoshabana.com/api/editar_subcategoria/${currentSubcategory.id}/`, {
+      const ordenPayload = editForm.orden === '' ? null : Number(editForm.orden);
+      const response = await fetch(`${API_URL}/editar_subcategoria/${currentSubcategory.id}/`, {
         method: 'PATCH',
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -189,7 +243,8 @@ const AdminSubcategoriesPage = () => {
         },
         body: JSON.stringify({
           nombre: editForm.nombre,
-          categoria: editForm.categoria
+          categoria: editForm.categoria,
+          orden: Number.isNaN(ordenPayload) ? null : ordenPayload
         })
       });
 
@@ -358,6 +413,42 @@ const AdminSubcategoriesPage = () => {
                 onChange={(e) => setEditForm({...editForm, nombre: e.target.value})}
                 required
                 margin="normal"
+                sx={{
+                  '& .MuiOutlinedInput-root': {
+                    borderRadius: '12px',
+                    '&:hover fieldset': {
+                      borderColor: '#FF6B00',
+                    },
+                    '&.Mui-focused fieldset': {
+                      borderColor: '#FF6B00',
+                    },
+                  },
+                  '& .MuiInputLabel-root.Mui-focused': {
+                    color: '#FF6B00',
+                  },
+                }}
+              />
+              <TextField
+                label="Orden"
+                variant="outlined"
+                fullWidth
+                type="number"
+                value={editForm.orden === '' ? '' : editForm.orden}
+                onChange={(e) => {
+                  const { value } = e.target;
+                  if (value === '') {
+                    setEditForm(prev => ({ ...prev, orden: '' }));
+                    return;
+                  }
+
+                  const numericValue = Number(value);
+                  if (!Number.isNaN(numericValue)) {
+                    setEditForm(prev => ({ ...prev, orden: numericValue }));
+                  }
+                }}
+                margin="normal"
+                inputProps={{ inputMode: 'numeric', pattern: '[0-9]*' }}
+                helperText="Solo numeros; deja vacio para enviar la subcategoria al final."
                 sx={{
                   '& .MuiOutlinedInput-root': {
                     borderRadius: '12px',

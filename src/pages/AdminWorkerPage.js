@@ -21,6 +21,7 @@ import ArrowUpwardIcon from '@mui/icons-material/ArrowUpward';
 import ArrowDownwardIcon from '@mui/icons-material/ArrowDownward';
 import FilterListIcon from '@mui/icons-material/FilterList';
 
+import { API_URL } from '../config/apiConfig';
 const AdminWorkerPage = () => {
   const navigate = useNavigate();
   const [workers, setWorkers] = useState([]);
@@ -64,7 +65,7 @@ const AdminWorkerPage = () => {
     setError(null);
 
     try {
-      const response = await fetch('https://videojuegoshabana.com/api/listar_trabajador/', {
+      const response = await fetch(`${API_URL}/listar_trabajador/`, {
         headers: {
           'Authorization': `Bearer ${token}`
         }
@@ -95,7 +96,7 @@ const AdminWorkerPage = () => {
     if (!token) return;
 
     try {
-      const response = await fetch(`https://videojuegoshabana.com/api/listar_detalle_trabajador/${id}/`, {
+      const response = await fetch(`${API_URL}/listar_detalle_trabajador/${id}/`, {
         headers: {
           'Authorization': `Bearer ${token}`
         }
@@ -137,7 +138,7 @@ const AdminWorkerPage = () => {
     }
 
     try {
-      const response = await fetch(`https://videojuegoshabana.com/api/eliminar_trabajador/${id}/`, {
+      const response = await fetch(`${API_URL}/eliminar_trabajador/${id}/`, {
         method: 'DELETE',
         headers: {
           'Authorization': `Bearer ${token}`
@@ -180,7 +181,7 @@ const AdminWorkerPage = () => {
         ...(editForm.password && { password: editForm.password })
       };
 
-      const response = await fetch(`https://videojuegoshabana.com/api/editar_trabajador/${currentWorker.id}/`, {
+      const response = await fetch(`${API_URL}/editar_trabajador/${currentWorker.id}/`, {
         method: 'PATCH',
         headers: {
           'Authorization': `Bearer ${token}`,

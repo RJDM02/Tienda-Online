@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import PropTypes from 'prop-types';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import ShoppingCartIcon from '@mui/icons-material/ShoppingCart';
 import VisibilityIcon from '@mui/icons-material/Visibility';
 import ShareIcon from '@mui/icons-material/Share';
@@ -82,57 +82,85 @@ const CardItem = ({ product, searchTerm = '', userRole }) => {
   const handleShare = async (e) => {
     e.stopPropagation();
     
-    // Obtener referido_id del token si existe
     const referidoId = getReferidoId();
-    
-    // URL del producto sin parámetros de referido
     const productUrl = `${window.location.origin}/product/${product.id}`;
-    
-    // Texto base para compartir
-    let shareText = `🌟 ${product.nombre} 🌟\n💵 Precio: $${hasDiscount ? product.precio_post_descuento : product.precio}\n📝 ${product.descripcion?.substring(0, 500) || 'Producto destacado'}...\n\n🔗 ${productUrl}\n🖼️ Imagen del producto: ${productImage}`;
+    const mainImageUrl = productImage?.startsWith('http')
+      ? productImage
+      : `${window.location.origin}${productImage?.startsWith('/') ? '' : '/'}${productImage || ''}`;
 
-    // Agregar información del referido si existe
+    // Colocamos primero la imagen del producto para que la previsualizacion en apps como WhatsApp use esa foto
+    const shareLines = [
+      mainImageUrl,
+      productUrl,
+      `${product.nombre}`,
+      product.condicion_detalle?.nombre ? `Condición: ${product.condicion_detalle.nombre}` : null,
+      hasDiscount ? `Precio: $${product.precio_post_descuento} (antes $${product.precio})` : `Precio: $${product.precio}`,
+      `${product.descripcion?.substring(0, 500) || 'Producto destacado'}...`,
+    ];
+
+    // Eliminar entradas vacías antes de componer el mensaje
+    const filteredShareLines = shareLines.filter(Boolean);
+
     if (referidoId) {
-      shareText += `\n\n👤 Código de referido: ${referidoId}`;
+      filteredShareLines.push(`Codigo de referido: ${referidoId}`);
     }
+
+    const composedText = filteredShareLines.join('\n');
 
     setOpenSnackbar(false);
 
     try {
       const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
-
       if (isMobile) {
+        // Intentar compartir con imagen adjunta y texto completo
+        if (navigator.canShare && mainImageUrl) {
+          try {
+            const response = await fetch(mainImageUrl);
+            const blob = await response.blob();
+            const file = new File([blob], 'producto.jpg', { type: blob.type || 'image/jpeg' });
+            if (navigator.canShare({ files: [file] })) {
+              await navigator.share({
+                title: product.nombre,
+                text: composedText,
+                files: [file],
+              });
+              return;
+            }
+          } catch (error) {
+            console.warn('No se pudo adjuntar la imagen al compartir, usando texto.', error);
+          }
+        }
+
         if (navigator.share) {
           await navigator.share({
             title: product.nombre,
-            text: shareText,
-            url: productUrl,
+            text: composedText,
           });
           return;
         }
 
         if (navigator.userAgent.match(/WhatsApp/i)) {
-          window.open(`whatsapp://send?text=${encodeURIComponent(shareText)}`);
+          window.open(`whatsapp://send?text=${encodeURIComponent(composedText)}`);
           return;
         }
       }
 
       if (navigator.userAgent.match(/FBAN|FBAV/i)) {
-        window.open(`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(productUrl)}&quote=${encodeURIComponent(shareText)}`, '_blank');
+        window.open(`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(productUrl)}&quote=${encodeURIComponent(composedText)}`, '_blank');
         return;
       }
 
       if (navigator.userAgent.match(/Twitter/i)) {
-        window.open(`https://twitter.com/intent/tweet?text=${encodeURIComponent(shareText)}&url=${encodeURIComponent(productUrl)}`, '_blank');
+        window.open(`https://twitter.com/intent/tweet?text=${encodeURIComponent(composedText)}&url=${encodeURIComponent(productUrl)}`, '_blank');
         return;
       }
 
       if (navigator.clipboard) {
-        await navigator.clipboard.writeText(shareText);
+        await navigator.clipboard.writeText(composedText);
         setOpenSnackbar(true);
       } else {
         const textArea = document.createElement('textarea');
-        textArea.value = shareText;
+        textArea.value = composedText;
         document.body.appendChild(textArea);
         textArea.select();
         document.execCommand('copy');
@@ -141,7 +169,7 @@ const CardItem = ({ product, searchTerm = '', userRole }) => {
       }
     } catch (err) {
       console.error('Error al compartir:', err);
-      window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(shareText)}`, '_blank');
+      window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(composedText)}`, '_blank');
     }
   };
 
@@ -157,9 +185,9 @@ const CardItem = ({ product, searchTerm = '', userRole }) => {
   return (
     <div className="bg-white rounded-xl md:rounded-2xl shadow-lg overflow-hidden hover:shadow-xl transition-all duration-300 transform hover:-translate-y-2 flex flex-col h-full group">
       {/* Imagen del producto con overlay */}
-      <div 
-        className="relative h-32 sm:h-40 md:h-48 bg-gradient-to-br from-gray-100 to-gray-200 overflow-hidden cursor-pointer"
-        onClick={handleViewDetails}
+      <Link
+        to={`/product/${product.id}`}
+        className="relative h-32 sm:h-40 md:h-48 bg-gradient-to-br from-gray-100 to-gray-200 overflow-hidden cursor-pointer block"
       >
         <img
           src={productImage}
@@ -177,6 +205,7 @@ const CardItem = ({ product, searchTerm = '', userRole }) => {
             <Tooltip title="Ver detalles">
               <button
                 onClick={(e) => {
+                  e.preventDefault();
                   e.stopPropagation();
                   handleViewDetails();
                 }}
@@ -188,6 +217,7 @@ const CardItem = ({ product, searchTerm = '', userRole }) => {
             <Tooltip title="Añadir al carrito">
               <button
                 onClick={(e) => {
+                  e.preventDefault();
                   e.stopPropagation();
                   handleAddToCart(e);
                 }}
@@ -204,6 +234,7 @@ const CardItem = ({ product, searchTerm = '', userRole }) => {
             <Tooltip title="Compartir producto">
               <button
                 onClick={(e) => {
+                  e.preventDefault();
                   e.stopPropagation();
                   handleShare(e);
                 }}
@@ -274,16 +305,19 @@ const CardItem = ({ product, searchTerm = '', userRole }) => {
             />
           </div>
         )}
-      </div>
+      </Link>
 
       {/* Contenido de la tarjeta */}
       <div className="p-3 md:p-4 lg:p-6 flex-grow flex flex-col">
-        <h3 
-          className="text-sm md:text-base lg:text-lg font-bold text-gray-900 mb-2 line-clamp-2 hover:text-[#FF6B00] transition-colors duration-200 cursor-pointer" 
-          onClick={handleViewDetails}
+        <Link
+          to={`/product/${product.id}`}
+          className="text-[0.78rem] sm:text-[0.82rem] md:text-sm lg:text-base font-semibold text-gray-900 mb-1 leading-[1.15] tracking-[-0.01em] break-words line-clamp-3 hover:text-[#FF6B00] transition-colors duration-200 cursor-pointer"
+          style={{
+            fontFamily: "'Roboto Condensed', 'Arial Narrow', 'Liberation Sans Narrow', 'Helvetica Neue', Arial, sans-serif",
+          }}
         >
           {highlightSearchTerm(product.nombre)}
-        </h3>
+        </Link>
         
         {/* Mostrar comisión si es gestor o admin */}
         {showCommission && product.comision && (

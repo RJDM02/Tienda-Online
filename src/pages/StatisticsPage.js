@@ -18,6 +18,7 @@ import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import CancelIcon from '@mui/icons-material/Cancel';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 
+import { API_URL } from '../config/apiConfig';
 const StatisticsPage = () => {
   const [statsData, setStatsData] = useState({
     estadistica_cliente: {
@@ -114,7 +115,7 @@ const StatisticsPage = () => {
           return;
         }
 
-        const response = await fetch('https://videojuegoshabana.com/api/listar_estadistica/', {
+        const response = await fetch(`${API_URL}/listar_estadistica/`, {
           headers: {
             'Authorization': `Bearer ${token}`
           }

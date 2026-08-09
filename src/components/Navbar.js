@@ -41,9 +41,12 @@ import Assessment from "@mui/icons-material/Assessment";
 import AccountBalance from "@mui/icons-material/AccountBalance";
 import ReceiptIcon from '@mui/icons-material/Receipt';
 import EqualizerIcon from '@mui/icons-material/Equalizer';
+import BubbleChartIcon from '@mui/icons-material/BubbleChart';
 import NotificationsIcon from '@mui/icons-material/Notifications';
 import HomeIcon from '@mui/icons-material/Home';
 import InfoIcon from '@mui/icons-material/Info';
+import AssignmentReturnIcon from '@mui/icons-material/AssignmentReturn';
+import PaidIcon from '@mui/icons-material/Paid';
 import logo from '@/assets/logo.png';
 import ModalEditCliente from '../components/ModalEditCliente';
 import CarBuy from './CarBuy';
@@ -51,6 +54,7 @@ import { useCart } from '../context/CartContext';
 import { jwtDecode } from 'jwt-decode';
 import './Navbar.css';
 
+import { API_BASE_URL } from '../config/apiConfig';
 function Navbar({ onShowLogin }) {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
@@ -66,8 +70,6 @@ function Navbar({ onShowLogin }) {
   const [isLoading, setIsLoading] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const { totalItems } = useCart();
-
-  const API_BASE_URL = 'https://videojuegoshabana.com';
 
   // Función para verificar y limpiar sesión si el token es inválido
   const checkTokenAndCleanSession = () => {
@@ -178,9 +180,12 @@ function Navbar({ onShowLogin }) {
 
   const isAdmin = userData && (userData.rol === 'Administrador' || userData.rol === 'Super_Administrador');
   const isSuperAdmin = userData && (userData.rol === 'Super_Administrador');
+  const isRemesasAdmin = userData && (userData.rol === 'Administrador_Remesas');
   const isCourier = userData && (userData.rol === 'Mensajero');
   const isManager = userData && (userData.rol === 'Gestor de Venta');
-  const isClient = userData && !isAdmin && !isCourier && !isManager;
+  const isRemesasClient = userData && (userData.rol === 'Cliente_Remesas');
+  const isClient = userData && (userData.rol === 'Cliente');
+  const isAdminPanelUser = isAdmin || isCourier || isManager || isRemesasAdmin;
 
   const navigateWithReload = (path) => {
     if (!checkTokenAndCleanSession()) {
@@ -277,7 +282,7 @@ function Navbar({ onShowLogin }) {
     // Configura un nuevo timer que ejecutará la búsqueda después de 500ms (puedes ajustar este valor)
     const timer = setTimeout(() => {
       updateSearch(value);
-    }, 700);
+    }, 1100);
     
     setDebounceTimer(timer);
   };
@@ -329,31 +334,63 @@ function Navbar({ onShowLogin }) {
     { icon: <AccountBalance />, title: "Contabilidad General(Administador)", path: "/admin-contabilidad-general-admin" },
     { icon: <ReceiptIcon />, title: "Record Ventas (Todos)", path: "/record-ventas" },
     { icon: <EqualizerIcon />, title: "Estadísticas", path: "/statistics" },
+    { icon: <BubbleChartIcon />, title: "Antigüedad Inventario", path: "/analytics-antiguedad-productos" },
     { icon: <HomeIcon />, title: "Administrar HomePage", path: "/admin-homepage" },
+  ];
+
+  const superAdminMenuItems = [
+    { icon: <AssignmentReturnIcon />, title: "Devoluciones", path: "/admin-devoluciones" },
+    { icon: <EditIcon />, title: "Gestionar remesas", path: "/remesa-gestionar" },
+    { icon: <HistoryIcon />, title: "Historial remesas", path: "/remesa-historial" }
   ];
 
   const sharedAdminManagerItems = [
     { icon: <ReceiptIcon />, title: "Record Ventas (Gestor)", path: "/record-ventas-manager" }
   ];
 
-  const managerSpecificItems = [
-    { icon: <HistoryIcon />, title: "Mis ventas", path: "/admin-ventas-gestor" },
-    { icon: <InfoIcon />, title: "Info gestor", path: "/info-gestor" }
+const managerSpecificItems = [
+  { icon: <HistoryIcon />, title: "Mis ventas", path: "/admin-ventas-gestor" },
+  { icon: <InfoIcon />, title: "Info gestor", path: "/info-gestor" },
+  { icon: <PointOfSaleIcon />, title: "Crear remesa", path: "/remesa-crear" },
+  { icon: <PeopleIcon />, title: "Crear cliente remesas", path: "/remesa-crear-cliente" },
+  { icon: <HistoryIcon />, title: "Historial remesas", path: "/remesa-historial" },
+  { icon: <AccountBalance />, title: "Contabilidad remesas", path: "/remesa-contabilidad" }
+];
+
+const remesasAdminItems = [
+  { icon: <PointOfSaleIcon />, title: "Crear remesa", path: "/remesa-crear" },
+  { icon: <PeopleIcon />, title: "Crear cliente remesas", path: "/remesa-crear-cliente" },
+  { icon: <EditIcon />, title: "Gestionar remesas", path: "/remesa-gestionar" },
+  { icon: <HistoryIcon />, title: "Historial remesas", path: "/remesa-historial" },
+  { icon: <AccountBalance />, title: "Contabilidad remesas", path: "/remesa-contabilidad" }
+];
+
+const adminRemesaItems = [
+  { icon: <PointOfSaleIcon />, title: "Crear remesa", path: "/remesa-crear" },
+  { icon: <PeopleIcon />, title: "Crear cliente remesas", path: "/remesa-crear-cliente" },
+  { icon: <PaidIcon />, title: "Fondos remesas", path: "/remesa-fondos" },
+  { icon: <AccountBalance />, title: "Contabilidad remesas", path: "/remesa-contabilidad" }
+];
+
+  const remesasClientItems = [
+    { icon: <HistoryIcon />, title: "Mi historial remesas", path: "/remesa-historial" }
   ];
 
   const mobileMenuItems = [
-    ...(isAdmin || isManager || isCourier ? [
+    ...(isAdminPanelUser ? [
       { icon: <NotificationsIcon />, title: "Notificaciones", path: "/notificaciones" }
     ] : []),
     // Agregar Administrar Ventas al menú móvil para admins
     ...(isAdmin ? [
       { icon: <PointOfSaleIcon />, title: "Administrar Ventas", path: "/admin-ventas" }
     ] : []),
-    ...(isAdmin ? [...adminMenuItems, ...sharedAdminManagerItems] : []),
+    ...(isAdmin ? [...adminMenuItems, ...(isSuperAdmin ? superAdminMenuItems : []), ...adminRemesaItems, ...sharedAdminManagerItems] : []),
+    ...(isRemesasAdmin ? remesasAdminItems : []),
     ...(isManager ? [...sharedAdminManagerItems, ...managerSpecificItems] : []),
     ...(isCourier ? [
       { icon: <DeliveryDiningIcon />, title: "Mis entregas", path: "/mensajeria-lista" }
-    ] : [])
+    ] : []),
+    ...(isRemesasClient ? remesasClientItems : [])
   ];
 
   return (
@@ -465,7 +502,7 @@ function Navbar({ onShowLogin }) {
               </Tooltip>
             )}
 
-            {(isAdmin || isManager || isCourier) && (
+            {isAdminPanelUser && (
               <Tooltip title="Notificaciones">
                 <IconButton 
                   color="inherit" 
@@ -525,6 +562,30 @@ function Navbar({ onShowLogin }) {
               </Tooltip>
             )}
 
+            {isRemesasClient && (
+              <Tooltip title="Mi historial remesas">
+                <IconButton
+                  color="inherit"
+                  onClick={() => navigateWithReload('/remesa-historial')}
+                  sx={{ display: { xs: 'none', sm: 'flex' } }}
+                >
+                  <HistoryIcon />
+                </IconButton>
+              </Tooltip>
+            )}
+
+            {isRemesasAdmin && (
+              <Tooltip title="Opciones de Remesas">
+                <IconButton
+                  color="inherit"
+                  onClick={handleAdminMenuOpen}
+                  sx={{ display: { xs: 'none', sm: 'flex' } }}
+                >
+                  <MoreVertIcon />
+                </IconButton>
+              </Tooltip>
+            )}
+
             {showCart && <CarBuy />}
 
             <Tooltip title={userData ? "Mi cuenta" : "Iniciar sesión"}>
@@ -541,7 +602,7 @@ function Navbar({ onShowLogin }) {
               </IconButton>
             </Tooltip>
 
-            {(isAdmin || isManager || isCourier) && (
+            {(isAdminPanelUser || isRemesasClient) && (
               <IconButton 
                 color="inherit" 
                 onClick={handleMobileMenuOpen}
@@ -570,7 +631,7 @@ function Navbar({ onShowLogin }) {
           transformOrigin={{ horizontal: 'right', vertical: 'top' }}
           anchorOrigin={{ horizontal: 'right', vertical: 'bottom' }}
         >
-          {isAdmin && adminMenuItems.map((item, index) => (
+          {isAdmin && [...adminMenuItems, ...(isSuperAdmin ? superAdminMenuItems : []), ...adminRemesaItems].map((item, index) => (
             <MenuItem 
               key={`admin-${index}`}
               onClick={() => navigateWithReload(item.path)}
@@ -586,6 +647,19 @@ function Navbar({ onShowLogin }) {
           {isManager && managerSpecificItems.map((item, index) => (
             <MenuItem 
               key={`manager-${index}`}
+              onClick={() => navigateWithReload(item.path)}
+              sx={{ minWidth: '250px' }}
+            >
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                {item.icon}
+                <Typography variant="body2">{item.title}</Typography>
+              </Box>
+            </MenuItem>
+          ))}
+
+          {isRemesasAdmin && remesasAdminItems.map((item, index) => (
+            <MenuItem
+              key={`remesas-admin-${index}`}
               onClick={() => navigateWithReload(item.path)}
               sx={{ minWidth: '250px' }}
             >
@@ -656,14 +730,14 @@ function Navbar({ onShowLogin }) {
             <span>{userData?.nombre || userData?.username}</span>
           </MenuItem>
 
-          {!isAdmin && !isCourier && !isManager && (
+          {!isAdminPanelUser && !isRemesasClient && (
             <MenuItem onClick={handleEditProfileClick}>
               <EditIcon fontSize="small" style={{ marginRight: 8 }} />
               Editar perfil
             </MenuItem>
           )}
 
-          {!isAdmin && !isCourier && !isManager && (
+          {!isAdminPanelUser && !isRemesasClient && (
             <MenuItem onClick={() => {
               navigate('/datos-cliente');
               handleMenuClose();
@@ -695,3 +769,4 @@ function Navbar({ onShowLogin }) {
 }
 
 export default Navbar;
+

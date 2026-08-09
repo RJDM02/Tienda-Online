@@ -2,6 +2,77 @@ import React, { useState, useEffect } from 'react';
 import { Slider, Checkbox } from '@mui/material';
 import { ChevronDown, ChevronUp, ChevronRight, ChevronLeft, Edit, User, Filter, DollarSign, Tags, X, Award } from 'lucide-react';
 
+import { API_URL } from '../config/apiConfig';
+const normalizeOrdenValue = (value) => {
+  if (value === null || value === undefined || value === '') {
+    return null;
+  }
+  const numericValue = Number(value);
+  return Number.isNaN(numericValue) ? null : numericValue;
+};
+
+const compareNullableNumbers = (a, b) => {
+  if (a === null && b === null) return 0;
+  if (a === null) return 1;
+  if (b === null) return -1;
+  return a - b;
+};
+
+const sortCategoriesByOrden = (list) => {
+  return [...list].sort((a, b) => {
+    const ordenComparison = compareNullableNumbers(
+      normalizeOrdenValue(a?.orden),
+      normalizeOrdenValue(b?.orden)
+    );
+    if (ordenComparison !== 0) {
+      return ordenComparison;
+    }
+
+    const nameComparison = (a?.nombre || '').localeCompare(b?.nombre || '', undefined, { sensitivity: 'base' });
+    if (nameComparison !== 0) {
+      return nameComparison;
+    }
+
+    return (a?.id || 0) - (b?.id || 0);
+  });
+};
+
+const sortSubcategoriesWithCategory = (list) => {
+  return [...list].sort((a, b) => {
+    const categoryOrdenComparison = compareNullableNumbers(
+      normalizeOrdenValue(a?.categoria?.orden),
+      normalizeOrdenValue(b?.categoria?.orden)
+    );
+    if (categoryOrdenComparison !== 0) {
+      return categoryOrdenComparison;
+    }
+
+    const categoryNameComparison = (a?.categoria?.nombre || '').localeCompare(
+      b?.categoria?.nombre || '',
+      undefined,
+      { sensitivity: 'base' }
+    );
+    if (categoryNameComparison !== 0) {
+      return categoryNameComparison;
+    }
+
+    const ordenComparison = compareNullableNumbers(
+      normalizeOrdenValue(a?.orden),
+      normalizeOrdenValue(b?.orden)
+    );
+    if (ordenComparison !== 0) {
+      return ordenComparison;
+    }
+
+    const nameComparison = (a?.nombre || '').localeCompare(b?.nombre || '', undefined, { sensitivity: 'base' });
+    if (nameComparison !== 0) {
+      return nameComparison;
+    }
+
+    return (a?.id || 0) - (b?.id || 0);
+  });
+};
+
 const Dashbar = ({ onFilterChange, userData, onEditProfile, selectedCategories = [], selectedConditions = [], priceRange }) => {
   const [categories, setCategories] = useState([]);
   const [subcategories, setSubcategories] = useState([]);
@@ -14,13 +85,13 @@ const Dashbar = ({ onFilterChange, userData, onEditProfile, selectedCategories =
   const [error, setError] = useState(null);
   const [expandedCategories, setExpandedCategories] = useState({});
   const [selectedSubcategories, setSelectedSubcategories] = useState([]);
-  const [localPriceRange, setLocalPriceRange] = useState([0, 2000]);
+  const [localPriceRange, setLocalPriceRange] = useState([0, 9999]);
   const [isCollapsed, setIsCollapsed] = useState(true);
   const [expandedSection, setExpandedSection] = useState(['price', 'categories', 'condition']);
 
   // Sincronizar con los valores iniciales de las props
   useEffect(() => {
-    setLocalPriceRange(priceRange || [0, 2000]);
+    setLocalPriceRange(priceRange || [0, 9999]);
   }, [priceRange]);
 
   useEffect(() => {
@@ -35,7 +106,7 @@ const Dashbar = ({ onFilterChange, userData, onEditProfile, selectedCategories =
   useEffect(() => {
     const fetchConditions = async () => {
       try {
-        const response = await fetch('https://videojuegoshabana.com/api/listar_condicion/', {
+        const response = await fetch(`${API_URL}/listar_condicion/`, {
           method: 'GET',
         });
         
@@ -57,14 +128,15 @@ const Dashbar = ({ onFilterChange, userData, onEditProfile, selectedCategories =
   useEffect(() => {
     const fetchCategories = async () => {
       try {
-        const response = await fetch('https://videojuegoshabana.com/api/listar_categoria/');
+        const response = await fetch(`${API_URL}/listar_categoria/`);
         if (!response.ok) throw new Error('Error al cargar categorías');
         
         const data = await response.json();
-        setCategories(data);
-         
+        const sortedData = sortCategoriesByOrden(data);
+        setCategories(sortedData);
+        
         const expanded = {};
-        data.forEach(cat => {
+        sortedData.forEach(cat => {
           expanded[cat.id] = false;
         });
         setExpandedCategories(expanded);
@@ -82,10 +154,11 @@ const Dashbar = ({ onFilterChange, userData, onEditProfile, selectedCategories =
   useEffect(() => {
     const fetchSubcategories = async () => {
       try {
-        const response = await fetch('https://videojuegoshabana.com/api/listar_subcategoria/');
+        const response = await fetch(`${API_URL}/listar_subcategoria/`);
         if (!response.ok) throw new Error('Error al cargar subcategorías');
         const data = await response.json();
-        setSubcategories(data);
+        const sortedData = sortSubcategoriesWithCategory(data);
+        setSubcategories(sortedData);
       } catch (err) {
         console.error("Error fetching subcategories:", err);
         setError(err.message);
@@ -160,7 +233,8 @@ const Dashbar = ({ onFilterChange, userData, onEditProfile, selectedCategories =
   };
 
   const getSubcategoriesByCategory = (categoryId) => {
-    return subcategories.filter(sub => sub.categoria?.id === categoryId);
+    const filtered = subcategories.filter(sub => sub.categoria?.id === categoryId);
+    return sortSubcategoriesWithCategory(filtered);
   };
 
   const handleCategoryClick = (categoryId, e) => {
@@ -180,8 +254,8 @@ const Dashbar = ({ onFilterChange, userData, onEditProfile, selectedCategories =
   };
 
   const clearPriceFilter = () => {
-    setLocalPriceRange([0, 2000]);
-    onFilterChange({ priceRange: [0, 2000] });
+    setLocalPriceRange([0, 9999]);
+    onFilterChange({ priceRange: [0, 9999] });
   };
 
   if (error) {
@@ -338,7 +412,7 @@ const Dashbar = ({ onFilterChange, userData, onEditProfile, selectedCategories =
               {!isCollapsed && (
                 <>
                   <span className="ml-2 text-white text-sm">Precios</span>
-                  {(localPriceRange[0] > 0 || localPriceRange[1] < 2000) && (
+                  {(localPriceRange[0] > 0 || localPriceRange[1] < 9999) && (
                     <span className="ml-2 bg-orange-500 text-white text-xs px-2 py-0.5 rounded-full">
                       Filtrado
                     </span>
@@ -359,7 +433,7 @@ const Dashbar = ({ onFilterChange, userData, onEditProfile, selectedCategories =
                 onChangeCommitted={handlePriceChangeCommitted}
                 valueLabelDisplay="auto"
                 min={0}
-                max={2000}
+                max={9999}
                 step={10}
                 aria-labelledby="range-slider"
                 sx={{
@@ -393,7 +467,7 @@ const Dashbar = ({ onFilterChange, userData, onEditProfile, selectedCategories =
                   ${localPriceRange[1]}
                 </span>
               </div>
-              {(localPriceRange[0] > 0 || localPriceRange[1] < 2000) && (
+              {(localPriceRange[0] > 0 || localPriceRange[1] < 9999) && (
                 <button
                   onClick={clearPriceFilter}
                   className="mt-2 w-full text-xs text-orange-500 hover:text-orange-400 flex items-center justify-center py-1 bg-gray-800 rounded"
