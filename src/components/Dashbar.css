@@ -1,7 +1,8 @@
 .dashbar-shell {
   border-color: rgba(255, 255, 255, 0.08) !important;
   background:
-    linear-gradient(180deg, rgba(255, 79, 20, 0.08), transparent 260px),
+    radial-gradient(circle at 30% 0%, rgba(255, 79, 20, 0.2), transparent 32%),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.04), transparent 260px),
     #0b0d16 !important;
   color: #fff;
 }
@@ -16,7 +17,8 @@
 
 .dashbar-panel {
   border: 1px solid rgba(255, 255, 255, 0.11);
-  background: rgba(255, 255, 255, 0.06);
+  border-radius: 14px !important;
+  background: rgba(255, 255, 255, 0.075);
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04);
 }
 
@@ -26,7 +28,7 @@
 }
 
 .dashbar-shell button {
-  border-radius: 8px;
+  border-radius: 12px;
 }
 
 .dashbar-shell .MuiCheckbox-root {
@@ -37,6 +39,14 @@
   display: none;
 }
 
+.dashbar-mobile-title {
+  display: none;
+}
+
+.dashbar-mobile-actions {
+  display: none;
+}
+
 @media (max-width: 768px) {
   .dashbar-shell {
     position: fixed !important;
@@ -44,14 +54,15 @@
     right: 0 !important;
     top: auto !important;
     bottom: 0 !important;
-    z-index: 60 !important;
+    z-index: 1401 !important;
     width: 100% !important;
-    height: min(78vh, 680px) !important;
+    height: min(82vh, 720px) !important;
     transform: translateY(110%);
     border-right: 0 !important;
     border-top: 1px solid rgba(255, 255, 255, 0.12);
-    border-radius: 18px 18px 0 0;
+    border-radius: 28px 28px 0 0;
     transition: transform 220ms ease;
+    box-shadow: 0 -30px 70px rgba(0, 0, 0, 0.45) !important;
   }
 
   .dashbar-shell.dashbar-mobile-open {
@@ -75,6 +86,25 @@
     background: rgba(255, 255, 255, 0.08);
   }
 
+  .dashbar-mobile-title {
+    display: block;
+    margin: 4px 48px 18px 0;
+  }
+
+  .dashbar-mobile-title h2 {
+    margin: 0;
+    color: #fff;
+    font-size: 30px;
+    font-weight: 900;
+    line-height: 1;
+  }
+
+  .dashbar-mobile-title p {
+    margin: 6px 0 0;
+    color: #9297aa;
+    font-size: 13px;
+  }
+
   .dashbar-shell::before {
     content: "";
     position: absolute;
@@ -88,6 +118,36 @@
   }
 
   .dashbar-shell .h-full {
-    padding-top: 28px;
+    padding: 30px 20px 112px;
+    overscroll-behavior: contain;
+  }
+
+  .dashbar-mobile-actions {
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    display: grid;
+    grid-template-columns: 1fr 1.35fr;
+    gap: 12px;
+    padding: 14px 20px 20px;
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+    background: linear-gradient(180deg, rgba(11, 13, 22, 0.78), #0b0d16 40%);
+  }
+
+  .dashbar-mobile-actions button {
+    min-height: 52px;
+    font-weight: 900;
+  }
+
+  .dashbar-clear-all {
+    border: 1px solid rgba(255, 79, 20, 0.75);
+    color: #ff4f14;
+  }
+
+  .dashbar-apply {
+    background: #ff4f14;
+    color: #fff;
+    box-shadow: 0 14px 34px rgba(255, 79, 20, 0.3);
   }
 }

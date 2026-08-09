@@ -1,7 +1,7 @@
 .shop-page {
   background:
-    linear-gradient(180deg, rgba(255, 255, 255, 0.96), rgba(246, 243, 237, 0.96)),
-    #f5f1e9;
+    radial-gradient(circle at 80% 0%, rgba(255, 79, 20, 0.08), transparent 32%),
+    linear-gradient(180deg, #fbfaf7 0%, #f3efe8 100%);
   color: #101018;
 }
 
@@ -20,16 +20,16 @@
 .shop-main {
   margin-left: 256px;
   max-height: calc(100vh - 64px);
-  padding: 32px;
+  padding: 42px 48px;
 }
 
 .shop-catalog-panel {
   min-height: calc(100vh - 128px);
-  padding: 40px;
-  border: 1px solid rgba(16, 16, 24, 0.06);
-  border-radius: 8px;
-  background: rgba(255, 255, 255, 0.82);
-  box-shadow: 0 24px 70px rgba(12, 12, 18, 0.08);
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
 }
 
 .shop-catalog-head {
@@ -37,7 +37,7 @@
   align-items: flex-end;
   justify-content: space-between;
   gap: 24px;
-  padding-bottom: 24px;
+  padding: 18px 0 28px;
   border-bottom: 1px solid rgba(16, 16, 24, 0.09);
 }
 
@@ -54,9 +54,9 @@
 .shop-title {
   margin: 0;
   color: #101018;
-  font-size: clamp(2rem, 4vw, 4.2rem);
+  font-size: clamp(2.8rem, 5vw, 5.6rem);
   font-weight: 900;
-  line-height: 0.95;
+  line-height: 0.9;
 }
 
 .shop-subtitle,
@@ -83,11 +83,12 @@
   align-items: center;
   justify-content: space-between;
   gap: 16px;
-  margin: 24px 0 28px;
-  padding: 14px 18px;
-  border: 1px solid rgba(16, 16, 24, 0.08);
-  border-radius: 8px;
-  background: #f7f5f0;
+  margin: 24px 0 30px;
+  padding: 16px 18px;
+  border: 1px solid rgba(16, 16, 24, 0.07);
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.72);
+  box-shadow: 0 18px 45px rgba(16, 16, 24, 0.05);
   color: #303343;
   font-weight: 700;
 }
@@ -99,7 +100,7 @@
   min-height: 40px;
   padding: 0 14px;
   border: 1px solid rgba(16, 16, 24, 0.14);
-  border-radius: 8px;
+  border-radius: 12px;
   background: #fff;
   color: #101018;
   font-weight: 800;
@@ -108,14 +109,14 @@
 .shop-products-grid {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 24px;
+  gap: 28px;
 }
 
 .shop-empty-button,
 .shop-back-home button {
   min-height: 44px;
   padding: 0 22px;
-  border-radius: 8px;
+  border-radius: 12px;
   background: #101018;
   color: #fff;
   font-weight: 800;
@@ -140,11 +141,11 @@
 @media (max-width: 1024px) {
   .shop-main {
     margin-left: 256px;
-    padding: 24px;
+    padding: 28px;
   }
 
   .shop-catalog-panel {
-    padding: 28px;
+    padding: 0;
   }
 
   .shop-products-grid {
@@ -172,8 +173,8 @@
 
   .shop-catalog-panel {
     min-height: auto;
-    padding: 18px;
-    border-radius: 8px;
+    padding: 0;
+    border-radius: 0;
     box-shadow: none;
   }
 
@@ -183,8 +184,8 @@
   }
 
   .shop-title {
-    font-size: 32px;
-    line-height: 1;
+    font-size: 38px;
+    line-height: 0.95;
   }
 
   .shop-subtitle,
@@ -195,6 +196,7 @@
   .shop-results-bar {
     margin: 18px 0;
     padding: 12px;
+    border-radius: 14px;
   }
 
   .shop-results-bar p {

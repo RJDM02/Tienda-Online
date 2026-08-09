@@ -259,6 +259,17 @@ const Dashbar = ({ onFilterChange, userData, onEditProfile, selectedCategories =
     onFilterChange({ priceRange: [0, 9999] });
   };
 
+  const clearAllFilters = () => {
+    setSelectedSubcategories([]);
+    setLocalPriceRange([0, 9999]);
+    onFilterChange({
+      subcategories: [],
+      categories: [],
+      conditions: [],
+      priceRange: [0, 9999]
+    });
+  };
+
   if (error) {
     return (
       <div className={`dashbar-shell fixed left-0 bg-gray-900 shadow-2xl p-6 border-r border-gray-800 transition-all duration-300 ease-in-out ${isCollapsed ? 'dashbar-collapsed w-16' : 'dashbar-expanded w-64'} ${mobileOpen ? 'dashbar-mobile-open' : ''}`} 
@@ -303,6 +314,13 @@ const Dashbar = ({ onFilterChange, userData, onEditProfile, selectedCategories =
       )}
 
       <div className="h-full overflow-y-auto p-4 pt-2">
+        {!isCollapsed && (
+          <div className="dashbar-mobile-title">
+            <h2>Filtros</h2>
+            <p>Ajusta tu busqueda</p>
+          </div>
+        )}
+
         {!isCollapsed && userData && (
           <div className="mb-4 pb-4 border-b border-gray-700">
             <div className="flex items-center justify-between">
@@ -343,8 +361,19 @@ const Dashbar = ({ onFilterChange, userData, onEditProfile, selectedCategories =
                 >
                   <Edit size={16} />
                 </button>
-              )}
-            </div>
+        )}
+
+        {!isCollapsed && onCloseMobile && (
+          <div className="dashbar-mobile-actions">
+            <button type="button" className="dashbar-clear-all" onClick={clearAllFilters}>
+              Limpiar
+            </button>
+            <button type="button" className="dashbar-apply" onClick={onCloseMobile}>
+              Aplicar filtros
+            </button>
+          </div>
+        )}
+      </div>
           </div>
         )}
 

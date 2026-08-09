@@ -170,18 +170,18 @@
 
 .vh-navbar.MuiAppBar-root {
   border-bottom: 1px solid rgba(16, 16, 24, 0.08);
-  background: rgba(255, 255, 255, 0.94) !important;
+  background: rgba(255, 255, 255, 0.96) !important;
   color: #101018 !important;
-  box-shadow: 0 10px 30px rgba(16, 16, 24, 0.08) !important;
+  box-shadow: 0 14px 36px rgba(16, 16, 24, 0.09) !important;
   backdrop-filter: blur(14px);
 }
 
 .vh-navbar .vh-navbar-toolbar {
-  padding: 0 28px !important;
+  padding: 0 38px !important;
 }
 
 .vh-navbar-brand {
-  min-width: 260px;
+  min-width: 300px;
 }
 
 .vh-navbar-logo img {
@@ -195,8 +195,8 @@
 }
 
 .vh-navbar-search .MuiOutlinedInput-root {
-  height: 44px !important;
-  border-radius: 8px !important;
+  height: 48px !important;
+  border-radius: 14px !important;
   background: #fff !important;
   box-shadow: inset 0 0 0 1px rgba(16, 16, 24, 0.14);
 }
@@ -206,7 +206,7 @@
 }
 
 .vh-navbar-search .Mui-focused {
-  box-shadow: inset 0 0 0 2px #ff4f14;
+  box-shadow: inset 0 0 0 2px #ff4f14, 0 12px 30px rgba(255, 79, 20, 0.12);
 }
 
 .vh-navbar-search .MuiInputBase-input {
@@ -215,7 +215,7 @@
 
 .vh-navbar-actions .MuiIconButton-root,
 .vh-navbar-actions .MuiButton-root {
-  border-radius: 8px !important;
+  border-radius: 12px !important;
 }
 
 .vh-navbar-actions .MuiButton-root {
@@ -247,7 +247,7 @@
   }
 
   .vh-navbar .vh-navbar-toolbar {
-    gap: 8px;
+  gap: 10px;
   }
 
   .vh-navbar-logo {
@@ -256,11 +256,12 @@
 
   .vh-navbar-search {
     max-width: none !important;
-    margin: 0 4px !important;
+    margin: 0 2px !important;
   }
 
   .vh-navbar-search .MuiOutlinedInput-root {
-    height: 40px !important;
+    height: 42px !important;
+    border-radius: 12px !important;
   }
 
   .vh-navbar-search .MuiInputBase-input {
