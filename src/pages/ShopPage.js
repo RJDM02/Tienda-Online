@@ -138,10 +138,14 @@ const ShopPage = () => {
 
   useEffect(() => {
     const scrollContainer = scrollContainerRef.current;
-    if (!scrollContainer) return;
 
     const handleScroll = () => {
-      const { scrollTop, scrollHeight, clientHeight } = scrollContainer;
+      const isMobile = window.matchMedia('(max-width: 768px)').matches;
+      const scrollSource = isMobile ? document.documentElement : scrollContainer;
+
+      if (!scrollSource) return;
+
+      const { scrollTop, scrollHeight, clientHeight } = scrollSource;
       const isNearBottom = scrollTop + clientHeight >= scrollHeight - 200;
       
       if (isNearBottom && hasMore && !isLoadingMore.current) {
@@ -149,8 +153,13 @@ const ShopPage = () => {
       }
     };
 
-    scrollContainer.addEventListener('scroll', handleScroll);
-    return () => scrollContainer.removeEventListener('scroll', handleScroll);
+    scrollContainer?.addEventListener('scroll', handleScroll);
+    window.addEventListener('scroll', handleScroll, { passive: true });
+
+    return () => {
+      scrollContainer?.removeEventListener('scroll', handleScroll);
+      window.removeEventListener('scroll', handleScroll);
+    };
   }, [loadMoreProducts, hasMore]);
 
   useEffect(() => {
