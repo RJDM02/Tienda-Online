@@ -47,6 +47,7 @@ import HomeIcon from '@mui/icons-material/Home';
 import InfoIcon from '@mui/icons-material/Info';
 import AssignmentReturnIcon from '@mui/icons-material/AssignmentReturn';
 import PaidIcon from '@mui/icons-material/Paid';
+import StorefrontIcon from '@mui/icons-material/Storefront';
 import logo from '@/assets/logo.png';
 import ModalEditCliente from '../components/ModalEditCliente';
 import CarBuy from './CarBuy';
@@ -183,9 +184,10 @@ function Navbar({ onShowLogin }) {
   const isRemesasAdmin = userData && (userData.rol === 'Administrador_Remesas');
   const isCourier = userData && (userData.rol === 'Mensajero');
   const isManager = userData && (userData.rol === 'Gestor de Venta');
+  const isPosManager = userData && (userData.rol === 'Encargado de Punto de Venta');
   const isRemesasClient = userData && (userData.rol === 'Cliente_Remesas');
   const isClient = userData && (userData.rol === 'Cliente');
-  const isAdminPanelUser = isAdmin || isCourier || isManager || isRemesasAdmin;
+  const isAdminPanelUser = isAdmin || isCourier || isManager || isRemesasAdmin || isPosManager;
 
   const navigateWithReload = (path) => {
     if (!checkTokenAndCleanSession()) {
@@ -327,6 +329,7 @@ function Navbar({ onShowLogin }) {
     { icon: <GradeIcon />, title: "Administrar Condicion", path: "/admin-condicion" },
     { icon: <AssignmentTurnedInIcon />, title: "Administrar garantías", path: "/admin-garantias" },
     { icon: <LocalOfferIcon />, title: "Administrar cupones", path: "/admin-cupones" },
+    { icon: <StorefrontIcon />, title: "Administrar puntos de venta", path: "/admin-punto-venta" },
     // Removido de aquí: { icon: <PointOfSaleIcon />, title: "Administrar Ventas", path: "/admin-ventas" },
     { icon: <Assessment />, title: "Contabilidad Gestor", path: "/admin-contabilidad-gestor" },
     { icon: <Assessment />, title: "Contabilidad Cliente", path: "/admin-contabilidad-cliente" },
@@ -376,6 +379,10 @@ const adminRemesaItems = [
     { icon: <HistoryIcon />, title: "Mi historial remesas", path: "/remesa-historial" }
   ];
 
+  const posManagerItems = [
+    { icon: <HistoryIcon />, title: "Mis ventas", path: "/admin-ventas-gestor" }
+  ];
+
   const mobileMenuItems = [
     ...(isAdminPanelUser ? [
       { icon: <NotificationsIcon />, title: "Notificaciones", path: "/notificaciones" }
@@ -387,6 +394,7 @@ const adminRemesaItems = [
     ...(isAdmin ? [...adminMenuItems, ...(isSuperAdmin ? superAdminMenuItems : []), ...adminRemesaItems, ...sharedAdminManagerItems] : []),
     ...(isRemesasAdmin ? remesasAdminItems : []),
     ...(isManager ? [...sharedAdminManagerItems, ...managerSpecificItems] : []),
+    ...(isPosManager ? posManagerItems : []),
     ...(isCourier ? [
       { icon: <DeliveryDiningIcon />, title: "Mis entregas", path: "/mensajeria-lista" }
     ] : []),
@@ -563,6 +571,18 @@ const adminRemesaItems = [
               </Tooltip>
             )}
 
+            {isPosManager && (
+              <Tooltip title="Opciones de Punto de Venta">
+                <IconButton
+                  color="inherit"
+                  onClick={handleAdminMenuOpen}
+                  sx={{ display: { xs: 'none', sm: 'flex' } }}
+                >
+                  <MoreVertIcon />
+                </IconButton>
+              </Tooltip>
+            )}
+
             {isRemesasClient && (
               <Tooltip title="Mi historial remesas">
                 <IconButton
@@ -661,6 +681,19 @@ const adminRemesaItems = [
           {isRemesasAdmin && remesasAdminItems.map((item, index) => (
             <MenuItem
               key={`remesas-admin-${index}`}
+              onClick={() => navigateWithReload(item.path)}
+              sx={{ minWidth: '250px' }}
+            >
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                {item.icon}
+                <Typography variant="body2">{item.title}</Typography>
+              </Box>
+            </MenuItem>
+          ))}
+
+          {isPosManager && posManagerItems.map((item, index) => (
+            <MenuItem
+              key={`pos-manager-${index}`}
               onClick={() => navigateWithReload(item.path)}
               sx={{ minWidth: '250px' }}
             >

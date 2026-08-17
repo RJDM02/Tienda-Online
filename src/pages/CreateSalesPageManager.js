@@ -90,8 +90,8 @@ const CreateSalesPageManager = () => {
         const decoded = jwtDecode(token);
         setCurrentUser(decoded);
         
-        // Verificar que el usuario es realmente un Gestor de Venta
-        if (decoded.rol !== 'Gestor de Venta') {
+        // Verificar que el usuario es realmente un Gestor de Venta o un Encargado de Punto de Venta
+        if (!['Gestor de Venta', 'Encargado de Punto de Venta'].includes(decoded.rol)) {
           navigate('/unauthorized');
         }
       } catch (error) {

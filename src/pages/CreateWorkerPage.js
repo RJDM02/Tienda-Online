@@ -208,6 +208,7 @@ const CreateWorkerPage = () => {
               {isSuperAdmin && <option value="Administrador_Remesas">Administrador Remesas</option>}
               <option value="Gestor de Venta">Gestor de Venta</option>
               <option value="Mensajero">Mensajero</option>
+              <option value="Encargado de Punto de Venta">Encargado de Punto de Venta</option>
             </select>
           </div>
 

@@ -52,6 +52,7 @@ const AdminItemPage = () => {
   const [conditionsData, setConditionsData] = useState([]);
   const [garantiasData, setGarantiasData] = useState([]);
   const [regalosData, setRegalosData] = useState([]);
+  const [puntosVentaData, setPuntosVentaData] = useState([]);
   const [oldDiscount, setOldDiscount] = useState(0);
   // Filtros como en el ejemplo de la API
   const filters = useRef({
@@ -155,7 +156,14 @@ const AdminItemPage = () => {
         }
       });
 
-      if (!categoriesResponse.ok || !subcategoriesResponse.ok || !conditionsResponse.ok || 
+      // Obtener puntos de venta
+      const puntosVentaResponse = await fetch(`${API_URL}/listar_punto_venta/`, {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+
+      if (!categoriesResponse.ok || !subcategoriesResponse.ok || !conditionsResponse.ok ||
           !garantiasResponse.ok || !regalosResponse.ok) {
         throw new Error('Error al obtener datos iniciales');
       }
@@ -171,6 +179,9 @@ const AdminItemPage = () => {
       setConditionsData(conditionsData);
       setGarantiasData(garantiasData);
       setRegalosData(regalosData);
+      if (puntosVentaResponse.ok) {
+        setPuntosVentaData(await puntosVentaResponse.json());
+      }
       
       // Obtener productos iniciales
       fetchItems();
@@ -347,7 +358,8 @@ const AdminItemPage = () => {
     currentVideoUrl: '',
     videoPreview: null,
     upc: '',
-    ubicacion: ''
+    ubicacion: '',
+    punto_venta: ''
   });
   const [videoError, setVideoError] = useState('');
 
@@ -384,7 +396,8 @@ const AdminItemPage = () => {
       currentVideoUrl: item.video || '',
       videoPreview: null,
       upc: item.upc || '',
-      ubicacion: item.ubicacion || ''
+      ubicacion: item.ubicacion || '',
+      punto_venta: item.punto_venta || ''
     });
     setVideoError('');
     setOpenEditModal(true);
@@ -511,6 +524,7 @@ const AdminItemPage = () => {
     formData.append('comision', editForm.comision);
     formData.append('upc', editForm.upc);
     formData.append('ubicacion', editForm.ubicacion);
+    if (editForm.punto_venta) formData.append('punto_venta', editForm.punto_venta);
       
       // Agregar garantía, regalo y condición
       if (editForm.garantia) formData.append('garantia', editForm.garantia);
@@ -1018,6 +1032,9 @@ const AdminItemPage = () => {
                       Ubicación
                     </th>
                     <th className="px-6 py-4 text-left text-sm font-semibold text-gray-700 uppercase tracking-wider">
+                      Punto de Venta
+                    </th>
+                    <th className="px-6 py-4 text-left text-sm font-semibold text-gray-700 uppercase tracking-wider">
                       Variaciones
                     </th>
                   </tr>
@@ -1224,6 +1241,15 @@ const AdminItemPage = () => {
                         <div className="text-sm text-gray-900">
                           {item.ubicacion || <span className="text-gray-400 italic">Sin ubicación</span>}
                         </div>
+                      </td>
+
+                      {/* Punto de Venta */}
+                      <td className="px-6 py-4">
+                        <Chip
+                          label={item.punto_venta_detalle?.nombre || 'Sede Principal'}
+                          color={item.punto_venta_detalle ? 'primary' : 'default'}
+                          size="small"
+                        />
                       </td>
 
                       {/* Variaciones */}
@@ -1486,7 +1512,37 @@ const AdminItemPage = () => {
                   },
                 }}
               />
-              
+
+              <TextField
+                select
+                label="Punto de Venta (opcional)"
+                name="punto_venta"
+                value={editForm.punto_venta}
+                onChange={handleEditChange}
+                fullWidth
+                margin="normal"
+                helperText="Si no se asigna, el producto se considera en la Sede Principal"
+                sx={{
+                  '& .MuiOutlinedInput-root': {
+                    borderRadius: '12px',
+                    '&:hover fieldset': {
+                      borderColor: '#FF6B00',
+                    },
+                    '&.Mui-focused fieldset': {
+                      borderColor: '#FF6B00',
+                    },
+                  },
+                  '& .MuiInputLabel-root.Mui-focused': {
+                    color: '#FF6B00',
+                  },
+                }}
+              >
+                <MenuItem value="">Sede Principal</MenuItem>
+                {puntosVentaData.map((pv) => (
+                  <MenuItem key={pv.id} value={pv.id}>{pv.nombre}</MenuItem>
+                ))}
+              </TextField>
+
               <div className="grid grid-cols-2 gap-4">
                 <TextField
                   label="Cantidad"

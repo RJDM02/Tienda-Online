@@ -24,6 +24,7 @@ const CreateVariacionPage = () => {
     precio: '',
     modelo: '',
     ubicacion: '',
+    punto_venta: '',
     costo: '',
     cantidad: '',
     imagen: null,
@@ -35,6 +36,7 @@ const CreateVariacionPage = () => {
   const [garantias, setGarantias] = useState([]);
   const [regalos, setRegalos] = useState([]);
   const [condiciones, setCondiciones] = useState([]);
+  const [puntosVenta, setPuntosVenta] = useState([]);
   const [previewImage, setPreviewImage] = useState('');
   const [loading, setLoading] = useState({
     form: false,
@@ -73,6 +75,13 @@ const CreateVariacionPage = () => {
           }
         });
 
+        // Obtener puntos de venta
+        const puntoVentaResponse = await fetch(`${API_URL}/listar_punto_venta/`, {
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
+        });
+
         if (!garantiaResponse.ok || !regaloResponse.ok || !condicionResponse.ok) {
           throw new Error('Error al obtener datos iniciales');
         }
@@ -84,6 +93,9 @@ const CreateVariacionPage = () => {
         setGarantias(garantiaData);
         setRegalos(regaloData);
         setCondiciones(condicionData);
+        if (puntoVentaResponse.ok) {
+          setPuntosVenta(await puntoVentaResponse.json());
+        }
       } catch (err) {
         setError(err.message);
       } finally {
@@ -146,6 +158,9 @@ const CreateVariacionPage = () => {
       formDataToSend.append('precio', formData.precio);
       formDataToSend.append('modelo', formData.modelo);
       formDataToSend.append('ubicacion', formData.ubicacion);
+      if (formData.punto_venta) {
+        formDataToSend.append('punto_venta', formData.punto_venta);
+      }
       formDataToSend.append('costo', formData.costo);
       formDataToSend.append('cantidad', formData.cantidad);
       formDataToSend.append('condicion', formData.condicion);
@@ -191,6 +206,7 @@ const CreateVariacionPage = () => {
         precio: '',
         modelo: '',
         ubicacion: '',
+        punto_venta: '',
         costo: '',
         cantidad: '',
         imagen: null,
@@ -217,6 +233,7 @@ const CreateVariacionPage = () => {
       precio: '',
       modelo: '',
       ubicacion: '',
+      punto_venta: '',
       costo: '',
       cantidad: '',
       imagen: null,
@@ -364,6 +381,24 @@ const CreateVariacionPage = () => {
                   placeholder="Ej: Rojo, vitrina 1, caja A"
                   sx={textFieldStyles}
                 />
+
+                <TextField
+                  select
+                  label="Punto de Venta (opcional)"
+                  variant="outlined"
+                  fullWidth
+                  name="punto_venta"
+                  value={formData.punto_venta}
+                  onChange={handleChange}
+                  disabled={loading.form || loading.initialData}
+                  helperText="Si no se asigna, la variación se considera en la Sede Principal"
+                  sx={textFieldStyles}
+                >
+                  <MenuItem value="">Sede Principal</MenuItem>
+                  {puntosVenta.map((pv) => (
+                    <MenuItem key={pv.id} value={pv.id}>{pv.nombre}</MenuItem>
+                  ))}
+                </TextField>
               </div>
             </div>
 

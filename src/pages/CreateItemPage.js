@@ -23,6 +23,7 @@ const CreateItemPage = () => {
         comision: 0,
         video: null,
         ubicacion: '',
+        punto_venta: '',
         upc: '' // Nuevo campo agregado
     });
     const [previews, setPreviews] = useState([]);
@@ -32,6 +33,7 @@ const CreateItemPage = () => {
     const [garantias, setGarantias] = useState([]);
     const [regalos, setRegalos] = useState([]);
     const [condiciones, setCondiciones] = useState([]);
+    const [puntosVenta, setPuntosVenta] = useState([]);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState('');
     const [success, setSuccess] = useState(false);
@@ -79,6 +81,13 @@ const CreateItemPage = () => {
                     }
                 });
 
+                // Obtener puntos de venta
+                const puntoVentaResponse = await fetch(`${API_URL}/listar_punto_venta/`, {
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+
                 if (!subCatResponse.ok || !garantiaResponse.ok || !regaloResponse.ok || !condicionResponse.ok) {
                     throw new Error('Error al obtener datos iniciales');
                 }
@@ -92,6 +101,9 @@ const CreateItemPage = () => {
                 setGarantias(garantiaData);
                 setRegalos(regaloData);
                 setCondiciones(condicionData);
+                if (puntoVentaResponse.ok) {
+                    setPuntosVenta(await puntoVentaResponse.json());
+                }
             } catch (err) {
                 setError(err.message);
             } finally {
@@ -250,6 +262,9 @@ const CreateItemPage = () => {
             data.append('comision', formData.comision);
             data.append('condicion', formData.condicion);
             data.append('ubicacion', formData.ubicacion);
+            if (formData.punto_venta) {
+                data.append('punto_venta', formData.punto_venta);
+            }
             data.append('upc', formData.upc); // Agregar el campo UPC al FormData
             
             // Agregar video si existe
@@ -313,6 +328,7 @@ const CreateItemPage = () => {
                 comision: 0,
                 video: null,
                 ubicacion: '',
+                punto_venta: '',
                 upc: '' // Resetear el campo UPC también
             });
             setPreviews([]);
@@ -345,6 +361,7 @@ const CreateItemPage = () => {
             comision: 0,
             video: null,
             ubicacion: '',
+            punto_venta: '',
             upc: '' // Limpiar el campo UPC también
         });
         setPreviews([]);
@@ -478,6 +495,24 @@ const CreateItemPage = () => {
                                 placeholder="Ej: Almacén central, Pasillo 3"
                                 sx={textFieldStyles}
                             />
+
+                            <TextField
+                                select
+                                label="Punto de Venta (opcional)"
+                                variant="outlined"
+                                fullWidth
+                                name="punto_venta"
+                                value={formData.punto_venta}
+                                onChange={handleChange}
+                                disabled={loading}
+                                helperText="Si no se asigna, el producto se considera en la Sede Principal"
+                                sx={textFieldStyles}
+                            >
+                                <MenuItem value="">Sede Principal</MenuItem>
+                                {puntosVenta.map((pv) => (
+                                    <MenuItem key={pv.id} value={pv.id}>{pv.nombre}</MenuItem>
+                                ))}
+                            </TextField>
                         </div>
 
                         {/* Información de Precios y Stock */}

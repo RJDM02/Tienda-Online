@@ -181,7 +181,10 @@ const CardItem = ({ product, searchTerm = '', userRole }) => {
   // Determinar si mostrar la comisión
   const isManager = userRole === 'Gestor de Venta';
   const isAdmin = userRole === 'Administrador' || userRole === 'Super_Administrador';
+  const isPosManager = userRole === 'Encargado de Punto de Venta';
   const showCommission = isManager || isAdmin;
+  // Solo el personal interno necesita ver en qué punto de venta está el producto
+  const showPuntoVenta = isManager || isAdmin || isPosManager;
 
   return (
     <div className="catalog-card bg-white rounded-xl md:rounded-2xl shadow-lg overflow-hidden hover:shadow-xl transition-all duration-300 transform hover:-translate-y-2 flex flex-col h-full group">
@@ -295,6 +298,26 @@ const CardItem = ({ product, searchTerm = '', userRole }) => {
               size="small"
               sx={{
                 backgroundColor: '#3b82f6',
+                color: 'white',
+                fontWeight: 'medium',
+                fontSize: '0.65rem',
+                height: '18px',
+                '& .MuiChip-label': {
+                  padding: '0 4px',
+                },
+              }}
+            />
+          </div>
+        )}
+
+        {/* Badge de punto de venta, visible solo para personal interno */}
+        {showPuntoVenta && (
+          <div className="absolute bottom-2 right-2">
+            <Chip
+              label={product.punto_venta_detalle?.nombre || 'Sede Principal'}
+              size="small"
+              sx={{
+                backgroundColor: product.punto_venta_detalle ? '#7c3aed' : '#6b7280',
                 color: 'white',
                 fontWeight: 'medium',
                 fontSize: '0.65rem',

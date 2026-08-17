@@ -36,6 +36,7 @@ const AdminVariacionPage = () => {
   const [garantias, setGarantias] = useState([]);
   const [regalos, setRegalos] = useState([]);
   const [condiciones, setCondiciones] = useState([]);
+  const [puntosVenta, setPuntosVenta] = useState([]);
   const [loading, setLoading] = useState({
     list: true,
     submitting: false,
@@ -50,6 +51,7 @@ const AdminVariacionPage = () => {
     color: '',
     modelo: '',
     ubicacion: '',
+    punto_venta: '',
     precio: '',
     cantidad: '',
     imagen: null,
@@ -90,6 +92,13 @@ const AdminVariacionPage = () => {
           }
         });
 
+        // Obtener puntos de venta
+        const puntoVentaResponse = await fetch(`${API_URL}/listar_punto_venta/`, {
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
+        });
+
         if (!garantiaResponse.ok || !regaloResponse.ok || !condicionResponse.ok) {
           throw new Error('Error al obtener datos iniciales');
         }
@@ -101,6 +110,9 @@ const AdminVariacionPage = () => {
         setGarantias(garantiaData);
         setRegalos(regaloData);
         setCondiciones(condicionData);
+        if (puntoVentaResponse.ok) {
+          setPuntosVenta(await puntoVentaResponse.json());
+        }
         fetchVariaciones();
       } catch (err) {
         setError(err.message);
@@ -155,6 +167,7 @@ const AdminVariacionPage = () => {
       color: variacion.color,
       modelo: variacion.modelo,
       ubicacion: variacion.ubicacion || '',
+      punto_venta: variacion.punto_venta || '',
       precio: variacion.precio,
       cantidad: variacion.cantidad,
       imagen: null,
@@ -217,6 +230,9 @@ const AdminVariacionPage = () => {
       formDataToSend.append('color', editFormData.color);
       formDataToSend.append('modelo', editFormData.modelo);
       formDataToSend.append('ubicacion', editFormData.ubicacion);
+      if (editFormData.punto_venta) {
+        formDataToSend.append('punto_venta', editFormData.punto_venta);
+      }
       formDataToSend.append('precio', editFormData.precio);
       formDataToSend.append('cantidad', editFormData.cantidad);
       formDataToSend.append('comision', editFormData.comision);
@@ -366,6 +382,9 @@ const AdminVariacionPage = () => {
                       Ubicacion
                     </th>
                     <th className="px-6 py-4 text-left text-sm font-semibold text-gray-700 uppercase tracking-wider">
+                      Punto de Venta
+                    </th>
+                    <th className="px-6 py-4 text-left text-sm font-semibold text-gray-700 uppercase tracking-wider">
                       Precio/Precio con Descuento
                     </th>
                     <th className="px-6 py-4 text-left text-sm font-semibold text-gray-700 uppercase tracking-wider">
@@ -421,6 +440,13 @@ const AdminVariacionPage = () => {
                         </td>
                         <td className="px-6 py-4">
                           <div className="text-sm font-medium text-gray-900">{variacion.ubicacion || 'N/A'}</div>
+                        </td>
+                        <td className="px-6 py-4">
+                          <Chip
+                            label={variacion.punto_venta_detalle?.nombre || 'Sede Principal'}
+                            color={variacion.punto_venta_detalle ? 'primary' : 'default'}
+                            size="small"
+                          />
                         </td>
                         <td className="px-6 py-4">
                           <div className="text-sm font-bold text-[#FF6B00]">${variacion.precio} / {variacion.precio_post_descuento}</div>
@@ -734,6 +760,36 @@ const AdminVariacionPage = () => {
                   },
                 }}
               />
+
+              <TextField
+                select
+                label="Punto de Venta (opcional)"
+                name="punto_venta"
+                value={editFormData.punto_venta}
+                onChange={handleEditChange}
+                fullWidth
+                margin="normal"
+                helperText="Si no se asigna, la variación se considera en la Sede Principal"
+                sx={{
+                  '& .MuiOutlinedInput-root': {
+                    borderRadius: '12px',
+                    '&:hover fieldset': {
+                      borderColor: '#FF6B00',
+                    },
+                    '&.Mui-focused fieldset': {
+                      borderColor: '#FF6B00',
+                    },
+                  },
+                  '& .MuiInputLabel-root.Mui-focused': {
+                    color: '#FF6B00',
+                  },
+                }}
+              >
+                <MenuItem value="">Sede Principal</MenuItem>
+                {puntosVenta.map((pv) => (
+                  <MenuItem key={pv.id} value={pv.id}>{pv.nombre}</MenuItem>
+                ))}
+              </TextField>
 
               {/* Campo UPC */}
               <TextField

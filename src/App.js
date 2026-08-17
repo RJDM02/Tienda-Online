@@ -51,6 +51,7 @@ import RemesaFundsPage from './pages/RemesaFundsPage';
 import RemesaManagePage from './pages/RemesaManagePage';
 import RemesaAccountingPage from './pages/RemesaAccountingPage';
 import RemesaClientCreatePage from './pages/RemesaClientCreatePage';
+import AdminPointOfSalePage from './pages/AdminPointOfSalePage';
 import './App.css';
 
 function App() {
@@ -222,13 +223,21 @@ function App() {
               } 
 
             />
-            <Route 
-              path="/admin-cupones" 
+            <Route
+              path="/admin-cupones"
               element={
-                <PrivateRoute allowedRoles={['Super_Administrador', 'Administrador']}> 
+                <PrivateRoute allowedRoles={['Super_Administrador', 'Administrador']}>
                   <AdminCouponPage/>
                 </PrivateRoute>
-              } 
+              }
+            />
+            <Route
+              path="/admin-punto-venta"
+              element={
+                <PrivateRoute allowedRoles={['Super_Administrador', 'Administrador']}>
+                  <AdminPointOfSalePage/>
+                </PrivateRoute>
+              }
             />
             <Route 
               path="/admin-ventas" 
@@ -326,13 +335,13 @@ function App() {
                 </PrivateRoute>
               } 
             />
-             <Route 
-             path="/notificaciones" 
+             <Route
+             path="/notificaciones"
               element={
-                <PrivateRoute allowedRoles={['Super_Administrador', 'Administrador','Administrador_Remesas','Gestor de Venta','Mensajero']}> 
+                <PrivateRoute allowedRoles={['Super_Administrador', 'Administrador','Administrador_Remesas','Gestor de Venta','Mensajero','Encargado de Punto de Venta']}>
                   <NotificationsPage/>
                 </PrivateRoute>
-              } 
+              }
             />
             <Route 
               path="/mensajeria-lista" 
@@ -342,29 +351,29 @@ function App() {
                 </PrivateRoute>
               } 
             />
-            <Route 
-              path="/admin-ventas-gestor" 
+            <Route
+              path="/admin-ventas-gestor"
               element={
-                <PrivateRoute allowedRoles={['Gestor de Venta']}> 
+                <PrivateRoute allowedRoles={['Gestor de Venta', 'Encargado de Punto de Venta']}>
                   <SalesManagerPage/>
                 </PrivateRoute>
-              } 
+              }
             />
-            <Route 
-              path="/info-gestor" 
+            <Route
+              path="/info-gestor"
               element={
                 <PrivateRoute allowedRoles={['Gestor de Venta']}>
                   <InfoManagerPage/>
                 </PrivateRoute>
-              } 
+              }
             />
-            <Route 
-              path="/crear-venta-manager" 
+            <Route
+              path="/crear-venta-manager"
               element={
-                <PrivateRoute allowedRoles={['Gestor de Venta']}> 
+                <PrivateRoute allowedRoles={['Gestor de Venta', 'Encargado de Punto de Venta']}>
                   <CreateSalesPageManager/>
                 </PrivateRoute>
-              } 
+              }
             />
             <Route
               path="/remesa-crear"

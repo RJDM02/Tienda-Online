@@ -90,7 +90,12 @@ const ShopPage = () => {
     if (filters.current.conditions.length > 0) {
       params.append('condicion', filters.current.conditions.join(','));
     }
-    
+
+    // Un Encargado de Punto de Venta solo vende productos de su propio punto de venta
+    if (userData?.rol === 'Encargado de Punto de Venta' && userData?.punto_venta_id) {
+      params.append('punto_venta', userData.punto_venta_id);
+    }
+
     return `${baseUrl}?${params.toString()}`;
   };
 

@@ -94,6 +94,7 @@ const AccountingAdminPage = () => {
   const [monthFilter, setMonthFilter] = useState(null);
   const [productFilter, setProductFilter] = useState('');
   const [dateRangeFilter, setDateRangeFilter] = useState(null);
+  const [posFilter, setPosFilter] = useState(null); // id de punto_venta, 'sede-principal', o null (todos)
 
   useEffect(() => {
     const fetchAccountingData = async () => {
@@ -164,15 +165,30 @@ const AccountingAdminPage = () => {
         }
       });
     }
+    // Apply punto de venta filter
+    if (posFilter) {
+      filtered = filtered.filter(item => {
+        if (posFilter === 'sede-principal') return !item.punto_venta;
+        return item.punto_venta?.id === posFilter;
+      });
+    }
+
     console.log('Registros después del filtro:', filtered.length);
      const sortedFilteredData = filtered.sort((a, b) => {
-      return new Date(b.fecha) - new Date(a.fecha);    
+      return new Date(b.fecha) - new Date(a.fecha);
     });
 
     const annotated = addGroupLabels(sortedFilteredData);
     setFilteredData(annotated);
     calculateTotals(sortedFilteredData);
-  }, [accountingData, monthFilter, productFilter, dateRangeFilter]);
+  }, [accountingData, monthFilter, productFilter, dateRangeFilter, posFilter]);
+
+  // Puntos de venta presentes en los datos, para poblar el filtro
+  const puntosVentaOptions = Array.from(
+    new Map(
+      accountingData.filter(item => item.punto_venta).map(item => [item.punto_venta.id, item.punto_venta])
+    ).values()
+  );
 
   const calculateTotals = (data) => {
     let gananciaTotal = 0;
@@ -255,6 +271,7 @@ const AccountingAdminPage = () => {
     setMonthFilter(null);
     setDateRangeFilter(null);
     setProductFilter('');
+    setPosFilter(null);
   };
 
     const columns = [
@@ -539,12 +556,29 @@ const AccountingAdminPage = () => {
             <Col xs={24} sm={12} md={6}>
               <div>
                 <Text strong className="block mb-2">Buscar Producto</Text>
-                <Input 
-                  placeholder="Nombre del producto" 
-                  prefix={<SearchOutlined />} 
+                <Input
+                  placeholder="Nombre del producto"
+                  prefix={<SearchOutlined />}
                   value={productFilter}
                   onChange={handleProductFilterChange}
                 />
+              </div>
+            </Col>
+            <Col xs={24} sm={12} md={6}>
+              <div>
+                <Text strong className="block mb-2">Punto de Venta</Text>
+                <Select
+                  placeholder="Todos los puntos de venta"
+                  value={posFilter}
+                  onChange={(value) => setPosFilter(value)}
+                  className="w-full"
+                  allowClear
+                >
+                  <Option value="sede-principal">Sede Principal</Option>
+                  {puntosVentaOptions.map((pv) => (
+                    <Option key={pv.id} value={pv.id}>{pv.nombre}</Option>
+                  ))}
+                </Select>
               </div>
             </Col>
             <Col xs={24} sm={12} md={6} className="flex items-end">
@@ -559,7 +593,7 @@ const AccountingAdminPage = () => {
           </Row>
           
           {/* Active filters indicator */}
-          {(monthFilter || dateRangeFilter || productFilter) && (
+          {(monthFilter || dateRangeFilter || productFilter || posFilter) && (
             <div className="mt-4">
               <Text type="secondary" className="mr-2">Filtros activos:</Text>
               {monthFilter && (
@@ -575,6 +609,11 @@ const AccountingAdminPage = () => {
               {productFilter && (
                 <Tag color="purple" className="mr-2">
                   Producto: {productFilter}
+                </Tag>
+              )}
+              {posFilter && (
+                <Tag color="orange" className="mr-2">
+                  Punto de Venta: {posFilter === 'sede-principal' ? 'Sede Principal' : puntosVentaOptions.find(pv => pv.id === posFilter)?.nombre}
                 </Tag>
               )}
             </div>
