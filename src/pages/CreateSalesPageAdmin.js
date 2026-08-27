@@ -186,6 +186,11 @@ const CreateAdminSalesPage = () => {
         salesData.producto_id = item.id;
       }
 
+      const puntoVentaId = item.productData?.punto_venta || item.productData?.punto_venta_detalle?.id;
+      if (puntoVentaId) {
+        salesData.punto_venta_id = puntoVentaId;
+      }
+
       return axios.post(`${API_URL}/crear_venta_admin/`, salesData, config)
         .then(() => {
           setProcessedItems(prev => prev + 1);

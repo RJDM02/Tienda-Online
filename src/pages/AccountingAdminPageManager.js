@@ -60,7 +60,8 @@ const AccountingManagerPage = () => {
   const [totals, setTotals] = useState({
     precio_post_descuento: 0,
     comision: 0,
-    domicilio_costo: 0
+    domicilio_costo: 0,
+    vuelto: 0
   });
   
   const [monthFilter, setMonthFilter] = useState('');
@@ -192,8 +193,11 @@ const AccountingManagerPage = () => {
     let precioTotal = 0;
     let comisionTotal = 0;
     let domicilioTotal = 0;
+    let vueltoTotal = 0;
 
     data.forEach(item => {
+      vueltoTotal += parseFloat(item.vuelto || 0);
+
       if (item.tipo === 'producto') {
         precioTotal += item.datos_producto.precio_post_descuento || 0;
         
@@ -220,7 +224,8 @@ const AccountingManagerPage = () => {
     setTotals({
       precio_post_descuento: precioTotal,
       comision: comisionTotal,
-      domicilio_costo: domicilioTotal
+      domicilio_costo: domicilioTotal,
+      vuelto: vueltoTotal
     });
   };
 
@@ -285,6 +290,7 @@ const AccountingManagerPage = () => {
               ? parseFloat(item.precio_gestor || 0).toFixed(2)
               : 'N/A'),
         'Moneda': `${item.moneda_nombre}(${item.moneda_cambio})`,
+        'Vuelto': parseFloat(item.vuelto || 0).toFixed(2),
         'Comisión': item.gestor 
           ? (item.tipo === 'producto'
               ? parseFloat(item.datos_producto?.comision || 0).toFixed(2)
@@ -540,7 +546,7 @@ const AccountingManagerPage = () => {
         )}
 
         {/* Summary Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6">
           <div className="bg-gradient-to-br from-blue-500 to-blue-600 rounded-2xl p-6 text-white shadow-xl">
             <div className="flex items-center justify-between mb-4">
               <div className="p-3 bg-white bg-opacity-20 rounded-xl">
@@ -572,6 +578,17 @@ const AccountingManagerPage = () => {
             </div>
             <h3 className="text-lg font-medium opacity-90">Total Domicilios</h3>
             <p className="text-3xl font-bold">{formatCurrency(totals.domicilio_costo)}</p>
+          </div>
+
+          <div className="bg-gradient-to-br from-amber-500 to-amber-600 rounded-2xl p-6 text-white shadow-xl">
+            <div className="flex items-center justify-between mb-4">
+              <div className="p-3 bg-white bg-opacity-20 rounded-xl">
+                <DollarSign size={24} />
+              </div>
+              <TrendingUp size={20} className="opacity-70" />
+            </div>
+            <h3 className="text-lg font-medium opacity-90">Total Vueltos</h3>
+            <p className="text-3xl font-bold">{formatCurrency(totals.vuelto)}</p>
           </div>
         </div>
 
@@ -631,6 +648,9 @@ const AccountingManagerPage = () => {
                   </th>
                   <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Moneda
+                  </th>
+                  <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Vuelto
                   </th>
                   <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Comisión
@@ -696,6 +716,11 @@ const AccountingManagerPage = () => {
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                         {item.moneda_nombre} ({item.moneda_cambio})
                       </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm font-semibold text-amber-700">
+                        {parseFloat(item.vuelto || 0) > 0
+                          ? formatCurrency(item.vuelto || 0)
+                          : <span className="text-gray-400">-</span>}
+                      </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                         {item.gestor ? 
                           formatCurrency(
@@ -726,7 +751,7 @@ const AccountingManagerPage = () => {
                   ))
                 ) : (
                   <tr>
-                    <td colSpan={9} className="px-6 py-12 text-center">
+                    <td colSpan={11} className="px-6 py-12 text-center">
                       <div className="text-gray-500">
                         <Package size={48} className="mx-auto mb-4 opacity-30" />
                         <p className="text-lg font-medium">No se encontraron registros</p>
@@ -758,3 +783,4 @@ const AccountingManagerPage = () => {
 };
 
 export default AccountingManagerPage;
+

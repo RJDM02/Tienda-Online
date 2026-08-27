@@ -720,7 +720,7 @@ const AccountingAdminPage = () => {
             dataSource={filteredData} 
             rowKey="id"
             loading={loading}
-            scroll={{ x: 1300 }}
+            scroll={{ x: 1500 }}
             bordered
             className="rounded-2xl"
             rowClassName="hover:bg-orange-50 transition-colors duration-200"
@@ -737,7 +737,7 @@ const AccountingAdminPage = () => {
                 <div className="py-8">
                   <BarChartOutlined className="text-4xl text-gray-300 mb-4" />
                   <Text className="text-gray-500">No hay datos de contabilidad disponibles</Text>
-                  {(monthFilter || dateRangeFilter || productFilter) && (
+                  {(monthFilter || dateRangeFilter || productFilter || posFilter) && (
                     <Button 
                       type="link" 
                       onClick={clearFilters}
@@ -856,6 +856,15 @@ const AccountingAdminPage = () => {
                   ${totals.domicilio_costo.toFixed(2)}
                 </div>
                 <Text className="text-gray-500">Costos Envío</Text>
+              </div>
+            </Col>
+            <Col xs={24} sm={12} md={6}>
+              <div className="text-center p-4 bg-white rounded-xl shadow-sm">
+                <DollarOutlined className="text-2xl text-amber-500 mb-2" />
+                <div className="text-amber-600 font-bold text-xl">
+                  ${totals.vuelto.toFixed(2)}
+                </div>
+                <Text className="text-gray-500">Vuelto</Text>
               </div>
             </Col>
           </Row>

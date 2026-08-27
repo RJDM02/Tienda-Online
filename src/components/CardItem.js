@@ -76,7 +76,10 @@ const CardItem = ({ product, searchTerm = '', userRole }) => {
       imagenes: product.imagenes,
       garantia_tiempo: product.garantia_tiempo,
       regalo_nombre: product.regalo_nombre,
-      availableStock: availableStock
+      availableStock: availableStock,
+      punto_venta: product.punto_venta,
+      punto_venta_detalle: product.punto_venta_detalle,
+      productData: product
     });
   };
 

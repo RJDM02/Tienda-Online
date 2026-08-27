@@ -473,10 +473,15 @@ const ProductView = ({ onShowLogin = () => {} }) => {
           modelo: selectedVariation.modelo,
           garantia_tiempo: selectedVariation.garantia_tiempo,
           regalo_nombre: selectedVariation.regalo_nombre,
-          cantidad: selectedVariation.cantidad
+          cantidad: selectedVariation.cantidad,
+          punto_venta: selectedVariation.punto_venta || product.punto_venta,
+          punto_venta_detalle: selectedVariation.punto_venta_detalle || product.punto_venta_detalle
         },
         cantidad: 1,
         availableStock: availableStock,
+        punto_venta: selectedVariation.punto_venta || product.punto_venta,
+        punto_venta_detalle: selectedVariation.punto_venta_detalle || product.punto_venta_detalle,
+        productData: product,
         referralCode: referralCode // ← PASAR CÓDIGO DE REFERIDO
       });
     } else {
@@ -489,6 +494,9 @@ const ProductView = ({ onShowLogin = () => {} }) => {
         regalo_nombre: product.regalo_nombre,
         cantidad: 1,
         availableStock: availableStock,
+        punto_venta: product.punto_venta,
+        punto_venta_detalle: product.punto_venta_detalle,
+        productData: product,
         referralCode: referralCode // ← PASAR CÓDIGO DE REFERIDO
       });
     }

@@ -10,11 +10,15 @@ import {
   Snackbar,
   Alert,
   Chip,
+  Checkbox,
+  ListItemText,
 } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
 import DeleteIcon from '@mui/icons-material/Delete';
 import EditIcon from '@mui/icons-material/Edit';
 import StorefrontIcon from '@mui/icons-material/Storefront';
+import Inventory2Icon from '@mui/icons-material/Inventory2';
+import SwapHorizIcon from '@mui/icons-material/SwapHoriz';
 
 import { API_URL } from '../config/apiConfig';
 
@@ -33,7 +37,16 @@ const inputSx = {
   },
 };
 
-const emptyForm = { nombre: '', localizacion: '', encargado: '', activo: true };
+const emptyForm = { nombre: '', localizacion: '', encargados: [], activo: true };
+const emptyTransferForm = {
+  tipo: 'producto',
+  producto: '',
+  variacion: '',
+  origen_punto_venta: '',
+  destino_punto_venta: '',
+  cantidad: 1,
+  nota: '',
+};
 
 const AdminPointOfSalePage = () => {
   const navigate = useNavigate();
@@ -45,9 +58,13 @@ const AdminPointOfSalePage = () => {
   const [openCreateModal, setOpenCreateModal] = useState(false);
   const [openEditModal, setOpenEditModal] = useState(false);
   const [openDeleteModal, setOpenDeleteModal] = useState(false);
+  const [openTransferModal, setOpenTransferModal] = useState(false);
   const [currentPuntoVenta, setCurrentPuntoVenta] = useState(null);
   const [newPuntoVenta, setNewPuntoVenta] = useState(emptyForm);
   const [editPuntoVenta, setEditPuntoVenta] = useState(emptyForm);
+  const [inventario, setInventario] = useState([]);
+  const [transferencias, setTransferencias] = useState([]);
+  const [transferForm, setTransferForm] = useState(emptyTransferForm);
 
   const getAuthToken = () => {
     const token = localStorage.getItem('authToken');
@@ -94,7 +111,7 @@ const AdminPointOfSalePage = () => {
     if (!token) return;
 
     try {
-      const response = await fetch(`${API_URL}/listar_trabajador_encargado_punto_venta/`, {
+      const response = await fetch(`${API_URL}/listar_trabajador_encargado_punto_venta/?todos=1`, {
         headers: { 'Authorization': `Bearer ${token}` }
       });
       if (!response.ok) return;
@@ -109,6 +126,8 @@ const AdminPointOfSalePage = () => {
   useEffect(() => {
     fetchPuntosVenta();
     fetchEncargadosDisponibles();
+    fetchInventario();
+    fetchTransferencias();
   }, []);
 
   const handleCloseAlert = () => {
@@ -119,9 +138,41 @@ const AdminPointOfSalePage = () => {
   const buildPayload = (form) => ({
     nombre: form.nombre,
     localizacion: form.localizacion,
-    encargado: form.encargado || null,
+    encargados: form.encargados || [],
     activo: form.activo,
   });
+
+  const fetchInventario = async () => {
+    const token = getAuthToken();
+    if (!token) return;
+
+    try {
+      const response = await fetch(`${API_URL}/listar_inventario_ubicacion/`, {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      if (!response.ok) return;
+      const data = await response.json();
+      setInventario(data);
+    } catch (err) {
+      console.error('Error al obtener inventario por ubicacion:', err);
+    }
+  };
+
+  const fetchTransferencias = async () => {
+    const token = getAuthToken();
+    if (!token) return;
+
+    try {
+      const response = await fetch(`${API_URL}/listar_transferencias_inventario/`, {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      if (!response.ok) return;
+      const data = await response.json();
+      setTransferencias(data);
+    } catch (err) {
+      console.error('Error al obtener transferencias:', err);
+    }
+  };
 
   const handleCreatePuntoVenta = async (e) => {
     e.preventDefault();
@@ -157,6 +208,7 @@ const AdminPointOfSalePage = () => {
       setNewPuntoVenta(emptyForm);
       fetchPuntosVenta();
       fetchEncargadosDisponibles();
+      fetchInventario();
     } catch (err) {
       setError(err.message);
     } finally {
@@ -197,6 +249,7 @@ const AdminPointOfSalePage = () => {
       setOpenEditModal(false);
       fetchPuntosVenta();
       fetchEncargadosDisponibles();
+      fetchInventario();
     } catch (err) {
       setError(err.message);
     } finally {
@@ -229,18 +282,73 @@ const AdminPointOfSalePage = () => {
       setOpenDeleteModal(false);
       fetchPuntosVenta();
       fetchEncargadosDisponibles();
+      fetchInventario();
     } catch (err) {
       setError(err.message);
     }
   };
 
-  // Al editar, el encargado actual del punto de venta debe seguir apareciendo en el selector
-  const opcionesEncargado = (encargadoActualId) => {
-    const opciones = [...encargadosDisponibles];
-    if (encargadoActualId && !opciones.some(t => String(t.id) === String(encargadoActualId))) {
-      const actual = puntosVenta.find(pv => pv.encargado === encargadoActualId)?.encargado_detalle;
-      if (actual) opciones.push({ id: encargadoActualId, nombre: actual.nombre, telefono: actual.telefono });
+  const handleTransferInventario = async (e) => {
+    e.preventDefault();
+    const token = getAuthToken();
+    if (!token) return;
+
+    const payload = {
+      origen_punto_venta: transferForm.origen_punto_venta || null,
+      destino_punto_venta: transferForm.destino_punto_venta || null,
+      cantidad: Number(transferForm.cantidad),
+      nota: transferForm.nota || null,
+    };
+
+    if (transferForm.tipo === 'producto') {
+      payload.producto = transferForm.producto;
+    } else {
+      payload.variacion = transferForm.variacion;
     }
+
+    setLoading(prev => ({ ...prev, submitting: true }));
+    setError(null);
+
+    try {
+      const response = await fetch(`${API_URL}/transferir_inventario/`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(payload)
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        const message = errorData.error || errorData.detail || errorData.cantidad || errorData.producto || 'Error al transferir inventario';
+        throw new Error(Array.isArray(message) ? message.join(', ') : message);
+      }
+
+      setSuccess('Inventario transferido correctamente');
+      setOpenTransferModal(false);
+      setTransferForm(emptyTransferForm);
+      fetchInventario();
+      fetchTransferencias();
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setLoading(prev => ({ ...prev, submitting: false }));
+    }
+  };
+
+  // Al editar, los encargados actuales del punto de venta deben seguir apareciendo en el selector
+  const opcionesEncargado = (encargadosActuales = []) => {
+    const opciones = [...encargadosDisponibles];
+    const actuales = Array.isArray(encargadosActuales) ? encargadosActuales : [];
+    actuales.forEach((encargadoId) => {
+      if (!opciones.some(t => String(t.id) === String(encargadoId))) {
+        const actual = puntosVenta
+          .flatMap(pv => pv.encargados_detalle || [])
+          .find(t => String(t.id) === String(encargadoId));
+        if (actual) opciones.push({ id: actual.id, nombre: actual.nombre, telefono: actual.telefono });
+      }
+    });
     return opciones;
   };
 
@@ -252,7 +360,7 @@ const AdminPointOfSalePage = () => {
           <div className="flex items-center justify-between">
             <div>
               <h1 className="text-3xl font-bold text-gray-900 mb-2">Administración de Puntos de Venta</h1>
-              <p className="text-gray-600">Gestiona los puntos de venta y su encargado</p>
+              <p className="text-gray-600">Gestiona puntos, encargados, inventario y transferencias</p>
             </div>
             <button
               onClick={() => setOpenCreateModal(true)}
@@ -260,6 +368,13 @@ const AdminPointOfSalePage = () => {
             >
               <AddIcon className="text-white" />
               <span>Nuevo Punto de Venta</span>
+            </button>
+            <button
+              onClick={() => setOpenTransferModal(true)}
+              className="bg-[#FF6B00] hover:bg-orange-600 text-white px-6 py-3 rounded-xl font-medium transition-all duration-200 flex items-center space-x-2 shadow-lg hover:shadow-xl transform hover:-translate-y-1"
+            >
+              <SwapHorizIcon className="text-white" />
+              <span>Transferir Inventario</span>
             </button>
           </div>
         </div>
@@ -281,7 +396,7 @@ const AdminPointOfSalePage = () => {
                     <th className="px-6 py-4 text-left text-sm font-semibold text-gray-700 uppercase tracking-wider">ID</th>
                     <th className="px-6 py-4 text-left text-sm font-semibold text-gray-700 uppercase tracking-wider">Nombre</th>
                     <th className="px-6 py-4 text-left text-sm font-semibold text-gray-700 uppercase tracking-wider">Localización</th>
-                    <th className="px-6 py-4 text-left text-sm font-semibold text-gray-700 uppercase tracking-wider">Encargado</th>
+                    <th className="px-6 py-4 text-left text-sm font-semibold text-gray-700 uppercase tracking-wider">Encargados</th>
                     <th className="px-6 py-4 text-left text-sm font-semibold text-gray-700 uppercase tracking-wider">Estado</th>
                     <th className="px-6 py-4 text-center text-sm font-semibold text-gray-700 uppercase tracking-wider">Acciones</th>
                   </tr>
@@ -304,13 +419,19 @@ const AdminPointOfSalePage = () => {
                         <div className="text-sm text-gray-700">{pv.localizacion}</div>
                       </td>
                       <td className="px-6 py-4">
-                        {pv.encargado_detalle ? (
-                          <div className="text-sm text-gray-900">
-                            <div className="font-medium">{pv.encargado_detalle.nombre}</div>
-                            <div className="text-gray-500">{pv.encargado_detalle.telefono}</div>
+                        {pv.encargados_detalle?.length ? (
+                          <div className="flex flex-wrap gap-2">
+                            {pv.encargados_detalle.map((encargado) => (
+                              <Chip
+                                key={encargado.id}
+                                label={`${encargado.nombre}${encargado.telefono ? ` (${encargado.telefono})` : ''}`}
+                                size="small"
+                                variant="outlined"
+                              />
+                            ))}
                           </div>
                         ) : (
-                          <span className="text-gray-400 italic text-sm">Sin encargado asignado</span>
+                          <span className="text-gray-400 italic text-sm">Sin encargados asignados</span>
                         )}
                       </td>
                       <td className="px-6 py-4">
@@ -328,7 +449,7 @@ const AdminPointOfSalePage = () => {
                                 id: pv.id,
                                 nombre: pv.nombre,
                                 localizacion: pv.localizacion,
-                                encargado: pv.encargado || '',
+                                encargados: pv.encargados || [],
                                 activo: pv.activo,
                               });
                               setOpenEditModal(true);
@@ -374,6 +495,90 @@ const AdminPointOfSalePage = () => {
           </div>
         )}
 
+        <div className="grid grid-cols-1 xl:grid-cols-3 gap-8 mt-8">
+          <div className="xl:col-span-2 bg-white rounded-2xl shadow-lg overflow-hidden">
+            <div className="p-6 border-b border-gray-100 flex items-center justify-between">
+              <div className="flex items-center space-x-3">
+                <div className="h-10 w-10 rounded-lg bg-orange-100 flex items-center justify-center">
+                  <Inventory2Icon className="text-orange-600" sx={{ fontSize: 20 }} />
+                </div>
+                <div>
+                  <h2 className="text-xl font-bold text-gray-900">Inventario por ubicacion</h2>
+                  <p className="text-sm text-gray-500">Stock separado entre sede principal y puntos de venta</p>
+                </div>
+              </div>
+              <button
+                onClick={fetchInventario}
+                className="border border-gray-300 text-gray-700 px-4 py-2 rounded-lg text-sm font-medium hover:bg-gray-50"
+              >
+                Actualizar
+              </button>
+            </div>
+            <div className="overflow-x-auto max-h-[520px]">
+              <table className="min-w-full">
+                <thead className="bg-gray-50 sticky top-0">
+                  <tr>
+                    <th className="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase">Producto / Variacion</th>
+                    <th className="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase">Ubicacion</th>
+                    <th className="px-6 py-3 text-right text-xs font-semibold text-gray-600 uppercase">Cantidad</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-gray-100">
+                  {inventario.map((row) => (
+                    <tr key={row.id} className="hover:bg-orange-50">
+                      <td className="px-6 py-4">
+                        <div className="font-medium text-gray-900">
+                          {row.producto_nombre || row.variacion_modelo}
+                        </div>
+                        <div className="text-xs text-gray-500">
+                          {row.producto ? `Producto #${row.producto}` : `Variacion #${row.variacion}`}
+                        </div>
+                      </td>
+                      <td className="px-6 py-4 text-sm text-gray-700">{row.punto_venta_nombre}</td>
+                      <td className="px-6 py-4 text-right">
+                        <Chip label={row.cantidad} color={row.cantidad > 0 ? 'success' : 'default'} size="small" />
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+              {inventario.length === 0 && (
+                <div className="p-10 text-center text-gray-500">No hay inventario por ubicacion registrado</div>
+              )}
+            </div>
+          </div>
+
+          <div className="bg-white rounded-2xl shadow-lg overflow-hidden">
+            <div className="p-6 border-b border-gray-100">
+              <h2 className="text-xl font-bold text-gray-900">Ultimas transferencias</h2>
+              <p className="text-sm text-gray-500">Movimientos entre sede y puntos de venta</p>
+            </div>
+            <div className="divide-y divide-gray-100 max-h-[520px] overflow-y-auto">
+              {transferencias.slice(0, 12).map((transferencia) => (
+                <div key={transferencia.id} className="p-5">
+                  <div className="flex items-start justify-between gap-4">
+                    <div>
+                      <div className="font-medium text-gray-900">
+                        {transferencia.producto_nombre || transferencia.variacion_modelo}
+                      </div>
+                      <div className="text-sm text-gray-500">
+                        {transferencia.origen_nombre} -> {transferencia.destino_nombre}
+                      </div>
+                      {transferencia.creado_por_nombre && (
+                        <div className="text-xs text-gray-400 mt-1">Por {transferencia.creado_por_nombre}</div>
+                      )}
+                    </div>
+                    <Chip label={transferencia.cantidad} color="primary" size="small" />
+                  </div>
+                </div>
+              ))}
+              {transferencias.length === 0 && (
+                <div className="p-10 text-center text-gray-500">No hay transferencias registradas</div>
+              )}
+            </div>
+          </div>
+        </div>
+
         {/* Modal para crear punto de venta */}
         <Dialog open={openCreateModal} onClose={() => setOpenCreateModal(false)} fullWidth maxWidth="sm" PaperProps={{ style: { borderRadius: '16px', padding: '8px' } }}>
           <DialogTitle className="text-center pb-2">
@@ -406,18 +611,27 @@ const AdminPointOfSalePage = () => {
               />
               <TextField
                 select
-                label="Encargado (opcional)"
+                label="Encargados (opcional)"
                 variant="outlined"
                 fullWidth
-                value={newPuntoVenta.encargado}
-                onChange={(e) => setNewPuntoVenta({ ...newPuntoVenta, encargado: e.target.value })}
+                value={newPuntoVenta.encargados}
+                onChange={(e) => setNewPuntoVenta({ ...newPuntoVenta, encargados: e.target.value })}
                 margin="normal"
-                helperText="Solo aparecen trabajadores con rol Encargado de Punto de Venta sin asignar"
+                helperText="Puedes seleccionar varios trabajadores con rol Encargado de Punto de Venta"
+                SelectProps={{
+                  multiple: true,
+                  renderValue: (selected) => selected
+                    .map((id) => opcionesEncargado(newPuntoVenta.encargados).find(t => String(t.id) === String(id))?.nombre)
+                    .filter(Boolean)
+                    .join(', ')
+                }}
                 sx={inputSx}
               >
-                <MenuItem value="">Sin asignar</MenuItem>
-                {opcionesEncargado(null).map((t) => (
-                  <MenuItem key={t.id} value={t.id}>{t.nombre} ({t.telefono})</MenuItem>
+                {opcionesEncargado(newPuntoVenta.encargados).map((t) => (
+                  <MenuItem key={t.id} value={t.id}>
+                    <Checkbox checked={newPuntoVenta.encargados.map(String).includes(String(t.id))} />
+                    <ListItemText primary={t.nombre} secondary={t.telefono} />
+                  </MenuItem>
                 ))}
               </TextField>
             </DialogContent>
@@ -477,17 +691,26 @@ const AdminPointOfSalePage = () => {
               />
               <TextField
                 select
-                label="Encargado (opcional)"
+                label="Encargados (opcional)"
                 variant="outlined"
                 fullWidth
-                value={editPuntoVenta.encargado}
-                onChange={(e) => setEditPuntoVenta({ ...editPuntoVenta, encargado: e.target.value })}
+                value={editPuntoVenta.encargados}
+                onChange={(e) => setEditPuntoVenta({ ...editPuntoVenta, encargados: e.target.value })}
                 margin="normal"
+                SelectProps={{
+                  multiple: true,
+                  renderValue: (selected) => selected
+                    .map((id) => opcionesEncargado(editPuntoVenta.encargados).find(t => String(t.id) === String(id))?.nombre)
+                    .filter(Boolean)
+                    .join(', ')
+                }}
                 sx={inputSx}
               >
-                <MenuItem value="">Sin asignar</MenuItem>
-                {opcionesEncargado(editPuntoVenta.encargado).map((t) => (
-                  <MenuItem key={t.id} value={t.id}>{t.nombre} ({t.telefono})</MenuItem>
+                {opcionesEncargado(editPuntoVenta.encargados).map((t) => (
+                  <MenuItem key={t.id} value={t.id}>
+                    <Checkbox checked={editPuntoVenta.encargados.map(String).includes(String(t.id))} />
+                    <ListItemText primary={t.nombre} secondary={t.telefono} />
+                  </MenuItem>
                 ))}
               </TextField>
               <TextField
@@ -525,6 +748,136 @@ const AdminPointOfSalePage = () => {
                   </>
                 ) : (
                   <span>Guardar Cambios</span>
+                )}
+              </button>
+            </DialogActions>
+          </form>
+        </Dialog>
+
+        {/* Modal para transferir inventario */}
+        <Dialog open={openTransferModal} onClose={() => setOpenTransferModal(false)} fullWidth maxWidth="sm" PaperProps={{ style: { borderRadius: '16px', padding: '8px' } }}>
+          <DialogTitle className="text-center pb-2">
+            <h2 className="text-2xl font-bold text-gray-900">Transferir Inventario</h2>
+            <p className="text-gray-500 text-sm mt-1">Mueve unidades entre sede principal y puntos de venta</p>
+          </DialogTitle>
+          <form onSubmit={handleTransferInventario}>
+            <DialogContent className="space-y-4">
+              <TextField
+                select
+                label="Tipo"
+                variant="outlined"
+                fullWidth
+                value={transferForm.tipo}
+                onChange={(e) => setTransferForm({ ...transferForm, tipo: e.target.value, producto: '', variacion: '' })}
+                margin="normal"
+                sx={inputSx}
+              >
+                <MenuItem value="producto">Producto</MenuItem>
+                <MenuItem value="variacion">Variacion</MenuItem>
+              </TextField>
+
+              {transferForm.tipo === 'producto' ? (
+                <TextField
+                  label="ID del producto"
+                  variant="outlined"
+                  fullWidth
+                  value={transferForm.producto}
+                  onChange={(e) => setTransferForm({ ...transferForm, producto: e.target.value })}
+                  required
+                  margin="normal"
+                  sx={inputSx}
+                />
+              ) : (
+                <TextField
+                  label="ID de la variacion"
+                  variant="outlined"
+                  fullWidth
+                  value={transferForm.variacion}
+                  onChange={(e) => setTransferForm({ ...transferForm, variacion: e.target.value })}
+                  required
+                  margin="normal"
+                  sx={inputSx}
+                />
+              )}
+
+              <TextField
+                select
+                label="Origen"
+                variant="outlined"
+                fullWidth
+                value={transferForm.origen_punto_venta}
+                onChange={(e) => setTransferForm({ ...transferForm, origen_punto_venta: e.target.value })}
+                margin="normal"
+                sx={inputSx}
+              >
+                <MenuItem value="">Sede Principal</MenuItem>
+                {puntosVenta.map((pv) => (
+                  <MenuItem key={pv.id} value={pv.id}>{pv.nombre}</MenuItem>
+                ))}
+              </TextField>
+
+              <TextField
+                select
+                label="Destino"
+                variant="outlined"
+                fullWidth
+                value={transferForm.destino_punto_venta}
+                onChange={(e) => setTransferForm({ ...transferForm, destino_punto_venta: e.target.value })}
+                margin="normal"
+                sx={inputSx}
+              >
+                <MenuItem value="">Sede Principal</MenuItem>
+                {puntosVenta.map((pv) => (
+                  <MenuItem key={pv.id} value={pv.id}>{pv.nombre}</MenuItem>
+                ))}
+              </TextField>
+
+              <TextField
+                label="Cantidad"
+                type="number"
+                variant="outlined"
+                fullWidth
+                value={transferForm.cantidad}
+                onChange={(e) => setTransferForm({ ...transferForm, cantidad: e.target.value })}
+                inputProps={{ min: 1 }}
+                required
+                margin="normal"
+                sx={inputSx}
+              />
+
+              <TextField
+                label="Nota"
+                variant="outlined"
+                fullWidth
+                multiline
+                minRows={2}
+                value={transferForm.nota}
+                onChange={(e) => setTransferForm({ ...transferForm, nota: e.target.value })}
+                margin="normal"
+                sx={inputSx}
+              />
+            </DialogContent>
+            <DialogActions className="p-6 pt-2">
+              <button
+                type="button"
+                onClick={() => setOpenTransferModal(false)}
+                disabled={loading.submitting}
+                className="px-6 py-3 border border-gray-300 text-gray-700 rounded-xl font-medium hover:bg-gray-50 transition-all duration-200 disabled:opacity-50"
+              >
+                Cancelar
+              </button>
+              <button
+                type="submit"
+                disabled={loading.submitting}
+                className="bg-[#FF6B00] text-white px-6 py-3 rounded-xl font-medium hover:bg-orange-600 transition-all duration-200 disabled:opacity-50 flex items-center space-x-2"
+              >
+                {loading.submitting ? (
+                  <>
+                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                    <span>Transfiriendo...</span>
+                  </>
+                ) : (
+                  <span>Transferir</span>
                 )}
               </button>
             </DialogActions>
