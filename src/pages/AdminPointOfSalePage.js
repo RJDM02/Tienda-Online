@@ -39,12 +39,8 @@ const inputSx = {
 
 const emptyForm = { nombre: '', localizacion: '', encargados: [], activo: true };
 const emptyTransferForm = {
-  tipo: 'producto',
-  producto: '',
-  variacion: '',
   origen_punto_venta: '',
   destino_punto_venta: '',
-  cantidad: 1,
   nota: '',
 };
 
@@ -65,6 +61,8 @@ const AdminPointOfSalePage = () => {
   const [inventario, setInventario] = useState([]);
   const [transferencias, setTransferencias] = useState([]);
   const [transferForm, setTransferForm] = useState(emptyTransferForm);
+  const [transferSearch, setTransferSearch] = useState('');
+  const [transferItems, setTransferItems] = useState([]);
 
   const getAuthToken = () => {
     const token = localStorage.getItem('authToken');
@@ -293,41 +291,55 @@ const AdminPointOfSalePage = () => {
     const token = getAuthToken();
     if (!token) return;
 
-    const payload = {
-      origen_punto_venta: transferForm.origen_punto_venta || null,
-      destino_punto_venta: transferForm.destino_punto_venta || null,
-      cantidad: Number(transferForm.cantidad),
-      nota: transferForm.nota || null,
-    };
+    if (transferForm.origen_punto_venta === transferForm.destino_punto_venta) {
+      setError('El origen y el destino no pueden ser iguales');
+      return;
+    }
 
-    if (transferForm.tipo === 'producto') {
-      payload.producto = transferForm.producto;
-    } else {
-      payload.variacion = transferForm.variacion;
+    if (transferItems.length === 0) {
+      setError('Agrega al menos un producto o variacion a la transferencia');
+      return;
     }
 
     setLoading(prev => ({ ...prev, submitting: true }));
     setError(null);
 
     try {
-      const response = await fetch(`${API_URL}/transferir_inventario/`, {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify(payload)
-      });
+      for (const item of transferItems) {
+        const payload = {
+          origen_punto_venta: transferForm.origen_punto_venta || null,
+          destino_punto_venta: transferForm.destino_punto_venta || null,
+          cantidad: Number(item.cantidad),
+          nota: transferForm.nota || null,
+        };
 
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}));
-        const message = errorData.error || errorData.detail || errorData.cantidad || errorData.producto || 'Error al transferir inventario';
-        throw new Error(Array.isArray(message) ? message.join(', ') : message);
+        if (item.tipo === 'producto') {
+          payload.producto = item.producto;
+        } else {
+          payload.variacion = item.variacion;
+        }
+
+        const response = await fetch(`${API_URL}/transferir_inventario/`, {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify(payload)
+        });
+
+        if (!response.ok) {
+          const errorData = await response.json().catch(() => ({}));
+          const message = errorData.error || errorData.detail || errorData.cantidad || errorData.producto || 'Error al transferir inventario';
+          throw new Error(`${item.nombre}: ${Array.isArray(message) ? message.join(', ') : message}`);
+        }
       }
 
-      setSuccess('Inventario transferido correctamente');
+      setSuccess(`Transferencia completada: ${transferItems.length} movimientos`);
       setOpenTransferModal(false);
       setTransferForm(emptyTransferForm);
+      setTransferSearch('');
+      setTransferItems([]);
       fetchInventario();
       fetchTransferencias();
     } catch (err) {
@@ -335,6 +347,72 @@ const AdminPointOfSalePage = () => {
     } finally {
       setLoading(prev => ({ ...prev, submitting: false }));
     }
+  };
+
+  const ubicacionMatches = (row, puntoVentaId) => {
+    if (!puntoVentaId) return !row.punto_venta;
+    return String(row.punto_venta) === String(puntoVentaId);
+  };
+
+  const getTransferCandidates = () => {
+    const term = transferSearch.trim().toLowerCase();
+
+    return inventario
+      .filter((row) => ubicacionMatches(row, transferForm.origen_punto_venta))
+      .filter((row) => Number(row.cantidad || 0) > 0)
+      .filter((row) => {
+        if (!term) return true;
+        const text = [
+          row.producto_nombre,
+          row.variacion_modelo,
+          row.producto,
+          row.variacion,
+          row.punto_venta_nombre,
+        ].filter(Boolean).join(' ').toLowerCase();
+        return text.includes(term);
+      })
+      .slice(0, 20);
+  };
+
+  const buildTransferItemKey = (row) => (
+    row.producto ? `producto-${row.producto}` : `variacion-${row.variacion}`
+  );
+
+  const addTransferItem = (row) => {
+    const key = buildTransferItemKey(row);
+    if (transferItems.some((item) => item.key === key)) return;
+
+    setTransferItems(prev => ([
+      ...prev,
+      {
+        key,
+        tipo: row.producto ? 'producto' : 'variacion',
+        producto: row.producto || null,
+        variacion: row.variacion || null,
+        nombre: row.producto_nombre || row.variacion_modelo || 'Sin nombre',
+        disponible: Number(row.cantidad || 0),
+        cantidad: 1,
+      }
+    ]));
+  };
+
+  const updateTransferItemQuantity = (key, cantidad) => {
+    setTransferItems(prev => prev.map((item) => {
+      if (item.key !== key) return item;
+      const normalized = Math.max(1, Math.min(Number(cantidad || 1), item.disponible));
+      return { ...item, cantidad: normalized };
+    }));
+  };
+
+  const removeTransferItem = (key) => {
+    setTransferItems(prev => prev.filter((item) => item.key !== key));
+  };
+
+  const closeTransferModal = () => {
+    setOpenTransferModal(false);
+    setTransferForm(emptyTransferForm);
+    setTransferSearch('');
+    setTransferItems([]);
   };
 
   // Al editar, los encargados actuales del punto de venta deben seguir apareciendo en el selector
@@ -755,95 +833,141 @@ const AdminPointOfSalePage = () => {
         </Dialog>
 
         {/* Modal para transferir inventario */}
-        <Dialog open={openTransferModal} onClose={() => setOpenTransferModal(false)} fullWidth maxWidth="sm" PaperProps={{ style: { borderRadius: '16px', padding: '8px' } }}>
+        <Dialog open={openTransferModal} onClose={closeTransferModal} fullWidth maxWidth="md" PaperProps={{ style: { borderRadius: '16px', padding: '8px' } }}>
           <DialogTitle className="text-center pb-2">
             <h2 className="text-2xl font-bold text-gray-900">Transferir Inventario</h2>
             <p className="text-gray-500 text-sm mt-1">Mueve unidades entre sede principal y puntos de venta</p>
           </DialogTitle>
           <form onSubmit={handleTransferInventario}>
             <DialogContent className="space-y-4">
-              <TextField
-                select
-                label="Tipo"
-                variant="outlined"
-                fullWidth
-                value={transferForm.tipo}
-                onChange={(e) => setTransferForm({ ...transferForm, tipo: e.target.value, producto: '', variacion: '' })}
-                margin="normal"
-                sx={inputSx}
-              >
-                <MenuItem value="producto">Producto</MenuItem>
-                <MenuItem value="variacion">Variacion</MenuItem>
-              </TextField>
-
-              {transferForm.tipo === 'producto' ? (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <TextField
-                  label="ID del producto"
+                  select
+                  label="Origen"
                   variant="outlined"
                   fullWidth
-                  value={transferForm.producto}
-                  onChange={(e) => setTransferForm({ ...transferForm, producto: e.target.value })}
-                  required
+                  value={transferForm.origen_punto_venta}
+                  onChange={(e) => {
+                    setTransferForm({ ...transferForm, origen_punto_venta: e.target.value });
+                    setTransferItems([]);
+                  }}
                   margin="normal"
                   sx={inputSx}
-                />
-              ) : (
+                >
+                  <MenuItem value="">Sede Principal</MenuItem>
+                  {puntosVenta.map((pv) => (
+                    <MenuItem key={pv.id} value={pv.id}>{pv.nombre}</MenuItem>
+                  ))}
+                </TextField>
+
                 <TextField
-                  label="ID de la variacion"
+                  select
+                  label="Destino"
                   variant="outlined"
                   fullWidth
-                  value={transferForm.variacion}
-                  onChange={(e) => setTransferForm({ ...transferForm, variacion: e.target.value })}
-                  required
+                  value={transferForm.destino_punto_venta}
+                  onChange={(e) => setTransferForm({ ...transferForm, destino_punto_venta: e.target.value })}
                   margin="normal"
                   sx={inputSx}
-                />
-              )}
+                >
+                  <MenuItem value="">Sede Principal</MenuItem>
+                  {puntosVenta.map((pv) => (
+                    <MenuItem key={pv.id} value={pv.id}>{pv.nombre}</MenuItem>
+                  ))}
+                </TextField>
+              </div>
 
               <TextField
-                select
-                label="Origen"
+                label="Buscar producto o variacion"
                 variant="outlined"
                 fullWidth
-                value={transferForm.origen_punto_venta}
-                onChange={(e) => setTransferForm({ ...transferForm, origen_punto_venta: e.target.value })}
+                value={transferSearch}
+                onChange={(e) => setTransferSearch(e.target.value)}
                 margin="normal"
-                sx={inputSx}
-              >
-                <MenuItem value="">Sede Principal</MenuItem>
-                {puntosVenta.map((pv) => (
-                  <MenuItem key={pv.id} value={pv.id}>{pv.nombre}</MenuItem>
-                ))}
-              </TextField>
-
-              <TextField
-                select
-                label="Destino"
-                variant="outlined"
-                fullWidth
-                value={transferForm.destino_punto_venta}
-                onChange={(e) => setTransferForm({ ...transferForm, destino_punto_venta: e.target.value })}
-                margin="normal"
-                sx={inputSx}
-              >
-                <MenuItem value="">Sede Principal</MenuItem>
-                {puntosVenta.map((pv) => (
-                  <MenuItem key={pv.id} value={pv.id}>{pv.nombre}</MenuItem>
-                ))}
-              </TextField>
-
-              <TextField
-                label="Cantidad"
-                type="number"
-                variant="outlined"
-                fullWidth
-                value={transferForm.cantidad}
-                onChange={(e) => setTransferForm({ ...transferForm, cantidad: e.target.value })}
-                inputProps={{ min: 1 }}
-                required
-                margin="normal"
+                placeholder="Nombre, modelo, ID o ubicacion"
                 sx={inputSx}
               />
+
+              <div className="border border-gray-200 rounded-xl overflow-hidden">
+                <div className="px-4 py-3 bg-gray-50 flex items-center justify-between">
+                  <span className="text-sm font-semibold text-gray-700">Inventario disponible en origen</span>
+                  <span className="text-xs text-gray-500">Selecciona varios productos</span>
+                </div>
+                <div className="max-h-56 overflow-y-auto divide-y divide-gray-100">
+                  {getTransferCandidates().map((row) => {
+                    const key = buildTransferItemKey(row);
+                    const selected = transferItems.some((item) => item.key === key);
+
+                    return (
+                      <button
+                        type="button"
+                        key={row.id}
+                        onClick={() => addTransferItem(row)}
+                        disabled={selected}
+                        className={`w-full px-4 py-3 text-left flex items-center justify-between gap-4 transition-colors ${
+                          selected ? 'bg-orange-50 text-gray-400 cursor-not-allowed' : 'hover:bg-orange-50'
+                        }`}
+                      >
+                        <div>
+                          <div className="font-medium text-gray-900">{row.producto_nombre || row.variacion_modelo}</div>
+                          <div className="text-xs text-gray-500">
+                            {row.producto ? `Producto #${row.producto}` : `Variacion #${row.variacion}`} - {row.punto_venta_nombre}
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <Chip label={`Disp. ${row.cantidad}`} color={row.cantidad > 0 ? 'success' : 'default'} size="small" />
+                          <span className="text-sm font-semibold text-orange-600">{selected ? 'Agregado' : 'Agregar'}</span>
+                        </div>
+                      </button>
+                    );
+                  })}
+                  {getTransferCandidates().length === 0 && (
+                    <div className="px-4 py-8 text-center text-sm text-gray-500">
+                      No hay inventario disponible con esos filtros
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              <div className="border border-gray-200 rounded-xl overflow-hidden">
+                <div className="px-4 py-3 bg-gray-50 flex items-center justify-between">
+                  <span className="text-sm font-semibold text-gray-700">Productos a transferir</span>
+                  <span className="text-xs text-gray-500">{transferItems.length} renglones</span>
+                </div>
+                <div className="divide-y divide-gray-100">
+                  {transferItems.map((item) => (
+                    <div key={item.key} className="p-4 grid grid-cols-1 md:grid-cols-[1fr_120px_90px] gap-3 md:items-center">
+                      <div>
+                        <div className="font-medium text-gray-900">{item.nombre}</div>
+                        <div className="text-xs text-gray-500">
+                          {item.tipo === 'producto' ? `Producto #${item.producto}` : `Variacion #${item.variacion}`} - disponible {item.disponible}
+                        </div>
+                      </div>
+                      <TextField
+                        label="Cantidad"
+                        type="number"
+                        size="small"
+                        value={item.cantidad}
+                        onChange={(e) => updateTransferItemQuantity(item.key, e.target.value)}
+                        inputProps={{ min: 1, max: item.disponible }}
+                        sx={inputSx}
+                      />
+                      <button
+                        type="button"
+                        onClick={() => removeTransferItem(item.key)}
+                        className="px-3 py-2 border border-red-200 text-red-600 rounded-lg text-sm font-medium hover:bg-red-50"
+                      >
+                        Quitar
+                      </button>
+                    </div>
+                  ))}
+                  {transferItems.length === 0 && (
+                    <div className="px-4 py-8 text-center text-sm text-gray-500">
+                      Todavia no has agregado productos
+                    </div>
+                  )}
+                </div>
+              </div>
 
               <TextField
                 label="Nota"
@@ -860,7 +984,7 @@ const AdminPointOfSalePage = () => {
             <DialogActions className="p-6 pt-2">
               <button
                 type="button"
-                onClick={() => setOpenTransferModal(false)}
+                onClick={closeTransferModal}
                 disabled={loading.submitting}
                 className="px-6 py-3 border border-gray-300 text-gray-700 rounded-xl font-medium hover:bg-gray-50 transition-all duration-200 disabled:opacity-50"
               >
@@ -868,7 +992,7 @@ const AdminPointOfSalePage = () => {
               </button>
               <button
                 type="submit"
-                disabled={loading.submitting}
+                disabled={loading.submitting || transferItems.length === 0}
                 className="bg-[#FF6B00] text-white px-6 py-3 rounded-xl font-medium hover:bg-orange-600 transition-all duration-200 disabled:opacity-50 flex items-center space-x-2"
               >
                 {loading.submitting ? (
@@ -877,7 +1001,7 @@ const AdminPointOfSalePage = () => {
                     <span>Transfiriendo...</span>
                   </>
                 ) : (
-                  <span>Transferir</span>
+                  <span>Transferir todo</span>
                 )}
               </button>
             </DialogActions>
