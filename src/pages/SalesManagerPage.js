@@ -25,6 +25,19 @@ import MonetizationOnIcon from '@mui/icons-material/MonetizationOn';
 import FilterListIcon from '@mui/icons-material/FilterList';
 
 import { API_URL } from '../config/apiConfig';
+
+const parseLocalDate = (value) => {
+  if (!value) return null;
+  if (typeof value === 'string') {
+    const match = value.match(/^(\d{4})-(\d{2})-(\d{2})/);
+    if (match) {
+      return new Date(Number(match[1]), Number(match[2]) - 1, Number(match[3]));
+    }
+  }
+  const date = new Date(value);
+  return Number.isNaN(date.getTime()) ? null : date;
+};
+
 const SalesManagerPage = () => {
   const [managerData, setManagerData] = useState({
     nombre: '',
@@ -68,15 +81,15 @@ const SalesManagerPage = () => {
         
         // Ordenar historial de ventas de más reciente a más antiguo
         const sortedHistorialVenta = (data.historial_venta || []).sort((a, b) => {
-          return new Date(b.fecha) - new Date(a.fecha);
+          return (parseLocalDate(b.fecha)?.getTime() || 0) - (parseLocalDate(a.fecha)?.getTime() || 0);
         });
 
         setManagerData({
           nombre: data.nombre || 'Gestor',
-          pedidos_pendientes: data.pedidos_pendientes || [],
-          historial_venta: data.historial_venta || []
+          pedidos_pendientes: sortedPedidosPendientes,
+          historial_venta: sortedHistorialVenta
         });
-        setFilteredHistorial(data.historial_venta || []);
+        setFilteredHistorial(sortedHistorialVenta);
       } catch (err) {
         setError(err.message);
       } finally {
@@ -91,8 +104,10 @@ const SalesManagerPage = () => {
     const filtered = (managerData.historial_venta || [])
       .filter(venta => {
         if (!venta.fecha) return false;
-        const saleDate = new Date(venta.fecha);
-        const matchesMonth = month === 'all' ? true : saleDate.getMonth() === parseInt(month, 10);
+        const saleDate = parseLocalDate(venta.fecha);
+        if (!saleDate) return false;
+        const monthKey = `${saleDate.getFullYear()}-${String(saleDate.getMonth() + 1).padStart(2, '0')}`;
+        const matchesMonth = month === 'all' ? true : monthKey === month;
         const day = saleDate.getDate();
         const matchesQuincena = quincena === 'all'
           ? true
@@ -102,7 +117,7 @@ const SalesManagerPage = () => {
 
         return matchesMonth && matchesQuincena;
       })
-      .sort((a, b) => new Date(b.fecha) - new Date(a.fecha));
+      .sort((a, b) => (parseLocalDate(b.fecha)?.getTime() || 0) - (parseLocalDate(a.fecha)?.getTime() || 0));
 
     setFilteredHistorial(filtered);
   };
@@ -264,12 +279,13 @@ const SalesManagerPage = () => {
     const months = {};
     managerData.historial_venta.forEach(venta => {
       if (venta.fecha) {
-        const date = new Date(venta.fecha);
-        const month = date.getMonth();
+        const date = parseLocalDate(venta.fecha);
+        if (!date) return;
+        const month = date.getMonth() + 1;
         const year = date.getFullYear();
-        const key = `${month}-${year}`;
+        const key = `${year}-${String(month).padStart(2, '0')}`;
         months[key] = {
-          month,
+          value: key,
           year,
           name: date.toLocaleString('es-ES', { month: 'long', year: 'numeric' })
         };
@@ -502,7 +518,7 @@ const SalesManagerPage = () => {
                         >
                           <MenuItem value="all">Todos los meses</MenuItem>
                           {getUniqueMonths().map((monthObj, index) => (
-                            <MenuItem key={index} value={monthObj.month}>
+                            <MenuItem key={index} value={monthObj.value}>
                               {monthObj.name}
                             </MenuItem>
                           ))}
