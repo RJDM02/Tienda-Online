@@ -371,7 +371,7 @@ const AdminPointOfSalePage = () => {
         ].filter(Boolean).join(' ').toLowerCase();
         return text.includes(term);
       })
-      .slice(0, 20);
+      .slice(0, 100);
   };
 
   const buildTransferItemKey = (row) => (
