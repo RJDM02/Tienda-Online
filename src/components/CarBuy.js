@@ -102,13 +102,18 @@ const CarBuy = () => {
       variationId: item.isVariation ? item.variationId : null,
       price: item.price,
       productData: {
+        ...item.productData,
         nombre: item.nombre,
         imagen: item.image,
         color: item.color,
         modelo: item.model,
         garantia: item.warranty,
-        regalo: item.gift
-      }
+        regalo: item.gift,
+        punto_venta: item.punto_venta || item.productData?.punto_venta,
+        punto_venta_detalle: item.punto_venta_detalle || item.productData?.punto_venta_detalle
+      },
+      punto_venta: item.punto_venta || item.productData?.punto_venta,
+      punto_venta_detalle: item.punto_venta_detalle || item.productData?.punto_venta_detalle
     }));
 
     // Redirigir según el rol del usuario
