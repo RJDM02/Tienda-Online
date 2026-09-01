@@ -347,15 +347,21 @@ const ProductView = ({ onShowLogin = () => {} }) => {
     ));
   };
 
+  const formatWarrantyDays = (value) => {
+    if (!value) return value;
+    const text = String(value).trim();
+    return /^\d+$/.test(text) ? `${text} dias` : text;
+  };
+
   const getWarrantyAndGiftInfo = () => {
     if (selectedVariation) {
       return {
-        garantia: selectedVariation.garantia_tiempo,
+        garantia: formatWarrantyDays(selectedVariation.garantia_tiempo),
         regalo: selectedVariation.regalo_nombre
       };
     }
     return {
-      garantia: product?.garantia_tiempo,
+      garantia: formatWarrantyDays(product?.garantia_tiempo),
       regalo: product?.regalo_nombre
     };
   };
