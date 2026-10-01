@@ -1,3 +1,4 @@
+import { apiFetch as fetch } from '../auth/session';
 import { useState } from 'react';
 import { User, Phone, Mail, Lock } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';

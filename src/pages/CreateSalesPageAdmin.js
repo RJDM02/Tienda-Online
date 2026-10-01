@@ -23,7 +23,7 @@ import {
 } from '@mui/material';
 import { DatePicker, LocalizationProvider, TimePicker } from '@mui/x-date-pickers';
 import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
-import axios from 'axios';
+import axios from '../auth/apiClient';
 import { jwtDecode } from 'jwt-decode';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import { styles, LoadingState, ErrorState, SectionTitle } from './CreateSalesPageStyles';

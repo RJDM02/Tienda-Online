@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Table, Button, message, Spin } from 'antd';
 import { DeleteOutlined } from '@ant-design/icons';
-import axios from 'axios';
+import axios from '../auth/apiClient';
 import dayjs from 'dayjs';
 import StockNotifier from '../components/StockNotifier';
 

@@ -18,7 +18,7 @@ import {
 } from '@mui/material';
 import { DatePicker, LocalizationProvider, TimePicker } from '@mui/x-date-pickers';
 import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
-import axios from 'axios';
+import axios from '../auth/apiClient';
 import { jwtDecode } from 'jwt-decode';
 import { useCart } from '../context/CartContext';
 import AdminNotifier from '../components/AdminNotifier';

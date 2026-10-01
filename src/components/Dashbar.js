@@ -1,3 +1,4 @@
+import { apiFetch as fetch } from '../auth/session';
 import React, { useState, useEffect } from 'react';
 import { Slider, Checkbox } from '@mui/material';
 import { ChevronDown, ChevronUp, ChevronRight, ChevronLeft, Edit, User, Filter, DollarSign, Tags, X, Award } from 'lucide-react';

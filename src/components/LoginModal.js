@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { X, Eye, EyeOff } from 'lucide-react';
 
-import { API_URL } from '../config/apiConfig';
+import { loginRequest } from '../auth/session';
 const LoginModal = ({ open, onClose }) => {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
@@ -15,22 +15,13 @@ const LoginModal = ({ open, onClose }) => {
     setErrors({});
 
     try {
-      const response = await fetch(`${API_URL}/login/`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          username,
-          password
-        })
-      });
+      const response = await loginRequest(username, password);
 
       const data = await response.json();
 
       if (!response.ok) {
         if (typeof data === 'object' && data !== null) {
-          setErrors(data);
+          setErrors(data.detail ? { non_field_errors: [String(data.detail)] } : data);
         } else {
           setErrors({ non_field_errors: [data.detail || 'Error en el login'] });
         }
@@ -42,17 +33,6 @@ const LoginModal = ({ open, onClose }) => {
         return;
       }
 
-      localStorage.setItem('authToken', data.access);
-      
-      try {
-        const tokenParts = data.access.split('.');
-        if (tokenParts.length === 3) {
-          const tokenPayload = JSON.parse(atob(tokenParts[1]));
-          localStorage.setItem('userData', JSON.stringify(tokenPayload));
-        }
-      } catch (decodeError) {
-        console.error('Error decodificando token:', decodeError);
-      }
       
       onClose();
       window.location.reload();

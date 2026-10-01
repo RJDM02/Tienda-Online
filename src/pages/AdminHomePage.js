@@ -1,3 +1,4 @@
+import { apiFetch as fetch } from '../auth/session';
 import { useEffect, useState } from 'react';
 import { Edit, Trash2, Plus, Save, FileImage } from 'lucide-react';
 import { API_BASE_URL, API_URL } from '../config/apiConfig';

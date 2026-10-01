@@ -1,3 +1,4 @@
+import { apiFetch as fetch } from '../auth/session';
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { useLocation, useNavigate, Link } from 'react-router-dom';
 import { SlidersHorizontal } from 'lucide-react';

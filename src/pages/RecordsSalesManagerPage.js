@@ -6,7 +6,7 @@ import {
   DollarOutlined,
   CalendarOutlined
 } from '@ant-design/icons';
-import axios from 'axios';
+import axios from '../auth/apiClient';
 
 import { API_URL } from '../config/apiConfig';
 const { Option } = Select;

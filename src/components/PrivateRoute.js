@@ -1,9 +1,12 @@
 import React from 'react';
 import { Navigate } from 'react-router-dom';
+import { useSessionSnapshot } from '../auth/useSessionSnapshot';
 
 const PrivateRoute = ({ children, allowedRoles }) => {
   // Obtener datos del usuario del localStorage
-  const userData = JSON.parse(localStorage.getItem('userData'));
+  const snapshot = useSessionSnapshot();
+  let userData;
+  try { userData = JSON.parse(snapshot); } catch { userData = null; }
   const token = localStorage.getItem('authToken');
 
   // Si no hay token, redirigir a login

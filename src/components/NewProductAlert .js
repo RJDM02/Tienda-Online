@@ -1,3 +1,4 @@
+import { apiFetch as fetch } from '../auth/session';
 import { API_BASE_URL, API_URL } from '../config/apiConfig';
 // NewProductAlert.js
 import emailjs from '@emailjs/browser';

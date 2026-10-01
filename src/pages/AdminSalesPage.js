@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Table, Button, Space, message, Modal, Descriptions, Form, Input, Select, DatePicker, Card, Row, Col, Tag } from 'antd';
-import axios from 'axios';
+import axios from '../auth/apiClient';
 import moment from 'moment';
 import OrderSoldAlert from '../components/OrderSoldAlert';
 import { API_URL } from '../config/apiConfig';

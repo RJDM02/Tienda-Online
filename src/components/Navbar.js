@@ -1,3 +1,4 @@
+import { apiFetch as fetch } from '../auth/session';
 import { useState, useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { 
@@ -53,6 +54,8 @@ import ModalEditCliente from '../components/ModalEditCliente';
 import CarBuy from './CarBuy';
 import { useCart } from '../context/CartContext';
 import { jwtDecode } from 'jwt-decode';
+import { isAuthSession, logoutAuthSession } from '../auth/session';
+import { useSessionSnapshot } from '../auth/useSessionSnapshot';
 import './Navbar.css';
 
 import { API_BASE_URL } from '../config/apiConfig';
@@ -65,6 +68,10 @@ function Navbar({ onShowLogin }) {
   const [adminMenuAnchorEl, setAdminMenuAnchorEl] = useState(null);
   const [mobileMenuAnchorEl, setMobileMenuAnchorEl] = useState(null);
   const [userData, setUserData] = useState(null);
+  const sessionSnapshot = useSessionSnapshot();
+  useEffect(() => {
+    try { setUserData(JSON.parse(sessionSnapshot)); } catch { setUserData(null); }
+  }, [sessionSnapshot]);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [clientDetails, setClientDetails] = useState(null);
   const [debounceTimer, setDebounceTimer] = useState(null);
@@ -87,7 +94,7 @@ function Navbar({ onShowLogin }) {
       const decoded = jwtDecode(token);
       const isExpired = decoded.exp < Date.now() / 1000;
       
-      if (isExpired) {
+      if (isExpired && !isAuthSession()) {
         cleanSession();
         return false;
       }
@@ -168,7 +175,15 @@ function Navbar({ onShowLogin }) {
     setMobileMenuAnchorEl(null);
   };
 
-  const handleLogout = () => {
+  const handleLogout = async () => {
+    if (isAuthSession()) {
+      try {
+        await logoutAuthSession();
+      } catch (error) {
+        window.alert(error.message);
+        return;
+      }
+    }
     cleanSession();
     handleMenuClose();
     navigate('/');

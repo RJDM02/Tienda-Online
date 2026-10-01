@@ -17,7 +17,7 @@ import {
   ChevronDown,
   User
 } from 'lucide-react';
-import axios from 'axios';
+import axios from '../auth/apiClient';
 import moment from 'moment';
 import * as XLSX from 'xlsx';
 

@@ -1,3 +1,4 @@
+import { apiFetch as fetch } from '../auth/session';
 import { API_URL } from '../config/apiConfig';
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
