@@ -1,103 +1,136 @@
 import { apiFetch as fetch } from '../auth/session';
 import { useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
+import {
+  Truck,
+  ShieldCheck,
+  CreditCard,
+  CheckCircle,
+  Sparkles,
+  MessageCircle,
+  ArrowRight,
+  ShoppingCart,
+  ChevronDown,
+  X,
+} from 'lucide-react';
 import FloatingWhatsAppButton from '../components/FloatingWhatsAppButton';
 import ChatWidget from '../components/ChatWidget';
+import ProductShareButton from '../components/ProductShareButton';
+import SiteFooter from '../components/SiteFooter';
+import heroShowcase from '../assets/hero-showcase.jpg';
 import { API_URL } from '../config/apiConfig';
+import { SITE_INFO } from '../config/siteInfo';
+import { useHomeData } from '../utils/homeData';
+import '../styles/vjh-theme.css';
 import './HomePage.css';
 
 const fallbackHomeData = {
-  hero_eyebrow: 'VIDEOJUEGOS HABANA - TIENDA TECH',
-  hero_title: 'Tecnologia real,',
-  hero_title_highlight: 'entregada rapido.',
-  hero_subtitle: 'Portatiles, consolas y accesorios originales, con una presencia visual mas premium y una navegacion que se siente rapida, tecnica y confiable.',
+  hero_eyebrow: 'Envío garantizado a toda La Habana',
+  hero_title: 'Tecnología real,',
+  hero_title_highlight: 'entregada rápido.',
+  hero_subtitle: 'La mayor variedad en Cuba. Laptops, tablets, lámparas LED, bocinas JBL, almacenamiento y todos los accesorios tecnológicos que necesitas, probados y listos para llevar.',
   hero_primary_button_text: 'Empiece su compra',
   hero_primary_button_url: '/shop',
   hero_secondary_button_text: 'Ver lo nuevo esta semana',
   hero_secondary_button_url: '#nuevos',
-  spotlight_status: 'LIVE STOCK',
-  spotlight_price: 'DESDE $520',
-  spotlight_text: 'Consolas, laptops y perifericos listos para entrega.',
+  spotlight_status: 'En Stock',
+  spotlight_price: 'Listo para entregar',
+  spotlight_text: 'Consolas, laptops y periféricos',
   ticker_items: [
-    'Entrega en toda La Habana',
-    'Pago contra entrega',
-    'Garantia real en cada equipo',
-    'Soporte por WhatsApp',
-    'Cupones y sistema de puntos',
+    'Garantía real en cada equipo',
+    'Entrega Directa a Domicilio',
+    'Pago contra Entrega',
+    'Cupones de descuentos y sistema de puntos',
     'Productos nuevos cada semana',
+    'Soporte por WhatsApp',
   ],
-  products_eyebrow: 'Lo mas pedido',
+  products_eyebrow: 'Selección Destacada',
   products_title: 'Los favoritos de la casa',
-  products_link_text: 'Ver toda la tienda',
+  products_link_text: 'Explorar todos',
   products_link_url: '/shop',
-  advantages_eyebrow: 'Por que comprar aqui',
+  advantages_eyebrow: '¿Por qué comprar aquí?',
   advantages_title: 'Comprar con nosotros tiene ventajas reales',
   advantages: [
     {
-      chip: 'ENV.GRATIS',
-      titulo: 'Mensajeria gratis',
-      descripcion: 'En compras superiores a 200 USD, la entrega en toda La Habana corre por nuestra cuenta.',
+      chip: 'GRATIS',
+      titulo: 'Mensajería gratis',
+      descripcion: 'En compras superiores a 200 USD, la entrega en toda La Habana corre por nuestra cuenta, directamente a su puerta.',
     },
     {
-      chip: 'DESCTO',
+      chip: 'AHORRO',
       titulo: 'Cupones y rebajas',
-      descripcion: 'Promociones activas, rebajas y lanzamientos semanales con visibilidad desde el inicio.',
+      descripcion: 'Promociones activas, rebajas de temporada y lanzamientos semanales con visibilidad de precios desde el inicio.',
     },
     {
-      chip: 'PUNTOS',
+      chip: 'LEALTAD',
       titulo: 'Sistema de puntos',
-      descripcion: 'Acumula beneficios por tus compras y aprovecha recompensas en proximos pedidos.',
+      descripcion: 'Acumule beneficios por sus compras habituales y aproveche recompensas exclusivas y descuentos en sus próximos pedidos.',
     },
   ],
-  new_eyebrow: 'Recien llegado',
+  new_eyebrow: 'Recién Llegados',
   new_title: 'Nuevo esta semana',
-  new_meta: '5 productos anadidos',
-  faq_eyebrow: 'Dudas frecuentes',
-  faq_title: 'Lo que mas nos preguntan',
-  faq_intro: 'Este bloque aterriza dudas comunes sin romper el ritmo visual de la home.',
+  new_meta: 'Ver novedades',
+  faq_eyebrow: 'Soporte al cliente',
+  faq_title: 'Lo que más nos preguntan',
+  faq_intro: '¿Tiene dudas sobre cómo comprar, los métodos de pago aceptados o el alcance de los envíos? Aquí tiene respuestas claras.',
   faqs: [],
-  footer_logo: 'VIDEOJUEGOS HABANA',
-  footer_copy: 'Tu tienda de confianza en La Habana. Tecnologia real, entrega rapida y precios justos.',
-  footer_links: [],
-  footer_hours_label: 'Horario',
-  footer_hours_days: 'Lun - Sab',
-  footer_hours_value: '9:00 AM - 5:00 PM',
-  footer_bottom_text: 'Videojuegos Habana. Todos los derechos reservados.',
-  terms_title: 'Terminos y condiciones',
+  terms_title: 'Términos y condiciones',
   terms_content: '',
   conditions_title: 'Condiciones de compra',
   conditions_content: '',
 };
 
+const TICKER_ICONS = [ShieldCheck, Truck, CreditCard, CheckCircle, Sparkles, MessageCircle];
+
 const resolveHref = (href) => href || '/shop';
 
-const ProductCard = ({ product, compact = false }) => {
+const ProductCard = ({ product, isNew = false }) => {
   const category = product?.subcategoria?.[0] || product?.categoria?.[0] || 'Producto';
   const price = Number(product?.precio_post_descuento || product?.precio || 0);
   const oldPrice = Number(product?.precio || 0);
   const hasDiscount = oldPrice > price;
+  const productUrl = product?.enlace || `/product/${product?.id}`;
 
   return (
-    <Link to={product?.enlace || `/product/${product?.id}`} className={compact ? 'vh-new-card' : 'vh-product-card'}>
-      <div
-        className={compact ? 'vh-new-card__media' : 'vh-product-card__media'}
-        style={product?.imagen ? { backgroundImage: `url(${product.imagen})` } : undefined}
-      >
-        {!compact && product?.ventas_totales > 0 && <span className="vh-badge">Top ventas</span>}
+    <article className="vj-card">
+      <Link to={productUrl} className="vj-card__media">
+        {product?.imagen && <img src={product.imagen} alt={product.nombre} loading="lazy" />}
+        <div className="vj-card__badges">
+          {isNew && <span className="vj-badge">Nuevo</span>}
+          {hasDiscount && <span className="vj-badge vj-badge--sale">Oferta</span>}
+          {!isNew && !hasDiscount && product?.ventas_totales > 0 && <span className="vj-badge">Top ventas</span>}
+        </div>
+      </Link>
+      <div className="vj-card__body">
+        <div className="vj-card__meta">
+          <div className="vj-card__category-row">
+            <span className="vj-card__category">{category}</span>
+          </div>
+          <Link to={productUrl} className="vj-card__title">{product?.nombre}</Link>
+        </div>
+        <div className="vj-card__footer">
+          <div className="vj-card__prices">
+            {hasDiscount && <span className="vj-card__price-old">${oldPrice.toFixed(2)}<i> USD</i></span>}
+            <span className="vj-card__price">${price.toFixed(2)}<i> USD</i></span>
+          </div>
+          <div className="vj-card__actions">
+            <ProductShareButton
+              product={{
+                id: product.id,
+                nombre: product.nombre,
+                condicion: product.condicion,
+                precio: price.toFixed(2),
+                precioAnterior: hasDiscount ? oldPrice.toFixed(2) : null,
+                descripcion: product.descripcion,
+              }}
+            />
+            <Link to={productUrl} className="vj-card__icon-btn vj-card__icon-btn--cart" aria-label="Ver y comprar" title="Ver y comprar">
+              <ShoppingCart size={18} />
+            </Link>
+          </div>
+        </div>
       </div>
-      <div className={compact ? undefined : 'vh-product-card__body'}>
-        <p className={compact ? undefined : 'vh-product-card__category'}>{category}</p>
-        <h3>{product?.nombre}</h3>
-        {compact ? (
-          <span>${price.toFixed(2)}</span>
-        ) : (
-          <p className="vh-product-card__price">
-            ${price.toFixed(2)}
-            {hasDiscount && <span>${oldPrice.toFixed(2)}</span>}
-          </p>
-        )}
-      </div>
-    </Link>
+    </article>
   );
 };
 
@@ -105,10 +138,10 @@ const InfoModal = ({ title, content, onClose }) => {
   if (!title && !content) return null;
 
   return (
-    <div className="vh-modal" role="dialog" aria-modal="true">
-      <div className="vh-modal__panel">
-        <button className="vh-modal__close" type="button" onClick={onClose} aria-label="Cerrar">
-          x
+    <div className="vjh-modal" role="dialog" aria-modal="true" onClick={onClose}>
+      <div className="vjh-modal__panel" onClick={(e) => e.stopPropagation()}>
+        <button className="vjh-modal__close" type="button" onClick={onClose} aria-label="Cerrar">
+          <X size={16} />
         </button>
         <h2>{title}</h2>
         <p>{content || 'Contenido pendiente de configurar.'}</p>
@@ -118,23 +151,13 @@ const InfoModal = ({ title, content, onClose }) => {
 };
 
 const HomePage = () => {
-  const [homeData, setHomeData] = useState(fallbackHomeData);
+  const homeData = useHomeData(fallbackHomeData);
   const [topProducts, setTopProducts] = useState([]);
   const [recentProducts, setRecentProducts] = useState([]);
   const [openFaq, setOpenFaq] = useState(0);
   const [modal, setModal] = useState(null);
 
   useEffect(() => {
-    const fetchHomeData = async () => {
-      try {
-        const response = await fetch(`${API_URL}/listar_homepage/`);
-        const data = await response.json();
-        setHomeData({ ...fallbackHomeData, ...(data?.[0] || {}) });
-      } catch (error) {
-        console.error('Error fetching home data:', error);
-      }
-    };
-
     const fetchProducts = async () => {
       let recentData = [];
 
@@ -163,7 +186,6 @@ const HomePage = () => {
       }
     };
 
-    fetchHomeData();
     fetchProducts();
   }, []);
 
@@ -174,163 +196,157 @@ const HomePage = () => {
 
   const advantages = Array.isArray(homeData.advantages) ? homeData.advantages : [];
   const faqs = Array.isArray(homeData.faqs) ? homeData.faqs : [];
-  const footerGroups = Array.isArray(homeData.footer_links) ? homeData.footer_links : [];
+  const spotlightProduct = topProducts[0];
+
+  const renderTickerGroup = (hidden) => (
+    <div className="vjh-ticker__group" aria-hidden={hidden || undefined}>
+      {tickerItems.map((item, index) => {
+        const Icon = TICKER_ICONS[index % TICKER_ICONS.length];
+        return (
+          <span className="vjh-ticker__item" key={`${item}-${index}`}>
+            <Icon size={18} />
+            {item}
+            <i aria-hidden="true">{"//"}</i>
+          </span>
+        );
+      })}
+    </div>
+  );
 
   return (
-    <main className="vh-page">
-      <section className="vh-hero">
-        <div className="vh-hero__grid"></div>
-        <div className="vh-container vh-hero__inner">
+    <main className="vjh-home vj-scope">
+      <section className="vjh-hero">
+        <div className="vjh-hero__glow" aria-hidden="true"></div>
+        <div className="vjh-hero__text">
+          <span className="vjh-hero__tag">
+            <Truck size={14} />
+            {homeData.hero_eyebrow}
+          </span>
+          <h1>
+            {homeData.hero_title} <span>{homeData.hero_title_highlight}</span>
+          </h1>
+          <p>{homeData.hero_subtitle}</p>
+          <div className="vjh-hero__actions">
+            <Link to={resolveHref(homeData.hero_primary_button_url)} className="vj-btn vj-btn--primary">
+              {homeData.hero_primary_button_text}
+            </Link>
+            <a href={resolveHref(homeData.hero_secondary_button_url)} className="vj-btn vjh-hero__ghost">
+              {homeData.hero_secondary_button_text}
+            </a>
+          </div>
+        </div>
+
+        <div className="vjh-hero__visual">
+          <img src={heroShowcase} alt="Laptops, tablets y accesorios disponibles en la tienda" />
+          {spotlightProduct ? (
+            <Link to={spotlightProduct.enlace || `/product/${spotlightProduct.id}`} className="vjh-hero__spec">
+              {spotlightProduct.imagen && <img src={spotlightProduct.imagen} alt="" />}
+              <span>
+                <b>{spotlightProduct.nombre}</b>
+                <em>{homeData.spotlight_status} • {homeData.spotlight_price}</em>
+              </span>
+            </Link>
+          ) : (
+            <div className="vjh-hero__spec">
+              <span>
+                <b>{homeData.spotlight_text}</b>
+                <em>{homeData.spotlight_status} • {homeData.spotlight_price}</em>
+              </span>
+            </div>
+          )}
+        </div>
+      </section>
+
+      <div className="vjh-ticker">
+        <div className="vjh-ticker__track">
+          {renderTickerGroup(false)}
+          {renderTickerGroup(true)}
+        </div>
+      </div>
+
+      <section className="vjh-section" id="productos">
+        <div className="vjh-section__head">
           <div>
-            <p className="vh-eyebrow">{homeData.hero_eyebrow}</p>
-            <h1 className="vh-hero__title">
-              {homeData.hero_title}
-              <span>{homeData.hero_title_highlight}</span>
-            </h1>
-            <p className="vh-hero__subtitle">{homeData.hero_subtitle}</p>
-            <div className="vh-hero__actions">
-              <Link to={resolveHref(homeData.hero_primary_button_url)} className="vh-btn vh-btn--primary">
-                {homeData.hero_primary_button_text}
-              </Link>
-              <a href={resolveHref(homeData.hero_secondary_button_url)} className="vh-btn vh-btn--ghost">
-                {homeData.hero_secondary_button_text}
-              </a>
-            </div>
+            <p className="vj-eyebrow">{homeData.products_eyebrow}</p>
+            <h2>{homeData.products_title}</h2>
           </div>
-
-          <div className="vh-hero__spotlight">
-            <div className="vh-console-card">
-              <div className="vh-console-card__top">
-                <span className="vh-console-card__status">{homeData.spotlight_status}</span>
-                <span className="vh-console-card__price">{homeData.spotlight_price}</span>
-              </div>
-              <div className="vh-console-card__visual">
-                <div className="vh-console-glow"></div>
-                <div className="vh-device vh-device--left"></div>
-                <div className="vh-device vh-device--center"></div>
-                <div className="vh-device vh-device--right"></div>
-              </div>
-              <div className="vh-console-card__bottom">
-                <p>{homeData.spotlight_text}</p>
-              </div>
-            </div>
-          </div>
+          <Link to={resolveHref(homeData.products_link_url)} className="vjh-section__link">
+            {homeData.products_link_text} <ArrowRight size={14} />
+          </Link>
         </div>
-        <div className="vh-ticker">
-          <span className="vh-ticker__dot"></span>
-          <div className="vh-ticker__track">
-            {tickerItems.map((item, index) => (
-              <span key={`${item}-${index}`}>{item}</span>
-            ))}
-          </div>
+
+        <div className="vjh-products">
+          {topProducts.map((product) => (
+            <ProductCard key={product.id} product={product} />
+          ))}
         </div>
       </section>
 
-      <section className="vh-products" id="productos">
-        <div className="vh-container">
-          <div className="vh-section-head">
-            <div>
-              <p className="vh-eyebrow vh-eyebrow--dark">{homeData.products_eyebrow}</p>
-              <h2>{homeData.products_title}</h2>
-            </div>
-            <Link to={resolveHref(homeData.products_link_url)}>{homeData.products_link_text} -></Link>
-          </div>
-
-          <div className="vh-products__grid">
-            {topProducts.map((product) => (
-              <ProductCard key={product.id} product={product} />
-            ))}
-          </div>
-        </div>
-      </section>
-
-      <section className="vh-advantages">
-        <div className="vh-container">
-          <p className="vh-eyebrow">{homeData.advantages_eyebrow}</p>
-          <h2>{homeData.advantages_title}</h2>
-          <div className="vh-advantages__grid">
-            {advantages.map((advantage, index) => (
-              <article className="vh-advantage-card" key={`${advantage.titulo}-${index}`}>
-                <span className="vh-chip">{advantage.chip}</span>
-                <h3>{advantage.titulo}</h3>
-                <p>{advantage.descripcion}</p>
-              </article>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      <section className="vh-new" id="nuevos">
-        <div className="vh-container">
-          <div className="vh-section-head">
-            <div>
-              <p className="vh-eyebrow vh-eyebrow--dark">{homeData.new_eyebrow}</p>
-              <h2>{homeData.new_title}</h2>
-            </div>
-            <p className="vh-meta">{homeData.new_meta}</p>
-          </div>
-
-          <div className="vh-new__rail">
-            {recentProducts.map((product) => (
-              <ProductCard key={product.id} product={product} compact />
-            ))}
-          </div>
-        </div>
-      </section>
-
-      <section className="vh-faqs">
-        <div className="vh-container vh-faqs__layout">
-          <div className="vh-faqs__intro">
-            <p className="vh-eyebrow vh-eyebrow--dark">{homeData.faq_eyebrow}</p>
-            <h2>{homeData.faq_title}</h2>
-            <p>{homeData.faq_intro}</p>
-          </div>
-          <div className="vh-faqs__list">
-            {faqs.map((faq, index) => (
-              <div className={`vh-faq-item ${openFaq === index ? 'vh-faq-item--open' : ''}`} key={`${faq.pregunta}-${index}`}>
-                <button className="vh-faq-item__question" type="button" onClick={() => setOpenFaq(openFaq === index ? -1 : index)}>
-                  <span>{faq.pregunta}</span>
-                  <span>{openFaq === index ? '-' : '+'}</span>
-                </button>
-                {openFaq === index && <p>{faq.respuesta}</p>}
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      <footer className="vh-footer">
-        <div className="vh-container vh-footer__top">
+      <section className="vjh-section vjh-section--dark" id="ventajas">
+        <div className="vjh-section__head vjh-section__head--center">
           <div>
-            <p className="vh-footer__logo">{homeData.footer_logo}</p>
-            <p className="vh-footer__copy">{homeData.footer_copy}</p>
+            <p className="vj-eyebrow">{homeData.advantages_eyebrow}</p>
+            <h2>{homeData.advantages_title}</h2>
           </div>
-          {footerGroups.map((group, index) => (
-            <div key={`${group.grupo}-${index}`}>
-              <p className="vh-footer__heading">{group.grupo}</p>
-              {(group.links || []).map((link, linkIndex) => (
-                <a href={link.url || '/'} key={`${link.texto}-${linkIndex}`}>
-                  {link.texto}
-                </a>
-              ))}
+        </div>
+        <div className="vjh-advantages">
+          {advantages.map((advantage, index) => (
+            <article className="vjh-advantage" key={`${advantage.titulo}-${index}`}>
+              <span className="vjh-advantage__chip">{advantage.chip}</span>
+              <h3>{advantage.titulo}</h3>
+              <p>{advantage.descripcion}</p>
+            </article>
+          ))}
+        </div>
+      </section>
+
+      <section className="vjh-section" id="nuevos">
+        <div className="vjh-section__head">
+          <div>
+            <p className="vj-eyebrow">{homeData.new_eyebrow}</p>
+            <h2>{homeData.new_title}</h2>
+          </div>
+          <Link to="/shop" className="vjh-section__link">
+            Ver novedades <ArrowRight size={14} />
+          </Link>
+        </div>
+
+        <div className="vjh-products">
+          {recentProducts.map((product) => (
+            <ProductCard key={product.id} product={product} isNew />
+          ))}
+        </div>
+      </section>
+
+      <section className="vjh-section vjh-faq">
+        <div className="vjh-faq__intro">
+          <span className="vjh-faq__badge">{homeData.faq_eyebrow}</span>
+          <h2>{homeData.faq_title}</h2>
+          <p>{homeData.faq_intro}</p>
+          <a href={SITE_INFO.whatsappUrl} target="_blank" rel="noopener noreferrer" className="vjh-faq__contact">
+            <MessageCircle size={18} />
+            ¿Aún con dudas? Consúltenos por WhatsApp
+          </a>
+        </div>
+        <div className="vjh-faq__list">
+          {faqs.map((faq, index) => (
+            <div className={`vjh-faq__item ${openFaq === index ? 'is-open' : ''}`} key={`${faq.pregunta}-${index}`}>
+              <button type="button" aria-expanded={openFaq === index} onClick={() => setOpenFaq(openFaq === index ? -1 : index)}>
+                <span>{faq.pregunta}</span>
+                <ChevronDown size={20} />
+              </button>
+              {openFaq === index && <p>{faq.respuesta}</p>}
             </div>
           ))}
-          <div>
-            <p className="vh-footer__heading">{homeData.footer_hours_label}</p>
-            <p className="vh-footer__hours">{homeData.footer_hours_days}</p>
-            <p className="vh-footer__hours vh-footer__hours--strong">{homeData.footer_hours_value}</p>
-            <button type="button" className="vh-footer__button" onClick={() => setModal('terms')}>
-              {homeData.terms_title}
-            </button>
-            <button type="button" className="vh-footer__button" onClick={() => setModal('conditions')}>
-              {homeData.conditions_title}
-            </button>
-          </div>
         </div>
-        <div className="vh-container vh-footer__bottom">
-          <p>{homeData.footer_bottom_text}</p>
-        </div>
-      </footer>
+      </section>
+
+      <SiteFooter
+        legalLinks={[
+          { label: homeData.terms_title, onClick: () => setModal('terms') },
+          { label: homeData.conditions_title, onClick: () => setModal('conditions') },
+        ]}
+      />
 
       {modal === 'terms' && (
         <InfoModal title={homeData.terms_title} content={homeData.terms_content} onClose={() => setModal(null)} />

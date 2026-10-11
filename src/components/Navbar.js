@@ -1,26 +1,19 @@
 import { apiFetch as fetch } from '../auth/session';
 import { useState, useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { 
-  AppBar, 
-  Toolbar, 
-  Typography, 
-  IconButton, 
+import {
+  AppBar,
+  Toolbar,
+  Typography,
+  IconButton,
   Avatar,
   Tooltip,
-  InputAdornment,
-  TextField,
   Menu,
   MenuItem,
   Box,
-  useMediaQuery,
-  useTheme,
   Button
 } from '@mui/material';
-import SearchIcon from '@mui/icons-material/Search';
-import AccountCircleIcon from '@mui/icons-material/AccountCircle';
 import LogoutIcon from '@mui/icons-material/Logout';
-import MenuIcon from '@mui/icons-material/Menu';
 import CategoryIcon from '@mui/icons-material/Category';
 import SubdirectoryArrowRightIcon from '@mui/icons-material/SubdirectoryArrowRight';
 import PeopleIcon from '@mui/icons-material/People';
@@ -37,7 +30,6 @@ import HistoryIcon from '@mui/icons-material/History';
 import PointOfSaleIcon from '@mui/icons-material/PointOfSale';
 import PersonPinIcon from '@mui/icons-material/PersonPin';
 import GradeIcon from '@mui/icons-material/Grade';
-import MoreVertIcon from '@mui/icons-material/MoreVert';
 import Assessment from "@mui/icons-material/Assessment";
 import AccountBalance from "@mui/icons-material/AccountBalance";
 import ReceiptIcon from '@mui/icons-material/Receipt';
@@ -49,6 +41,7 @@ import InfoIcon from '@mui/icons-material/Info';
 import AssignmentReturnIcon from '@mui/icons-material/AssignmentReturn';
 import PaidIcon from '@mui/icons-material/Paid';
 import StorefrontIcon from '@mui/icons-material/Storefront';
+import { Search, User, Bell, Menu as MenuGlyph, X } from 'lucide-react';
 import logo from '@/assets/logo.png';
 import ModalEditCliente from '../components/ModalEditCliente';
 import CarBuy from './CarBuy';
@@ -56,12 +49,11 @@ import { useCart } from '../context/CartContext';
 import { jwtDecode } from 'jwt-decode';
 import { isAuthSession, logoutAuthSession } from '../auth/session';
 import { useSessionSnapshot } from '../auth/useSessionSnapshot';
+import '../styles/vjh-theme.css';
 import './Navbar.css';
 
 import { API_BASE_URL } from '../config/apiConfig';
 function Navbar({ onShowLogin }) {
-  const theme = useTheme();
-  const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
   const location = useLocation();
   const navigate = useNavigate();
   const [anchorEl, setAnchorEl] = useState(null);
@@ -77,12 +69,29 @@ function Navbar({ onShowLogin }) {
   const [debounceTimer, setDebounceTimer] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
+  const [mobileSearchOpen, setMobileSearchOpen] = useState(false);
   const { totalItems } = useCart();
+
+  const isHome = location.pathname === '/';
+  const isStoreRoute = isHome
+    || location.pathname === '/shop'
+    || location.pathname === '/registro'
+    || location.pathname.startsWith('/product/');
+
+  // La tienda usa la tipografia y la altura de barra del rediseño; el panel interno conserva las suyas.
+  useEffect(() => {
+    document.body.classList.toggle('vj-store', isStoreRoute);
+    return () => document.body.classList.remove('vj-store');
+  }, [isStoreRoute]);
+
+  useEffect(() => {
+    setMobileSearchOpen(false);
+  }, [location.pathname]);
 
   // Función para verificar y limpiar sesión si el token es inválido
   const checkTokenAndCleanSession = () => {
     const token = localStorage.getItem('authToken');
-    
+
     // Si no hay token, limpiamos la sesión
     if (!token) {
       cleanSession();
@@ -93,12 +102,12 @@ function Navbar({ onShowLogin }) {
       // Verificar expiración del token
       const decoded = jwtDecode(token);
       const isExpired = decoded.exp < Date.now() / 1000;
-      
+
       if (isExpired && !isAuthSession()) {
         cleanSession();
         return false;
       }
-      
+
       return true;
     } catch (error) {
       cleanSession();
@@ -121,7 +130,7 @@ function Navbar({ onShowLogin }) {
 
   useEffect(() => {
     const storedUserData = localStorage.getItem('userData');
-    
+
     if (storedUserData) {
       if (checkTokenAndCleanSession()) {
         setUserData(JSON.parse(storedUserData));
@@ -133,7 +142,7 @@ function Navbar({ onShowLogin }) {
     if (!checkTokenAndCleanSession()) {
       return null;
     }
-    
+
     const token = localStorage.getItem('authToken');
     return jwtDecode(token);
   };
@@ -143,7 +152,7 @@ function Navbar({ onShowLogin }) {
       onShowLogin();
       return;
     }
-    
+
     setAnchorEl(event.currentTarget);
   };
 
@@ -249,14 +258,14 @@ function Navbar({ onShowLogin }) {
 
       const decodedToken = decodeToken();
       const userId = decodedToken?.user_id;
-      
+
       if (!userId) {
         throw new Error('No se pudo obtener el ID del usuario desde el token');
       }
 
       setIsLoading(true);
       const details = await fetchClientDetails(userId);
-      
+
       const completeUserData = {
         id: userId,
         username: details.username || userData?.username || '',
@@ -290,28 +299,28 @@ function Navbar({ onShowLogin }) {
   const handleSearchChange = (e) => {
     const value = e.target.value;
     setSearchQuery(value);
-    
+
     // Limpia el timer anterior si existe
     if (debounceTimer) {
       clearTimeout(debounceTimer);
     }
-    
+
     // Configura un nuevo timer que ejecutará la búsqueda después de 500ms (puedes ajustar este valor)
     const timer = setTimeout(() => {
       updateSearch(value);
     }, 1100);
-    
+
     setDebounceTimer(timer);
   };
 
   // Modifica la función updateSearch para que no navegue si el query está vacío
   const updateSearch = (query) => {
-    const currentPath = location.pathname;
+    // La busqueda siempre lleva al catalogo, que es donde se filtran los productos
     if (query.trim()) {
-      navigate(`${currentPath}?search=${encodeURIComponent(query.trim())}`);
-    } else if (location.search) {
+      navigate(`/shop?search=${encodeURIComponent(query.trim())}`);
+    } else if (location.pathname === '/shop' && location.search) {
       // Si hay parámetros de búsqueda pero el query está vacío, navega sin parámetros
-      navigate(currentPath);
+      navigate('/shop');
     }
   };
 
@@ -329,8 +338,19 @@ function Navbar({ onShowLogin }) {
       updateSearch(searchQuery);
     };
 
-  const showSearch = location.pathname === '/shop' || location.pathname.startsWith('/product/');
-  const showCart = location.pathname === '/shop' || location.pathname.startsWith('/product/');
+  const isCatalogRoute = location.pathname === '/shop' || location.pathname.startsWith('/product/');
+  const showSearch = isCatalogRoute || (isHome && Boolean(userData));
+  const showCart = isCatalogRoute || (isHome && Boolean(userData));
+
+  const getAvatarSrc = () => {
+    if (!userData?.imagen) return null;
+    try {
+      return require(`../assets/${userData.imagen}.png`);
+    } catch {
+      return null;
+    }
+  };
+  const avatarSrc = getAvatarSrc();
 
   const adminMenuItems = [
     { icon: <InventoryIcon />, title: "Administrar productos", path: "/admin-item" },
@@ -418,83 +438,51 @@ const adminRemesaItems = [
 
   return (
     <>
-      <AppBar position="fixed" className="vh-navbar" style={{ zIndex: 1300 }}>
-        <Toolbar className="vh-navbar-toolbar" sx={{ 
-          minHeight: '64px !important', 
-          maxHeight: '64px !important',
-          paddingX: { xs: 1, sm: 2 },
-          display: 'flex',
-          justifyContent: 'space-between'
-        }}>
-          
-          <Box className="vh-navbar-brand" sx={{ display: 'flex', alignItems: 'center', flexShrink: 0 }}>
-            <Box className="vh-navbar-logo" onClick={goToHome} sx={{ cursor: 'pointer', display: 'flex', alignItems: 'center', mr: 2 }}>
-              <img src={logo} alt="VIDEOJUEGOS HABANA logo" style={{ height: isMobile ? '40px' : '50px' }} />
-            </Box>
-            
-            <Typography 
-              variant="h6" 
-              noWrap
-              onClick={goToHome}
-              sx={{ 
-                cursor: 'pointer',
-                display: { xs: 'none', sm: 'block' },
-                fontSize: { sm: '1rem', md: '1.25rem' }
-              }}
-              className="navbar-title vh-navbar-title"
-            >
-              VIDEOJUEGOS HABANA
-            </Typography>
+      <AppBar position="fixed" className={`vh-navbar vj-scope ${mobileSearchOpen ? 'vh-navbar--searching' : ''}`} style={{ zIndex: 1300 }}>
+        <Toolbar className="vh-navbar-toolbar">
+
+          <Box className="vh-navbar-brand" onClick={goToHome}>
+            <img src={logo} alt="VIDEOJUEGOS HABANA logo" className="vh-navbar-logo" />
+            <div className="vh-navbar-brand-text">
+              <span className="vh-navbar-title">VIDEOJUEGOS <b>HABANA</b></span>
+              <span className="vh-navbar-tagline">La Habana • Cuba</span>
+            </div>
           </Box>
 
           {showSearch && (
-            <Box className="search-field vh-navbar-search" sx={{ 
-              flexGrow: 1,
-              maxWidth: { xs: '220px', sm: '360px', md: '520px' },
-              mx: 2
-            }}>
-              <form onSubmit={handleSearchSubmit}>
-                <TextField
-                  variant="outlined"
-                  size="small"
-                  placeholder="Buscar..."
-                  value={searchQuery}
-                  onChange={handleSearchChange}
-                  fullWidth
-                  InputProps={{
-                    startAdornment: (
-                      <InputAdornment position="start">
-                        <SearchIcon sx={{ fontSize: { xs: '18px', sm: '24px' } }} />
-                      </InputAdornment>
-                    ),
-                    style: {
-                      backgroundColor: 'white',
-                      borderRadius: '4px',
-                      height: isMobile ? '36px' : '40px'
-                    }
-                  }}
-                  sx={{
-                    '& .MuiOutlinedInput-root': {
-                      '& fieldset': {
-                        borderColor: 'transparent',
-                      },
-                      '&:hover fieldset': {
-                        borderColor: 'transparent',
-                      },
-                      '&.Mui-focused fieldset': {
-                        borderColor: 'primary.main',
-                      },
-                    },
-                    '& input': {
-                      padding: isMobile ? '6px 8px' : '8px 12px'
-                    }
-                  }}
-                />
-              </form>
-            </Box>
+            <form className="vh-navbar-search" onSubmit={handleSearchSubmit} role="search">
+              <Search size={20} />
+              <input
+                type="search"
+                dir="ltr"
+                placeholder="Buscar laptops, tablets, accesorios..."
+                aria-label="Buscar productos"
+                value={searchQuery}
+                onChange={handleSearchChange}
+              />
+              <button
+                type="button"
+                className="vh-navbar-search-close"
+                aria-label="Cerrar búsqueda"
+                onClick={() => setMobileSearchOpen(false)}
+              >
+                <X size={18} />
+              </button>
+            </form>
           )}
 
-          <Box className="mobile-controls vh-navbar-actions" sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+          <Box className="mobile-controls vh-navbar-actions">
+            {showSearch && (
+              <button
+                type="button"
+                className="vh-navbar-search-toggle"
+                aria-label="Buscar productos"
+                onClick={() => setMobileSearchOpen(true)}
+              >
+                <Search size={16} />
+              </button>
+            )}
+
             {/* Botón para Administrar Ventas (solo para Administradores y Super Administradores) */}
             {isAdmin && (
               <Tooltip title="Administrar Ventas">
@@ -502,7 +490,7 @@ const adminRemesaItems = [
                   color="inherit"
                   onClick={() => navigateWithReload('/admin-ventas')}
                   startIcon={<PointOfSaleIcon />}
-                  sx={{ 
+                  sx={{
                     display: { xs: 'none', md: 'flex' },
                     textTransform: 'none',
                     fontSize: '0.875rem'
@@ -516,8 +504,8 @@ const adminRemesaItems = [
             {/* Botón de icono para Administrar Ventas en pantallas más pequeñas */}
             {isAdmin && (
               <Tooltip title="Administrar Ventas">
-                <IconButton 
-                  color="inherit" 
+                <IconButton
+                  color="inherit"
                   onClick={() => navigateWithReload('/admin-ventas')}
                   sx={{ display: { xs: 'none', sm: 'flex', md: 'none' } }}
                 >
@@ -528,20 +516,20 @@ const adminRemesaItems = [
 
             {isAdminPanelUser && (
               <Tooltip title="Notificaciones">
-                <IconButton 
-                  color="inherit" 
+                <IconButton
+                  color="inherit"
                   onClick={() => navigateWithReload('/notificaciones')}
                   sx={{ display: { xs: 'none', sm: 'flex' } }}
                 >
-                  <NotificationsIcon />
+                  <Bell size={20} />
                 </IconButton>
               </Tooltip>
             )}
 
             {(isAdmin || isManager) && (
               <Tooltip title="Record Ventas (Gestor)">
-                <IconButton 
-                  color="inherit" 
+                <IconButton
+                  color="inherit"
                   onClick={() => navigateWithReload('/record-ventas-manager')}
                   sx={{ display: { xs: 'none', sm: 'flex' } }}
                 >
@@ -552,8 +540,8 @@ const adminRemesaItems = [
 
             {isCourier && (
               <Tooltip title="Mis entregas">
-                <IconButton 
-                  color="inherit" 
+                <IconButton
+                  color="inherit"
                   onClick={() => navigateWithReload('/mensajeria-lista')}
                   sx={{ display: { xs: 'none', sm: 'flex' } }}
                 >
@@ -564,24 +552,24 @@ const adminRemesaItems = [
 
             {isAdmin && (
               <Tooltip title="Panel de Administración">
-                <IconButton 
-                  color="inherit" 
+                <IconButton
+                  color="inherit"
                   onClick={handleAdminMenuOpen}
                   sx={{ display: { xs: 'none', sm: 'flex' } }}
                 >
-                  <MoreVertIcon />
+                  <MenuGlyph size={20} />
                 </IconButton>
               </Tooltip>
             )}
 
             {isManager && (
               <Tooltip title="Opciones de Gestor">
-                <IconButton 
-                  color="inherit" 
+                <IconButton
+                  color="inherit"
                   onClick={handleAdminMenuOpen}
                   sx={{ display: { xs: 'none', sm: 'flex' } }}
                 >
-                  <MoreVertIcon />
+                  <MenuGlyph size={20} />
                 </IconButton>
               </Tooltip>
             )}
@@ -593,7 +581,7 @@ const adminRemesaItems = [
                   onClick={handleAdminMenuOpen}
                   sx={{ display: { xs: 'none', sm: 'flex' } }}
                 >
-                  <MoreVertIcon />
+                  <MenuGlyph size={20} />
                 </IconButton>
               </Tooltip>
             )}
@@ -617,7 +605,7 @@ const adminRemesaItems = [
                   onClick={handleAdminMenuOpen}
                   sx={{ display: { xs: 'none', sm: 'flex' } }}
                 >
-                  <MoreVertIcon />
+                  <MenuGlyph size={20} />
                 </IconButton>
               </Tooltip>
             )}
@@ -625,26 +613,27 @@ const adminRemesaItems = [
             {showCart && <CarBuy />}
 
             <Tooltip title={userData ? "Mi cuenta" : "Iniciar sesión"}>
-              <IconButton color="inherit" onClick={handleMenuOpen}>
-                {userData ? (
-                  <Avatar 
-                    alt={userData.nombre || userData.username} 
-                    src={userData.imagen ? require(`../assets/${userData.imagen}.png`) : null}
-                    sx={{ width: 32, height: 32 }}
-                  />
+              <button
+                type="button"
+                className={userData ? 'vh-navbar-avatar' : 'vh-navbar-login'}
+                aria-label={userData ? "Mi cuenta" : "Iniciar sesión"}
+                onClick={handleMenuOpen}
+              >
+                {avatarSrc ? (
+                  <img src={avatarSrc} alt={userData.nombre || userData.username} />
                 ) : (
-                  <AccountCircleIcon />
+                  <User size={userData ? 18 : 16} />
                 )}
-              </IconButton>
+              </button>
             </Tooltip>
 
             {(isAdminPanelUser || isRemesasClient) && (
-              <IconButton 
-                color="inherit" 
+              <IconButton
+                color="inherit"
                 onClick={handleMobileMenuOpen}
                 sx={{ display: { xs: 'flex', sm: 'none' }, p: 1 }}
               >
-                <MenuIcon />
+                <MenuGlyph size={20} />
               </IconButton>
             )}
           </Box>
@@ -668,7 +657,7 @@ const adminRemesaItems = [
           anchorOrigin={{ horizontal: 'right', vertical: 'bottom' }}
         >
           {isAdmin && [...adminMenuItems, ...(isSuperAdmin ? superAdminMenuItems : []), ...adminRemesaItems].map((item, index) => (
-            <MenuItem 
+            <MenuItem
               key={`admin-${index}`}
               onClick={() => navigateWithReload(item.path)}
               sx={{ minWidth: '250px' }}
@@ -679,9 +668,9 @@ const adminRemesaItems = [
               </Box>
             </MenuItem>
           ))}
-          
+
           {isManager && managerSpecificItems.map((item, index) => (
-            <MenuItem 
+            <MenuItem
               key={`manager-${index}`}
               onClick={() => navigateWithReload(item.path)}
               sx={{ minWidth: '250px' }}
@@ -738,7 +727,7 @@ const adminRemesaItems = [
           anchorOrigin={{ horizontal: 'right', vertical: 'bottom' }}
         >
           {mobileMenuItems.map((item, index) => (
-            <MenuItem 
+            <MenuItem
               key={index}
               onClick={item.onClick ? item.onClick : () => navigateWithReload(item.path)}
             >
@@ -772,9 +761,9 @@ const adminRemesaItems = [
           anchorOrigin={{ horizontal: 'right', vertical: 'bottom' }}
         >
           <MenuItem onClick={handleEditProfileClick}>
-            <Avatar 
-              alt={userData?.nombre || userData?.username} 
-              src={userData?.imagen ? require(`../assets/${userData.imagen}.png`) : null}
+            <Avatar
+              alt={userData?.nombre || userData?.username}
+              src={avatarSrc}
             />
             <span>{userData?.nombre || userData?.username}</span>
           </MenuItem>
@@ -803,7 +792,7 @@ const adminRemesaItems = [
         </Menu>
       </AppBar>
 
-      <Toolbar />
+      <div className="vh-navbar-spacer" />
 
       <ModalEditCliente
         open={isEditModalOpen}

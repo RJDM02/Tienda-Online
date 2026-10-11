@@ -85,8 +85,8 @@ const Dashbar = ({ onFilterChange, userData, onEditProfile, selectedCategories =
   const [categories, setCategories] = useState([]);
   const [subcategories, setSubcategories] = useState([]);
   const [conditions, setConditions] = useState([]);
-  const [loading, setLoading] = useState({ 
-    categories: true, 
+  const [loading, setLoading] = useState({
+    categories: true,
     subcategories: true,
     conditions: true
   });
@@ -117,9 +117,9 @@ const Dashbar = ({ onFilterChange, userData, onEditProfile, selectedCategories =
         const response = await fetch(`${API_URL}/listar_condicion/`, {
           method: 'GET',
         });
-        
+
         if (!response.ok) throw new Error('Error al cargar condiciones');
-        
+
         const data = await response.json();
         setConditions(data);
       } catch (err) {
@@ -138,11 +138,11 @@ const Dashbar = ({ onFilterChange, userData, onEditProfile, selectedCategories =
       try {
         const response = await fetch(`${API_URL}/listar_categoria/`);
         if (!response.ok) throw new Error('Error al cargar categorías');
-        
+
         const data = await response.json();
         const sortedData = sortCategoriesByOrden(data);
         setCategories(sortedData);
-        
+
         const expanded = {};
         sortedData.forEach(cat => {
           expanded[cat.id] = false;
@@ -193,7 +193,7 @@ const Dashbar = ({ onFilterChange, userData, onEditProfile, selectedCategories =
     const newCategories = selectedCategories.includes(String(categoryId))
       ? selectedCategories.filter(id => id !== String(categoryId))
       : [...selectedCategories, String(categoryId)];
-    
+
     onFilterChange({ categories: newCategories });
   };
 
@@ -209,7 +209,7 @@ const Dashbar = ({ onFilterChange, userData, onEditProfile, selectedCategories =
     const newConditions = selectedConditions.includes(String(conditionId))
       ? selectedConditions.filter(id => id !== String(conditionId))
       : [...selectedConditions, String(conditionId)];
-    
+
     onFilterChange({ conditions: newConditions });
   };
 
@@ -222,7 +222,7 @@ const Dashbar = ({ onFilterChange, userData, onEditProfile, selectedCategories =
   };
 
   const toggleSection = (section) => {
-    setExpandedSection(prev => 
+    setExpandedSection(prev =>
       prev.includes(section)
         ? prev.filter(s => s !== section)
         : [...prev, section]
@@ -279,8 +279,7 @@ const Dashbar = ({ onFilterChange, userData, onEditProfile, selectedCategories =
 
   if (error) {
     return (
-      <div className={`dashbar-shell fixed left-0 bg-gray-900 shadow-2xl p-6 border-r border-gray-800 transition-all duration-300 ease-in-out ${isCollapsed ? 'dashbar-collapsed w-16' : 'dashbar-expanded w-64'} ${mobileOpen ? 'dashbar-mobile-open' : ''}`} 
-           style={{ height: 'calc(100vh - 64px)', top: '64px', zIndex: 50 }}>
+      <div className={`dashbar-shell vj-scope bg-gray-900 shadow-2xl p-6 border-r border-gray-800 transition-all duration-300 ease-in-out ${isCollapsed ? 'dashbar-collapsed w-16' : 'dashbar-expanded w-64'} ${mobileOpen ? 'dashbar-mobile-open' : ''}`}>
         <div className="bg-red-900 border border-red-700 text-red-100 px-4 py-3 rounded">
           {error}
         </div>
@@ -290,18 +289,16 @@ const Dashbar = ({ onFilterChange, userData, onEditProfile, selectedCategories =
 
   if (loading.categories || loading.subcategories || loading.conditions) {
     return (
-      <div className={`dashbar-shell fixed left-0 bg-gray-900 shadow-2xl p-6 flex justify-center items-center border-r border-gray-800 transition-all duration-300 ease-in-out ${isCollapsed ? 'dashbar-collapsed w-16' : 'dashbar-expanded w-64'} ${mobileOpen ? 'dashbar-mobile-open' : ''}`}
-           style={{ height: 'calc(100vh - 64px)', top: '64px', zIndex: 50 }}>
+      <div className={`dashbar-shell vj-scope bg-gray-900 shadow-2xl p-6 flex justify-center items-center border-r border-gray-800 transition-all duration-300 ease-in-out ${isCollapsed ? 'dashbar-collapsed w-16' : 'dashbar-expanded w-64'} ${mobileOpen ? 'dashbar-mobile-open' : ''}`}>
         <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-orange-500"></div>
       </div>
     );
   }
 
   return (
-    <div className={`dashbar-shell fixed left-0 shadow-2xl border-r transition-all duration-300 ease-in-out ${isCollapsed ? 'dashbar-collapsed w-16' : 'dashbar-expanded w-64'} ${mobileOpen ? 'dashbar-mobile-open' : ''}`}
-         style={{ height: 'calc(100vh - 64px)', top: '64px', zIndex: 50 }}>
-      
-      <button 
+    <div className={`dashbar-shell vj-scope shadow-2xl border-r transition-all duration-300 ease-in-out ${isCollapsed ? 'dashbar-collapsed w-16' : 'dashbar-expanded w-64'} ${mobileOpen ? 'dashbar-mobile-open' : ''}`}>
+
+      <button
         onClick={toggleCollapse}
         className="absolute -right-3 top-4 bg-orange-500 text-white rounded-full p-1 shadow-lg hover:bg-orange-600 transition-colors z-50"
         aria-label={isCollapsed ? "Expandir panel" : "Contraer panel"}
@@ -320,62 +317,47 @@ const Dashbar = ({ onFilterChange, userData, onEditProfile, selectedCategories =
         </button>
       )}
 
-      <div className="h-full overflow-y-auto p-4 pt-2">
+      <div className="dashbar-scroll">
         {!isCollapsed && (
           <div className="dashbar-mobile-title">
-            <h2>Filtros</h2>
-            <p>Ajusta tu busqueda</p>
+            <h2>Filtros de Búsqueda</h2>
           </div>
         )}
 
         {!isCollapsed && userData && (
-          <div className="mb-4 pb-4 border-b border-gray-700">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center space-x-3">
-                <div className="relative">
-                  <div className="w-10 h-10 bg-gray-700 rounded-full border-2 border-orange-500 flex items-center justify-center overflow-hidden">
-                    {userData?.imagen ? (
-                      <img 
-                        src={userData.imagen} 
-                        alt="Usuario" 
-                        className="w-full h-full object-cover"
-                        onError={(e) => {
-                          e.target.style.display = 'none';
-                          e.target.nextSibling.style.display = 'flex';
-                        }}
-                      />
-                    ) : null}
-                    <User className="w-5 h-5 text-white" style={{ display: userData?.imagen ? 'none' : 'flex' }} />
-                  </div>
-                  <div className="absolute -bottom-1 -right-1 bg-orange-500 rounded-full p-1">
-                    <div className="w-2 h-2 bg-green-400 rounded-full"></div>
-                  </div>
-                </div>
-                <div>
-                  <h3 className="text-white font-semibold text-sm truncate max-w-[140px]">
-                    {userData?.nombre || userData?.username || 'Usuario'}
-                  </h3>
-                  <p className="text-gray-400 text-xs truncate max-w-[140px]">
-                    {userData?.correo || userData?.email || 'usuario@email.com'}
-                  </p>
-                </div>
-              </div>
-              {onEditProfile && (
-                <button 
-                  onClick={onEditProfile}
-                  className="text-orange-500 hover:bg-gray-800 p-1 rounded-full transition-colors"
-                  aria-label="Editar perfil"
-                >
-                  <Edit size={16} />
-                </button>
-              )}
+          <div className="dashbar-user">
+            <div className="dashbar-user__avatar">
+              {userData?.imagen ? (
+                <img
+                  src={userData.imagen}
+                  alt="Usuario"
+                  onError={(e) => {
+                    e.target.style.display = 'none';
+                    e.target.nextSibling.style.display = 'block';
+                  }}
+                />
+              ) : null}
+              <User size={22} style={{ display: userData?.imagen ? 'none' : 'block' }} />
             </div>
+            <div className="dashbar-user__meta">
+              <h3>{userData?.nombre || userData?.username || 'Usuario'}</h3>
+              {(userData?.correo || userData?.email) && <p>{userData?.correo || userData?.email}</p>}
+            </div>
+            {onEditProfile && (
+              <button
+                onClick={onEditProfile}
+                className="dashbar-user__edit"
+                aria-label="Editar perfil"
+              >
+                <Edit size={16} />
+              </button>
+            )}
           </div>
         )}
 
         {!isCollapsed && (
-          <h2 className="text-lg font-bold mb-4 text-white flex items-center">
-            <Filter className="mr-2" size={18} /> Filtros
+          <h2 className="dashbar-title">
+            <Filter size={18} /> Filtros
           </h2>
         )}
 
@@ -383,14 +365,14 @@ const Dashbar = ({ onFilterChange, userData, onEditProfile, selectedCategories =
         <div className="mb-3 text-left">
           <button
             onClick={() => toggleSection('condition')}
-            className={`flex items-center w-full ${isCollapsed ? 'justify-center' : 'justify-between'} p-2 rounded-lg hover:bg-gray-800 transition-colors`}
+            className={`dashbar-row ${isCollapsed ? 'dashbar-row--icon' : ''}`}
             aria-expanded={expandedSection.includes('condition')}
           >
             <div className="flex items-center">
               <Award className="text-orange-500" size={18} />
               {!isCollapsed && (
                 <>
-                  <span className="ml-2 text-white text-sm">Condición</span>
+                  <span className="dashbar-row__label">Condición</span>
                   {selectedConditions.length > 0 && (
                     <span className="ml-2 bg-orange-500 text-white text-xs px-2 py-0.5 rounded-full">
                       {selectedConditions.length}
@@ -415,7 +397,7 @@ const Dashbar = ({ onFilterChange, userData, onEditProfile, selectedCategories =
                     sx={{
                       color: '#9CA3AF',
                       '&.Mui-checked': {
-                        color: '#FF6B00',
+                        color: '#e8611a',
                       },
                     }}
                   />
@@ -441,14 +423,14 @@ const Dashbar = ({ onFilterChange, userData, onEditProfile, selectedCategories =
         <div className="mb-3 text-left">
           <button
             onClick={() => toggleSection('price')}
-            className={`flex items-center w-full ${isCollapsed ? 'justify-center' : 'justify-between'} p-2 rounded-lg hover:bg-gray-800 transition-colors`}
+            className={`dashbar-row ${isCollapsed ? 'dashbar-row--icon' : ''}`}
             aria-expanded={expandedSection.includes('price')}
           >
             <div className="flex items-center">
               <DollarSign className="text-orange-500" size={18} />
               {!isCollapsed && (
                 <>
-                  <span className="ml-2 text-white text-sm">Precios</span>
+                  <span className="dashbar-row__label">Precios</span>
                   {(localPriceRange[0] > 0 || localPriceRange[1] < 9999) && (
                     <span className="ml-2 bg-orange-500 text-white text-xs px-2 py-0.5 rounded-full">
                       Filtrado
@@ -474,13 +456,13 @@ const Dashbar = ({ onFilterChange, userData, onEditProfile, selectedCategories =
                 step={10}
                 aria-labelledby="range-slider"
                 sx={{
-                  color: '#FF6B00',
+                  color: '#e8611a',
                   '& .MuiSlider-thumb': {
                     height: 16,
                     width: 16,
-                    backgroundColor: '#FF6B00',
-                    border: '2px solid #FF6B00',
-                    boxShadow: '0 0 6px rgba(255, 107, 0, 0.3)',
+                    backgroundColor: '#e8611a',
+                    border: '2px solid #e8611a',
+                    boxShadow: '0 0 6px rgba(232, 97, 26, 0.3)',
                   },
                   '& .MuiSlider-track': {
                     border: 'none',
@@ -489,20 +471,16 @@ const Dashbar = ({ onFilterChange, userData, onEditProfile, selectedCategories =
                     backgroundColor: '#374151',
                   },
                   '& .MuiSlider-valueLabel': {
-                    backgroundColor: '#FF6B00',
+                    backgroundColor: '#e8611a',
                     color: 'white',
                     fontSize: '0.75rem',
                     padding: '0.25rem',
                   }
                 }}
               />
-              <div className="flex justify-between text-xs text-gray-400 mt-2">
-                <span className="bg-gray-700 px-2 py-1 rounded text-orange-500 font-semibold">
-                  ${localPriceRange[0]}
-                </span>
-                <span className="bg-gray-700 px-2 py-1 rounded text-orange-500 font-semibold">
-                  ${localPriceRange[1]}
-                </span>
+              <div className="dashbar-price-range">
+                <span>Min: ${localPriceRange[0]} USD</span>
+                <span>Max: ${localPriceRange[1]} USD</span>
               </div>
               {(localPriceRange[0] > 0 || localPriceRange[1] < 9999) && (
                 <button
@@ -521,14 +499,14 @@ const Dashbar = ({ onFilterChange, userData, onEditProfile, selectedCategories =
         <div className="space-y-2 text-left">
           <button
             onClick={() => toggleSection('categories')}
-            className={`flex items-center w-full ${isCollapsed ? 'justify-center' : 'justify-between'} p-2 rounded-lg hover:bg-gray-800 transition-colors`}
+            className={`dashbar-row ${isCollapsed ? 'dashbar-row--icon' : ''}`}
             aria-expanded={expandedSection.includes('categories')}
           >
             <div className="flex items-center">
               <Tags className="text-orange-500" size={18} />
               {!isCollapsed && (
                 <>
-                  <span className="ml-2 text-white text-sm">Categorías</span>
+                  <span className="dashbar-row__label">Categorías</span>
                   {selectedCategories.length > 0 && (
                     <span className="ml-2 bg-orange-500 text-white text-xs px-2 py-0.5 rounded-full">
                       {selectedCategories.length}
@@ -552,14 +530,14 @@ const Dashbar = ({ onFilterChange, userData, onEditProfile, selectedCategories =
                     const categoryImageUrl = getCategoryImageUrl(category.imagen);
 
                     return (
-                      <div 
-                        key={category.id} 
+                      <div
+                        key={category.id}
                         className={`dashbar-panel rounded-lg overflow-hidden ${
                           selectedCategories.includes(String(category.id)) ? 'dashbar-selected' : ''
                         }`}
                       >
                         <div className="flex items-center">
-                          <div 
+                          <div
                             className="category-selector flex items-center px-2 cursor-pointer"
                             onClick={(e) => handleCategoryClick(category.id, e)}
                           >
@@ -570,7 +548,7 @@ const Dashbar = ({ onFilterChange, userData, onEditProfile, selectedCategories =
                               sx={{
                                 color: '#9CA3AF',
                                 '&.Mui-checked': {
-                                  color: '#FF6B00',
+                                  color: '#e8611a',
                                 },
                               }}
                             />
@@ -603,15 +581,15 @@ const Dashbar = ({ onFilterChange, userData, onEditProfile, selectedCategories =
                             </div>
                             {hasSubcategories && (
                               <div className="text-orange-500">
-                                {expandedCategories[category.id] ? 
-                                  <ChevronUp size={14} /> : 
+                                {expandedCategories[category.id] ?
+                                  <ChevronUp size={14} /> :
                                   <ChevronDown size={14} />
                                 }
                               </div>
                             )}
                           </button>
                         </div>
-                        
+
                         {hasSubcategories && expandedCategories[category.id] && (
                           <div className="px-2 pb-2 space-y-1 bg-gray-850 animate-fadeIn">
                             {categorySubs.map(subcategory => (
@@ -624,7 +602,7 @@ const Dashbar = ({ onFilterChange, userData, onEditProfile, selectedCategories =
                                     sx={{
                                       color: '#9CA3AF',
                                       '&.Mui-checked': {
-                                        color: '#FF6B00',
+                                        color: '#e8611a',
                                       },
                                     }}
                                   />
@@ -675,7 +653,7 @@ const Dashbar = ({ onFilterChange, userData, onEditProfile, selectedCategories =
               Limpiar
             </button>
             <button type="button" className="dashbar-apply" onClick={onCloseMobile}>
-              Aplicar filtros
+              Aplicar Filtros
             </button>
           </div>
         )}

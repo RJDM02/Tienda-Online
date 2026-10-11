@@ -1,6 +1,6 @@
 import { apiFetch as fetch } from '../auth/session';
 import { useState } from 'react';
-import { User, Phone, Mail, Lock } from 'lucide-react';
+import { User, Phone, Mail, Lock, X } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import icon1 from '../assets/icon1.png';
 import icon2 from '../assets/icon2.png';
@@ -8,6 +8,8 @@ import icon3 from '../assets/icon3.png';
 import icon4 from '../assets/icon4.png';
 
 import { API_URL } from '../config/apiConfig';
+import '../styles/vjh-theme.css';
+import '../styles/vjh-auth.css';
 const RegisterPage = ({ onShowLogin }) => {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
@@ -21,10 +23,10 @@ const RegisterPage = ({ onShowLogin }) => {
   const [errors, setErrors] = useState({}); // Estado para manejar errores
 
   const icons = [
-    { name: 'icon1', src: icon1 },
-    { name: 'icon2', src: icon2 },
-    { name: 'icon3', src: icon3 },
-    { name: 'icon4', src: icon4 }
+    { name: 'icon1', src: icon1, label: 'Hombre' },
+    { name: 'icon2', src: icon2, label: 'Mujer' },
+    { name: 'icon3', src: icon3, label: 'Chico' },
+    { name: 'icon4', src: icon4, label: 'Chica' }
   ];
 
   const handleChange = (e) => {
@@ -45,9 +47,9 @@ const RegisterPage = ({ onShowLogin }) => {
   // Función para renderizar errores de un campo
   const renderFieldErrors = (fieldName) => {
     if (!errors[fieldName]) return null;
-    
+
     return (
-      <div className="mt-1 text-sm text-red-600">
+      <div className="vj-auth-error">
         {errors[fieldName].map((error, index) => (
           <p key={index}>{error}</p>
         ))}
@@ -103,24 +105,29 @@ const RegisterPage = ({ onShowLogin }) => {
     }
   };
 
+  const fields = [
+    { name: 'username', label: 'Nombre de usuario', type: 'text', placeholder: 'Tu nombre de usuario', icon: <User size={18} />, autoComplete: 'username' },
+    { name: 'telefono', label: 'Teléfono', type: 'tel', placeholder: 'Tu número de teléfono', icon: <Phone size={18} />, autoComplete: 'tel' },
+    { name: 'correo', label: 'Correo electrónico', type: 'email', placeholder: 'tu@email.com', icon: <Mail size={18} />, autoComplete: 'email' },
+    { name: 'password', label: 'Contraseña', type: 'password', placeholder: 'Tu contraseña segura', icon: <Lock size={18} />, autoComplete: 'new-password' },
+  ];
+
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 flex items-center justify-center p-4">
-      <div className="relative bg-white rounded-2xl shadow-2xl w-full max-w-md p-8 transform transition-all duration-300">
-        
-        {/* Decoración superior */}
-        <div className="absolute top-0 left-1/2 transform -translate-x-1/2 -translate-y-1/2">
-          <div className="w-20 h-1 bg-gradient-to-r from-[#FF6B00] to-[#ff8533] rounded-full"></div>
-        </div>
+    <div className="vj-auth-page vj-scope">
+      <div className="vj-auth-card vj-auth-card--register">
+        <button type="button" onClick={() => navigate('/')} className="vj-auth-close" aria-label="Cerrar">
+          <X size={16} />
+        </button>
 
         {/* Header */}
-        <div className="text-center mb-8">
-          <h2 className="text-3xl font-bold text-gray-900 mb-2">Registro de Cliente</h2>
-          <p className="text-gray-500">Crea tu cuenta para empezar</p>
+        <div className="vj-auth-header">
+          <h2>Registro de Cliente</h2>
+          <p>Crea tu cuenta para empezar</p>
         </div>
 
         {/* Mensajes de error generales */}
         {errors.non_field_errors && (
-          <div className="mb-4 p-3 bg-red-50 text-red-600 rounded-lg text-sm">
+          <div className="vj-auth-alert">
             {errors.non_field_errors.map((error, index) => (
               <p key={index}>{error}</p>
             ))}
@@ -128,112 +135,45 @@ const RegisterPage = ({ onShowLogin }) => {
         )}
 
         {/* Formulario */}
-        <form onSubmit={handleSubmit} className="space-y-4">
-          {/* Campo de Usuario */}
-          <div>
-            <label className="text-sm font-medium text-gray-700 block">
-              Nombre de usuario
-            </label>
-            <div className="relative">
-              <User className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={18} />
-              <input
-                type="text"
-                name="username"
-                value={formData.username}
-                onChange={handleChange}
-                className={`w-full pl-10 pr-4 py-3 border rounded-xl focus:outline-none focus:ring-2 focus:ring-[#FF6B00] focus:border-transparent transition-all duration-200 ${
-                  errors.username ? 'border-red-500 bg-red-50' : 'border-gray-200 bg-gray-50 focus:bg-white'
-                }`}
-                placeholder="Tu nombre de usuario"
-                required
-              />
-            </div>
-            {renderFieldErrors('username')}
-          </div>
-
-          {/* Campo de Teléfono */}
-          <div>
-            <label className="text-sm font-medium text-gray-700 block">
-              Teléfono
-            </label>
-            <div className="relative">
-              <Phone className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={18} />
-              <input
-                type="tel"
-                name="telefono"
-                value={formData.telefono}
-                onChange={handleChange}
-                className={`w-full pl-10 pr-4 py-3 border rounded-xl focus:outline-none focus:ring-2 focus:ring-[#FF6B00] focus:border-transparent transition-all duration-200 ${
-                  errors.telefono ? 'border-red-500 bg-red-50' : 'border-gray-200 bg-gray-50 focus:bg-white'
-                }`}
-                placeholder="Tu número de teléfono"
-                required
-              />
-            </div>
-            {renderFieldErrors('telefono')}
-          </div>
-
-          {/* Campo de Email */}
-          <div>
-            <label className="text-sm font-medium text-gray-700 block">
-              Correo electrónico
-            </label>
-            <div className="relative">
-              <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={18} />
-              <input
-                type="email"
-                name="correo"
-                value={formData.correo}
-                onChange={handleChange}
-                className={`w-full pl-10 pr-4 py-3 border rounded-xl focus:outline-none focus:ring-2 focus:ring-[#FF6B00] focus:border-transparent transition-all duration-200 ${
-                  errors.correo ? 'border-red-500 bg-red-50' : 'border-gray-200 bg-gray-50 focus:bg-white'
-                }`}
-                placeholder="tu@email.com"
-                required
-              />
-            </div>
-            {renderFieldErrors('correo')}
-          </div>
-
-          {/* Campo de Contraseña */}
-          <div>
-            <label className="text-sm font-medium text-gray-700 block">
-              Contraseña
-            </label>
-            <div className="relative">
-              <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={18} />
-              <input
-                type="password"
-                name="password"
-                value={formData.password}
-                onChange={handleChange}
-                className={`w-full pl-10 pr-4 py-3 border rounded-xl focus:outline-none focus:ring-2 focus:ring-[#FF6B00] focus:border-transparent transition-all duration-200 ${
-                  errors.password ? 'border-red-500 bg-red-50' : 'border-gray-200 bg-gray-50 focus:bg-white'
-                }`}
-                placeholder="Tu contraseña segura"
-                required
-              />
-            </div>
-            {renderFieldErrors('password')}
+        <form onSubmit={handleSubmit} className="vj-auth-form">
+          <div className="vj-auth-fields">
+            {fields.map((field) => (
+              <div className="vj-auth-field" key={field.name}>
+                <label htmlFor={`register-${field.name}`}>{field.label}</label>
+                <div className={`vj-auth-input ${errors[field.name] ? 'has-error' : ''}`}>
+                  {field.icon}
+                  <input
+                    id={`register-${field.name}`}
+                    type={field.type}
+                    name={field.name}
+                    autoComplete={field.autoComplete}
+                    value={formData[field.name]}
+                    onChange={handleChange}
+                    placeholder={field.placeholder}
+                    required
+                  />
+                </div>
+                {renderFieldErrors(field.name)}
+              </div>
+            ))}
           </div>
 
           {/* Selección de ícono */}
-          <div className="space-y-4">
-            <label className="text-sm font-medium text-gray-700 block">
-              Selecciona tu ícono de perfil
-            </label>
+          <div className="vj-auth-avatars">
+            <span className="vj-auth-label">Selecciona tu ícono de perfil</span>
             {errors.imagen && (
-              <div className="text-sm text-red-600">
+              <div className="vj-auth-error">
                 {errors.imagen.map((error, index) => (
                   <p key={index}>{error}</p>
                 ))}
               </div>
             )}
-            <div className="flex justify-center gap-4">
+            <div className="vj-auth-avatars__list">
               {icons.map((icon) => (
                 <button
                   key={icon.name}
                   type="button"
+                  aria-pressed={formData.imagen === icon.name}
                   onClick={() => {
                     setFormData({...formData, imagen: icon.name});
                     if (errors.imagen) {
@@ -244,31 +184,22 @@ const RegisterPage = ({ onShowLogin }) => {
                       });
                     }
                   }}
-                  className={`p-4 rounded-full border-2 transition-all duration-200 hover:scale-105 ${
-                    formData.imagen === icon.name 
-                      ? 'border-[#FF6B00] bg-orange-50 shadow-lg' 
-                      : 'border-gray-200 hover:border-gray-300 bg-white'
-                  }`}
+                  className={`vj-auth-avatar ${formData.imagen === icon.name ? 'is-selected' : ''}`}
                 >
-                  <img 
-                    src={icon.src} 
-                    alt={icon.name}
-                    className="w-8 h-8 object-contain"
-                  />
+                  <span>
+                    <img src={icon.src} alt="" />
+                  </span>
+                  {icon.label}
                 </button>
               ))}
             </div>
           </div>
 
           {/* Botón de registro */}
-          <button
-            type="submit"
-            disabled={loading || !formData.imagen}
-            className="w-full bg-black text-white py-3 px-6 rounded-xl font-medium hover:bg-gray-800 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center space-x-2 mt-8"
-          >
+          <button type="submit" disabled={loading || !formData.imagen} className="vj-btn vj-btn--dark vj-auth-submit">
             {loading ? (
               <>
-                <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                <div className="vj-spinner"></div>
                 <span>Registrando...</span>
               </>
             ) : (
@@ -277,28 +208,15 @@ const RegisterPage = ({ onShowLogin }) => {
           </button>
         </form>
 
-        {/* Separador */}
-        <div className="relative my-6">
-          <div className="absolute inset-0 flex items-center">
-            <div className="w-full border-t border-gray-200"></div>
-          </div>
-          <div className="relative flex justify-center text-sm">
-            <span className="px-4 bg-white text-gray-500">o</span>
-          </div>
-        </div>
+        <div className="vj-auth-divider">o</div>
 
         {/* Enlace de login */}
-        <div className="text-center">
-          <p className="text-sm text-gray-600">
-            ¿Ya tienes cuenta?{' '}
-            <button
-              onClick={handleLoginClick}
-              className="text-[#FF6B00] hover:text-[#e55a00] font-medium transition-colors duration-200 hover:underline"
-            >
-              Inicia sesión aquí
-            </button>
-          </p>
-        </div>
+        <p className="vj-auth-footer">
+          ¿Ya tienes cuenta?{' '}
+          <button type="button" onClick={handleLoginClick}>
+            Inicia sesión
+          </button>
+        </p>
       </div>
     </div>
   );

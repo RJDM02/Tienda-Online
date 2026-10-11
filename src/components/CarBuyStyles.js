@@ -44,8 +44,8 @@ export const DrawerPaper = {
     boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)',
     borderLeft: 'none',
     borderRadius: '20px 0 0 20px',
-    mt: '64px',
-    height: 'calc(100% - 64px)'
+    mt: 'var(--vj-nav-h, 64px)',
+    height: 'calc(100% - var(--vj-nav-h, 64px))'
   }
 };
 

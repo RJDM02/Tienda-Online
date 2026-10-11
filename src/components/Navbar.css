@@ -168,107 +168,259 @@
   min-width: 0 !important;
 }
 
+/* ---------- Rediseño de la barra (Figma: nav-bar) ---------- */
 .vh-navbar.MuiAppBar-root {
-  border-bottom: 1px solid rgba(16, 16, 24, 0.08);
-  background: rgba(255, 255, 255, 0.96) !important;
-  color: #101018 !important;
-  box-shadow: 0 14px 36px rgba(16, 16, 24, 0.09) !important;
-  backdrop-filter: blur(14px);
+  border-bottom: 1px solid var(--vj-line);
+  background: #fff !important;
+  color: var(--vj-ink) !important;
+  box-shadow: none !important;
+  font-family: var(--vj-font);
 }
 
 .vh-navbar .vh-navbar-toolbar {
-  padding: 0 38px !important;
+  gap: 24px;
+  min-height: var(--vj-nav-h) !important;
+  max-height: var(--vj-nav-h) !important;
+  padding: 0 var(--vj-gutter) !important;
+  overflow: visible !important;
+}
+
+body:not(.vj-store) .vh-navbar .vh-navbar-toolbar {
+  padding: 0 24px !important;
+}
+
+.vh-navbar-spacer {
+  height: var(--vj-nav-h);
+  flex-shrink: 0;
 }
 
 .vh-navbar-brand {
-  min-width: 300px;
+  display: flex;
+  flex-shrink: 0;
+  align-items: center;
+  gap: 12px;
+  cursor: pointer;
 }
 
-.vh-navbar-logo img {
+.vh-navbar-logo {
+  width: 44px;
+  height: 44px;
   object-fit: contain;
 }
 
-.vh-navbar-title.MuiTypography-root {
-  color: #101018 !important;
-  font-weight: 900 !important;
-  letter-spacing: 0 !important;
+.vh-navbar-brand-text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  line-height: normal;
+  text-align: left;
+  white-space: nowrap;
 }
 
-.vh-navbar-search .MuiOutlinedInput-root {
-  height: 48px !important;
-  border-radius: 14px !important;
-  background: #fff !important;
-  box-shadow: inset 0 0 0 1px rgba(16, 16, 24, 0.14);
+.vh-navbar-title {
+  color: var(--vj-ink);
+  font-size: 18px;
+  font-weight: 800;
 }
 
-.vh-navbar-search .MuiOutlinedInput-notchedOutline {
-  border-color: transparent !important;
+.vh-navbar-title b {
+  color: var(--vj-orange);
+  font-weight: 800;
 }
 
-.vh-navbar-search .Mui-focused {
-  box-shadow: inset 0 0 0 2px #ff4f14, 0 12px 30px rgba(255, 79, 20, 0.12);
+.vh-navbar-tagline {
+  color: var(--vj-muted);
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
 }
 
-.vh-navbar-search .MuiInputBase-input {
-  font-size: 16px !important;
+.vh-navbar-search {
+  display: flex;
+  flex: 1 1 0;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+  max-width: 680px;
+  height: 44px;
+  margin: 0 auto;
+  padding: 0 16px;
+  border: 1px solid var(--vj-line);
+  border-radius: 22px;
+  background: #fff;
+  color: var(--vj-muted);
+  transition: border-color 160ms ease, box-shadow 160ms ease;
+}
+
+.vh-navbar-search:focus-within {
+  border-color: var(--vj-orange);
+  box-shadow: 0 0 0 3px rgba(232, 97, 26, 0.12);
+}
+
+.vh-navbar-search svg {
+  flex-shrink: 0;
+}
+
+.vh-navbar-search input {
+  flex: 1;
+  min-width: 0;
+  border: 0;
+  outline: 0;
+  background: transparent;
+  color: var(--vj-ink);
+  font-family: Inter, var(--vj-font);
+  font-size: 14px;
+}
+
+.vh-navbar-search input::placeholder {
+  color: #636b7d;
+}
+
+.vh-navbar-search input::-webkit-search-cancel-button {
+  display: none;
+}
+
+.vh-navbar-search-close,
+.vh-navbar-search-toggle {
+  display: none;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  color: var(--vj-ink);
+}
+
+.vh-navbar-search-toggle {
+  width: 28px;
+  height: 28px;
+  border: 1px solid var(--vj-line);
+  border-radius: 999px;
+}
+
+.vh-navbar-actions {
+  display: flex;
+  flex-shrink: 0;
+  align-items: center;
+  gap: 8px;
+  margin-left: auto;
 }
 
 .vh-navbar-actions .MuiIconButton-root,
 .vh-navbar-actions .MuiButton-root {
   border-radius: 12px !important;
+  color: var(--vj-ink) !important;
 }
 
 .vh-navbar-actions .MuiButton-root {
   min-height: 38px;
   padding: 0 12px;
-  color: #101018 !important;
-  font-weight: 800;
+  font-family: var(--vj-font);
+  font-weight: 700;
 }
 
 .vh-navbar-actions .MuiButton-root:hover,
 .vh-navbar-actions .MuiIconButton-root:hover {
-  background: rgba(255, 79, 20, 0.08) !important;
-  color: #ff4f14 !important;
+  background: var(--vj-orange-soft) !important;
+  color: var(--vj-orange) !important;
+}
+
+.vh-navbar-login,
+.vh-navbar-avatar {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  margin-left: 4px;
+  color: #fff;
+  transition: background-color 160ms ease, transform 160ms ease;
+}
+
+.vh-navbar-login {
+  padding: 8px 16px;
+  border-radius: 100px;
+  background: var(--vj-night);
+}
+
+.vh-navbar-login:hover {
+  background: var(--vj-night-3);
+}
+
+.vh-navbar-avatar {
+  width: 32px;
+  height: 32px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: var(--vj-orange);
+}
+
+.vh-navbar-avatar:hover {
+  transform: scale(1.06);
+}
+
+.vh-navbar-avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
 }
 
 @media (max-width: 900px) {
-  .vh-navbar .vh-navbar-toolbar {
-    padding: 0 14px !important;
+  .vh-navbar .vh-navbar-toolbar,
+  body:not(.vj-store) .vh-navbar .vh-navbar-toolbar {
+    gap: 12px;
+    padding: 0 16px !important;
   }
 
   .vh-navbar-brand {
-    min-width: auto;
-  }
-}
-
-@media (max-width: 600px) {
-  .vh-navbar.MuiAppBar-root {
-    min-height: 64px;
-  }
-
-  .vh-navbar .vh-navbar-toolbar {
-  gap: 10px;
+    gap: 8px;
+    min-width: 0;
   }
 
   .vh-navbar-logo {
-    margin-right: 0 !important;
+    width: 32px;
+    height: 32px;
   }
 
-  .vh-navbar-search {
-    max-width: none !important;
-    margin: 0 2px !important;
+  .vh-navbar-title {
+    font-size: 13px;
   }
 
-  .vh-navbar-search .MuiOutlinedInput-root {
-    height: 42px !important;
-    border-radius: 12px !important;
-  }
-
-  .vh-navbar-search .MuiInputBase-input {
-    font-size: 14px !important;
+  .vh-navbar-tagline {
+    font-size: 9px;
   }
 
   .vh-navbar-actions {
-    gap: 2px !important;
+    gap: 4px;
+  }
+
+  /* En movil la busqueda es un boton que despliega el campo sobre la barra */
+  .vh-navbar-search {
+    display: none;
+  }
+
+  .vh-navbar-search-toggle {
+    display: inline-flex;
+  }
+
+  .vh-navbar--searching .vh-navbar-search {
+    position: absolute;
+    left: 16px;
+    right: 16px;
+    z-index: 2;
+    display: flex;
+    max-width: none;
+  }
+
+  .vh-navbar--searching .vh-navbar-search-close {
+    display: inline-flex;
+  }
+
+  .vh-navbar--searching .vh-navbar-brand,
+  .vh-navbar--searching .vh-navbar-actions {
+    visibility: hidden;
+  }
+}
+
+@media (max-width: 380px) {
+  .vh-navbar-tagline {
+    display: none;
   }
 }

@@ -1,13 +1,14 @@
 import { apiFetch as fetch } from '../auth/session';
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { useLocation, useNavigate, Link } from 'react-router-dom';
-import { SlidersHorizontal } from 'lucide-react';
+import { Filter } from 'lucide-react';
 import Dashbar from '../components/Dashbar';
-import Navbar from '../components/Navbar';
 import CardItem from '../components/CardItem';
+import SiteFooter from '../components/SiteFooter';
 import FloatingWhatsAppButton from '../components/FloatingWhatsAppButton';
 import ChatWidget from '../components/ChatWidget';
 import { jwtDecode } from 'jwt-decode';
+import '../styles/vjh-theme.css';
 import './ShopPage.css';
 
 import { API_URL } from '../config/apiConfig';
@@ -30,7 +31,6 @@ const ShopPage = () => {
     conditions: []
   });
   const isLoadingMore = useRef(false);
-  const scrollContainerRef = useRef(null);
 
   const getCurrentUser = useCallback(() => {
     try {
@@ -65,29 +65,29 @@ const ShopPage = () => {
 
   const buildApiUrl = (baseUrl = `${API_URL}/listar_item_activo/`) => {
     const params = new URLSearchParams();
-    
+
     if (filters.current.searchTerm) {
       params.append('nombre', filters.current.searchTerm);
     }
-    
+
     params.append('min', filters.current.priceRange[0]);
     params.append('max', filters.current.priceRange[1]);
-    
+
     if (filters.current.categories.length > 0) {
       const categoryNames = filters.current.categories.map(id => {
         const category = categoriesData.find(cat => String(cat.id) === id);
         return category ? category.nombre : '';
       }).filter(name => name !== '');
-      
+
       if (categoryNames.length > 0) {
         params.append('categoria', categoryNames.join(','));
       }
     }
-    
+
     if (filters.current.subcategories.length > 0) {
       params.append('sub_categoria', filters.current.subcategories.join(','));
     }
-    
+
     if (filters.current.conditions.length > 0) {
       params.append('condicion', filters.current.conditions.join(','));
     }
@@ -103,14 +103,14 @@ const ShopPage = () => {
   const fetchProducts = useCallback(async (url) => {
     try {
       if (isLoadingMore.current) return;
-      
+
       setLoading(true);
       isLoadingMore.current = true;
-      
+
       const apiUrl = url || buildApiUrl();
       const response = await fetch(apiUrl);
       const data = await response.json();
-      
+
       const formattedProducts = data.results.map(item => ({
         ...item,
         precio: parseFloat(item.precio).toFixed(2),
@@ -119,14 +119,14 @@ const ShopPage = () => {
         subcategorias_detalle: item.subcategorias_detalle || [],
         condicion: String(item.condicion_detalle?.id) || ''
       }));
-      
+
       if (url && url.includes('page=')) {
         setAllProducts(prev => [...prev, ...formattedProducts]);
       } else {
         setAllProducts(formattedProducts);
         setInitialLoadComplete(true);
       }
-      
+
       setNextPageUrl(data.next);
       setHasMore(!!data.next);
     } catch (error) {
@@ -143,27 +143,19 @@ const ShopPage = () => {
   }, [hasMore, nextPageUrl, fetchProducts]);
 
   useEffect(() => {
-    const scrollContainer = scrollContainerRef.current;
-
+    // El catalogo hace scroll con la pagina; el margen cubre la altura del footer
     const handleScroll = () => {
-      const isMobile = window.matchMedia('(max-width: 768px)').matches;
-      const scrollSource = isMobile ? document.documentElement : scrollContainer;
+      const { scrollTop, scrollHeight, clientHeight } = document.documentElement;
+      const isNearBottom = scrollTop + clientHeight >= scrollHeight - 1000;
 
-      if (!scrollSource) return;
-
-      const { scrollTop, scrollHeight, clientHeight } = scrollSource;
-      const isNearBottom = scrollTop + clientHeight >= scrollHeight - 200;
-      
       if (isNearBottom && hasMore && !isLoadingMore.current) {
         loadMoreProducts();
       }
     };
 
-    scrollContainer?.addEventListener('scroll', handleScroll);
     window.addEventListener('scroll', handleScroll, { passive: true });
 
     return () => {
-      scrollContainer?.removeEventListener('scroll', handleScroll);
       window.removeEventListener('scroll', handleScroll);
     };
   }, [loadMoreProducts, hasMore]);
@@ -176,7 +168,7 @@ const ShopPage = () => {
     const conditionsParam = searchParams.get('conditions') || '';
     const minPrice = parseInt(searchParams.get('min')) || 0;
     const maxPrice = parseInt(searchParams.get('max')) || 9999;
-    
+
     filters.current = {
       searchTerm: searchQuery,
       categories: categoriesParam ? categoriesParam.split(',') : [],
@@ -184,64 +176,64 @@ const ShopPage = () => {
       conditions: conditionsParam ? conditionsParam.split(',') : [],
       priceRange: [minPrice, maxPrice]
     };
-    
+
     setAllProducts([]);
     setNextPageUrl(null);
     setInitialLoadComplete(false);
     setHasMore(true);
-    
+
     fetchProducts();
   }, [location.search, fetchProducts]);
 
   const handleFilterChange = useCallback((newFilters) => {
     filters.current = { ...filters.current, ...newFilters };
-    
+
     const searchParams = new URLSearchParams();
-    
+
     if (filters.current.searchTerm) {
       searchParams.set('search', filters.current.searchTerm);
     }
-    
+
     if (filters.current.subcategories.length > 0) {
       searchParams.set('subcategories', filters.current.subcategories.join(','));
     }
-    
+
     if (filters.current.categories.length > 0) {
       searchParams.set('categories', filters.current.categories.join(','));
     }
-    
+
     if (filters.current.conditions.length > 0) {
       searchParams.set('conditions', filters.current.conditions.join(','));
     }
-    
+
     searchParams.set('min', filters.current.priceRange[0]);
     searchParams.set('max', filters.current.priceRange[1]);
-    
+
     navigate(`/shop?${searchParams.toString()}`, { replace: true });
   }, [navigate]);
 
   const getFilterSummary = () => {
     if (filters.current.categories.length > 0 && filters.current.subcategories.length > 0) {
-      return <>Filtrando por <span className="text-[#FF6B00] font-bold">{filters.current.categories.length}</span> categorías y <span className="text-[#FF6B00] font-bold">{filters.current.subcategories.length}</span> subcategorías</>;
+      return <>Filtrando por <span className="shop-accent">{filters.current.categories.length}</span> categorías y <span className="shop-accent">{filters.current.subcategories.length}</span> subcategorías</>;
     }
     if (filters.current.categories.length > 0) {
-      return <>Filtrando por <span className="text-[#FF6B00] font-bold">{filters.current.categories.length}</span> categorías</>;
+      return <>Filtrando por <span className="shop-accent">{filters.current.categories.length}</span> categorías</>;
     }
     if (filters.current.subcategories.length > 0) {
-      return <>Filtrando por <span className="text-[#FF6B00] font-bold">{filters.current.subcategories.length}</span> subcategorías</>;
+      return <>Filtrando por <span className="shop-accent">{filters.current.subcategories.length}</span> subcategorías</>;
     }
     if (filters.current.conditions.length > 0) {
-      return <>Filtrando por <span className="text-[#FF6B00] font-bold">{filters.current.conditions.length}</span> condiciones</>;
+      return <>Filtrando por <span className="shop-accent">{filters.current.conditions.length}</span> condiciones</>;
     }
     if (filters.current.priceRange[0] > 0 || filters.current.priceRange[1] < 9999) {
-      return <>Filtrando por precio: <span className="text-[#FF6B00] font-bold">${filters.current.priceRange[0]}</span> - <span className="text-[#FF6B00] font-bold">${filters.current.priceRange[1]}</span></>;
+      return <>Filtrando por precio: <span className="shop-accent">${filters.current.priceRange[0]}</span> - <span className="shop-accent">${filters.current.priceRange[1]}</span></>;
     }
-    return <>Mostrando <span className="text-[#FF6B00] font-bold">{allProducts.length}</span> productos</>;
+    return <>Mostrando <span className="shop-accent">{allProducts.length}</span> productos</>;
   };
 
   const clearAllFilters = () => {
-    handleFilterChange({ 
-      subcategories: [], 
+    handleFilterChange({
+      subcategories: [],
       categories: [],
       conditions: [],
       priceRange: [0, 9999],
@@ -250,11 +242,7 @@ const ShopPage = () => {
   };
 
   return (
-    <div className="shop-page min-h-screen flex flex-col">
-      <div className="fixed top-0 left-0 right-0 z-50">
-        <Navbar onShowLogin={() => {}} />
-      </div>
-      
+    <div className="shop-page vj-scope">
       {mobileFiltersOpen && (
         <button
           type="button"
@@ -264,10 +252,10 @@ const ShopPage = () => {
         />
       )}
 
-      <div className="shop-layout flex flex-1">
+      <div className="shop-layout">
         <div className="shop-sidebar">
-          <Dashbar 
-            onFilterChange={handleFilterChange} 
+          <Dashbar
+            onFilterChange={handleFilterChange}
             userData={userData}
             selectedCategories={filters.current.categories}
             selectedConditions={filters.current.conditions}
@@ -276,23 +264,20 @@ const ShopPage = () => {
             onCloseMobile={() => setMobileFiltersOpen(false)}
           />
         </div>
-        
-        <div 
-          ref={scrollContainerRef}
-          className="shop-main flex-1 overflow-y-auto"
-        >
+
+        <div className="shop-main">
           <div className="shop-catalog-panel">
             <div className="shop-catalog-head">
               <div>
-                <p className="shop-eyebrow">Catalogo</p>
+                <p className="shop-eyebrow">Catálogo</p>
                 <h1 className="shop-title">Tu Tienda de Confianza</h1>
               </div>
               {filters.current.searchTerm ? (
                 <div className="shop-search-state" dir="ltr">
                   <p>
-                    Resultados para: <span className="font-semibold text-orange-600">"{filters.current.searchTerm}"</span>
+                    Resultados para: <span className="shop-accent">"{filters.current.searchTerm}"</span>
                   </p>
-                  <button 
+                  <button
                     onClick={() => handleFilterChange({ searchTerm: '' })}
                     className="shop-clear-search"
                   >
@@ -300,10 +285,10 @@ const ShopPage = () => {
                   </button>
                 </div>
               ) : (
-                <p className="shop-subtitle">Encuentra tecnologia lista para entregar.</p>
+                <p className="shop-subtitle">Encuentra tecnología lista para entregar.</p>
               )}
             </div>
-            
+
             <div className="shop-results-bar">
               <p>
                 {getFilterSummary()}
@@ -313,37 +298,37 @@ const ShopPage = () => {
                 className="shop-mobile-filter-button"
                 onClick={() => setMobileFiltersOpen(true)}
               >
-                <SlidersHorizontal size={18} />
+                <Filter size={16} />
                 <span>Filtros</span>
               </button>
             </div>
-            
+
             {loading && !initialLoadComplete ? (
-              <div className="flex flex-col items-center justify-center py-16">
-                <div className="w-12 h-12 border-4 border-[#FF6B00] border-t-transparent rounded-full animate-spin mb-4"></div>
-                <p className="text-gray-600 font-medium">Cargando productos...</p>
+              <div className="shop-state">
+                <div className="vj-spinner"></div>
+                <p>Cargando productos...</p>
               </div>
             ) : allProducts.length > 0 ? (
               <>
                 <div className="shop-products-grid">
                   {allProducts.map(product => (
-                    <CardItem 
-                      key={product.id} 
-                      product={product} 
+                    <CardItem
+                      key={product.id}
+                      product={product}
                       searchTerm={filters.current.searchTerm}
                       userRole={userData?.rol}
                     />
                   ))}
                 </div>
-                
+
                 {loading && (
-                  <div className="mt-4 text-center">
-                    <div className="w-8 h-8 border-2 border-[#FF6B00] border-t-transparent rounded-full animate-spin mx-auto"></div>
+                  <div className="shop-state shop-state--inline">
+                    <div className="vj-spinner"></div>
                   </div>
                 )}
               </>
             ) : (
-              <div className="col-span-full text-center py-16">
+              <div className="shop-state">
                 <div className="text-gray-400 mb-4">
                   <svg className="w-16 h-16 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.172 16.172a4 4 0 015.656 0M9 12h6m-6-4h6m2 5.291A7.962 7.962 0 0112 15c-2.34 0-4.469-1.009-5.927-2.616M15 17H9v-2h6v2z" />
@@ -359,7 +344,7 @@ const ShopPage = () => {
                 </button>
               </div>
             )}
-            
+
             <div className="shop-back-home">
               <Link to="/">
                 <button>
@@ -370,6 +355,7 @@ const ShopPage = () => {
           </div>
         </div>
       </div>
+      <SiteFooter />
       <ChatWidget />
       <FloatingWhatsAppButton />
     </div>
