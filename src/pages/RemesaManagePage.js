@@ -287,8 +287,8 @@ function RemesaManagePage() {
                 </Form.Item>
               </Col>
               <Col xs={24} sm={12} md={8} lg={4}>
-                <Form.Item name="telefono_destinatario" label="Telefono Cliente">
-                  <Input placeholder="Numero de telefono" />
+                <Form.Item name="telefono_destinatario" label="Teléfono Cliente">
+                  <Input placeholder="Número de teléfono" />
                 </Form.Item>
               </Col>
               <Col xs={24} sm={12} md={8} lg={4}>
@@ -303,7 +303,7 @@ function RemesaManagePage() {
               </Col>
               <Col xs={24} sm={12} md={8} lg={4}>
                 <Form.Item name="direccion" label="Domicilio">
-                  <Input placeholder="Ubicacion" />
+                  <Input placeholder="Ubicación" />
                 </Form.Item>
               </Col>
               <Col xs={24} sm={12} md={8} lg={4}>
@@ -403,7 +403,7 @@ function RemesaManagePage() {
             <Form.Item shouldUpdate noStyle>
               {() =>
                 editForm.getFieldValue('estado') === 'cancelado' ? (
-                  <Form.Item name="motivo_cancelacion" label="Motivo de cancelacion" rules={[{ required: true, message: 'Indique un motivo' }]}>
+                  <Form.Item name="motivo_cancelacion" label="Motivo de cancelación" rules={[{ required: true, message: 'Indique un motivo' }]}>
                     <Input.TextArea rows={2} />
                   </Form.Item>
                 ) : null

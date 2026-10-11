@@ -582,7 +582,7 @@ const AccountingManagerPage = () => {
 
         {/* Modal de confirmacion para desactivar */}
         <Modal
-          title={contabilidadToDeactivate === 'all' ? 'Confirmar desactivacion masiva' : 'Confirmar desactivacion'}
+          title={contabilidadToDeactivate === 'all' ? 'Confirmar desactivación masiva' : 'Confirmar desactivación'}
           open={confirmModalVisible}
           onOk={confirmDeactivate}
           onCancel={cancelDeactivate}
@@ -593,8 +593,8 @@ const AccountingManagerPage = () => {
         >
           <p>
             {contabilidadToDeactivate === 'all'
-              ? 'Esta seguro que desea desactivar todas las contabilidades activas? Esta accion no se puede deshacer.'
-              : 'Esta seguro que desea desactivar esta contabilidad? Esta accion no se puede deshacer.'}
+              ? '¿Está seguro que desea desactivar todas las contabilidades activas? Esta acción no se puede deshacer.'
+              : '¿Está seguro que desea desactivar esta contabilidad? Esta acción no se puede deshacer.'}
           </p>
         </Modal>
       </div>

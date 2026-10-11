@@ -1595,13 +1595,13 @@ const AdminItemPage = () => {
 
               {/* Campo UPC */}
               <TextField
-                label="SKU (C�digo de Barras)"
+                label="SKU (Código de Barras)"
                 name="upc"
                 value={editForm.upc}
                 onChange={handleEditChange}
                 fullWidth
                 margin="normal"
-                placeholder="Ingrese el c�digo SKU"
+                placeholder="Ingrese el código SKU"
                 sx={{
                   '& .MuiOutlinedInput-root': {
                     borderRadius: '12px',
@@ -1808,7 +1808,7 @@ const AdminItemPage = () => {
                     renderValue={(selected) => {
                       const values = Array.isArray(selected) ? selected : selected ? [selected] : [];
                       if (!values.length) {
-                        return 'Selecciona subcategorias';
+                        return 'Selecciona subcategorías';
                       }
                       return values
                         .map((value) => {

@@ -140,7 +140,7 @@ function RemesaHistoryPage() {
       render: (_, record) => (
         <div>
           <div><strong>Nombre:</strong> {record.destinatario || '-'}</div>
-          <div><strong>Telefono:</strong> {record.telefono_destinatario || '-'}</div>
+          <div><strong>Teléfono:</strong> {record.telefono_destinatario || '-'}</div>
           <div><strong>Creador:</strong> {record.creador_nombre || '-'}</div>
           <div><strong>Usuario:</strong> {record.creador_username || '-'}</div>
           <div><strong>Rol:</strong> {record.creador_rol || '-'}</div>
@@ -182,7 +182,7 @@ function RemesaHistoryPage() {
       width: 220,
     },
     {
-      title: 'Motivo Cancelacion',
+      title: 'Motivo Cancelación',
       dataIndex: 'motivo_cancelacion',
       key: 'motivo_cancelacion',
       width: 240,
@@ -211,8 +211,8 @@ function RemesaHistoryPage() {
                 </Form.Item>
               </Col>
               <Col xs={24} sm={12} md={8} lg={4}>
-                <Form.Item name="telefono" label="Telefono Cliente">
-                  <Input placeholder="Numero de telefono" />
+                <Form.Item name="telefono" label="Teléfono Cliente">
+                  <Input placeholder="Número de teléfono" />
                 </Form.Item>
               </Col>
               <Col xs={24} sm={12} md={8} lg={4}>
@@ -225,7 +225,7 @@ function RemesaHistoryPage() {
                 </Form.Item>
               </Col>
               <Col xs={24} sm={12} md={8} lg={4}>
-                <Form.Item name="motivo" label="Motivo Cancelacion">
+                <Form.Item name="motivo" label="Motivo Cancelación">
                   <Input placeholder="Motivo" />
                 </Form.Item>
               </Col>

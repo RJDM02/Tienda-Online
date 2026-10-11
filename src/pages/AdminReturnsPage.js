@@ -145,13 +145,13 @@ const AdminReturnsPage = () => {
       render: (value) => <Text>{value || 'N/A'}</Text>,
     },
     {
-      title: 'Producto / Variacion',
+      title: 'Producto / Variación',
       key: 'producto_variacion',
       width: 260,
       render: (_, record) => (
         <div>
           <div className="font-medium">{record.producto_nombre || 'N/A'}</div>
-          <div className="text-gray-500">{record.variacion_modelo || 'Sin variacion'}</div>
+          <div className="text-gray-500">{record.variacion_modelo || 'Sin variación'}</div>
         </div>
       ),
     },
@@ -186,7 +186,7 @@ const AdminReturnsPage = () => {
       ),
     },
     {
-      title: 'Fecha Devolucion',
+      title: 'Fecha Devolución',
       dataIndex: 'fecha_devolucion',
       key: 'fecha_devolucion',
       width: 180,

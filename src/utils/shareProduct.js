@@ -24,7 +24,7 @@ export const getShareUrl = (productId, referidoId = getReferidoId()) => {
 const formatWarranty = (value) => {
   if (!value) return null;
   const text = String(value).trim();
-  return /^\d+$/.test(text) ? `${text} dias` : text;
+  return /^\d+$/.test(text) ? `${text} días` : text;
 };
 
 const formatGift = (value) => {
@@ -46,9 +46,9 @@ const buildShareText = ({ nombre, condicion, precio, precioAnterior, descripcion
     condicion ? `Condición: ${condicion}` : null,
     precio ? (hasDiscount ? `Precio: $${precio} (antes $${precioAnterior})` : `Precio: $${precio}`) : null,
     shortDescription || null,
-    warranty ? `Garantia: ${warranty}` : null,
+    warranty ? `Garantía: ${warranty}` : null,
     gift ? `Regalo incluido: ${gift}` : null,
-    referidoId ? `Codigo de referido: ${referidoId}` : null,
+    referidoId ? `Código de referido: ${referidoId}` : null,
     shareUrl,
   ].filter(Boolean).join('\n');
 };

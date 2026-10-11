@@ -298,7 +298,7 @@ const AdminPointOfSalePage = () => {
     }
 
     if (transferItems.length === 0) {
-      setError('Agrega al menos un producto o variacion a la transferencia');
+      setError('Agrega al menos un producto o variación a la transferencia');
       return;
     }
 
@@ -582,7 +582,7 @@ const AdminPointOfSalePage = () => {
                   <Inventory2Icon className="text-orange-600" sx={{ fontSize: 20 }} />
                 </div>
                 <div>
-                  <h2 className="text-xl font-bold text-gray-900">Inventario por ubicacion</h2>
+                  <h2 className="text-xl font-bold text-gray-900">Inventario por ubicación</h2>
                   <p className="text-sm text-gray-500">Stock separado entre sede principal y puntos de venta</p>
                 </div>
               </div>
@@ -597,8 +597,8 @@ const AdminPointOfSalePage = () => {
               <table className="min-w-full">
                 <thead className="bg-gray-50 sticky top-0">
                   <tr>
-                    <th className="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase">Producto / Variacion</th>
-                    <th className="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase">Ubicacion</th>
+                    <th className="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase">Producto / Variación</th>
+                    <th className="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase">Ubicación</th>
                     <th className="px-6 py-3 text-right text-xs font-semibold text-gray-600 uppercase">Cantidad</th>
                   </tr>
                 </thead>
@@ -610,7 +610,7 @@ const AdminPointOfSalePage = () => {
                           {row.producto_nombre || row.variacion_modelo}
                         </div>
                         <div className="text-xs text-gray-500">
-                          {row.producto ? `Producto #${row.producto}` : `Variacion #${row.variacion}`}
+                          {row.producto ? `Producto #${row.producto}` : `Variación #${row.variacion}`}
                         </div>
                       </td>
                       <td className="px-6 py-4 text-sm text-gray-700">{row.punto_venta_nombre}</td>
@@ -622,14 +622,14 @@ const AdminPointOfSalePage = () => {
                 </tbody>
               </table>
               {inventario.length === 0 && (
-                <div className="p-10 text-center text-gray-500">No hay inventario por ubicacion registrado</div>
+                <div className="p-10 text-center text-gray-500">No hay inventario por ubicación registrado</div>
               )}
             </div>
           </div>
 
           <div className="bg-white rounded-2xl shadow-lg overflow-hidden">
             <div className="p-6 border-b border-gray-100">
-              <h2 className="text-xl font-bold text-gray-900">Ultimas transferencias</h2>
+              <h2 className="text-xl font-bold text-gray-900">Últimas transferencias</h2>
               <p className="text-sm text-gray-500">Movimientos entre sede y puntos de venta</p>
             </div>
             <div className="divide-y divide-gray-100 max-h-[520px] overflow-y-auto">
@@ -879,13 +879,13 @@ const AdminPointOfSalePage = () => {
               </div>
 
               <TextField
-                label="Buscar producto o variacion"
+                label="Buscar producto o variación"
                 variant="outlined"
                 fullWidth
                 value={transferSearch}
                 onChange={(e) => setTransferSearch(e.target.value)}
                 margin="normal"
-                placeholder="Nombre, modelo, ID o ubicacion"
+                placeholder="Nombre, modelo, ID o ubicación"
                 sx={inputSx}
               />
 
@@ -912,7 +912,7 @@ const AdminPointOfSalePage = () => {
                         <div>
                           <div className="font-medium text-gray-900">{row.producto_nombre || row.variacion_modelo}</div>
                           <div className="text-xs text-gray-500">
-                            {row.producto ? `Producto #${row.producto}` : `Variacion #${row.variacion}`} - {row.punto_venta_nombre}
+                            {row.producto ? `Producto #${row.producto}` : `Variación #${row.variacion}`} - {row.punto_venta_nombre}
                           </div>
                         </div>
                         <div className="flex items-center gap-2">
@@ -941,7 +941,7 @@ const AdminPointOfSalePage = () => {
                       <div>
                         <div className="font-medium text-gray-900">{item.nombre}</div>
                         <div className="text-xs text-gray-500">
-                          {item.tipo === 'producto' ? `Producto #${item.producto}` : `Variacion #${item.variacion}`} - disponible {item.disponible}
+                          {item.tipo === 'producto' ? `Producto #${item.producto}` : `Variación #${item.variacion}`} - disponible {item.disponible}
                         </div>
                       </div>
                       <TextField
@@ -964,7 +964,7 @@ const AdminPointOfSalePage = () => {
                   ))}
                   {transferItems.length === 0 && (
                     <div className="px-4 py-8 text-center text-sm text-gray-500">
-                      Todavia no has agregado productos
+                      Todavía no has agregado productos
                     </div>
                   )}
                 </div>

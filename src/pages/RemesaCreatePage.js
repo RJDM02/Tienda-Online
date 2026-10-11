@@ -295,8 +295,8 @@ function RemesaCreatePage() {
               <Col xs={24} sm={12} md={8} lg={6}>
                 <Form.Item
                   name="telefono_destinatario"
-                  label="Telefono Destinatario"
-                  rules={[{ required: true, message: 'Ingrese el telefono' }]}
+                  label="Teléfono Destinatario"
+                  rules={[{ required: true, message: 'Ingrese el teléfono' }]}
                 >
                   <AutoComplete
                     options={
@@ -317,7 +317,7 @@ function RemesaCreatePage() {
                     onChange={(value) => setTelefonoValue(value || '')}
                   >
                     <Input
-                      placeholder="Numero de telefono"
+                      placeholder="Número de teléfono"
                       onFocus={() => setTelefonoFocused(true)}
                       onBlur={() => {
                         setTimeout(() => setTelefonoFocused(false), 120);
@@ -329,7 +329,7 @@ function RemesaCreatePage() {
               </Col>
 
               <Col xs={24} sm={12} md={8} lg={6}>
-                <Form.Item name="dni" label="DNI/Cedula" rules={[{ required: true, message: 'Ingrese DNI o cedula' }]}>
+                <Form.Item name="dni" label="DNI/Cédula" rules={[{ required: true, message: 'Ingrese DNI o cédula' }]}>
                   <Input placeholder="Documento" />
                 </Form.Item>
               </Col>
@@ -345,8 +345,8 @@ function RemesaCreatePage() {
               </Col>
 
               <Col xs={24} sm={12} md={8} lg={6}>
-                <Form.Item name="direccion" label="Domicilio" rules={[{ required: true, message: 'Ingrese direccion' }]}>
-                  <Input placeholder="Ubicacion" />
+                <Form.Item name="direccion" label="Domicilio" rules={[{ required: true, message: 'Ingrese dirección' }]}>
+                  <Input placeholder="Ubicación" />
                 </Form.Item>
               </Col>
 

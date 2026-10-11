@@ -341,7 +341,7 @@ const ProductView = ({ onShowLogin = () => {} }) => {
   const formatWarrantyDays = (value) => {
     if (!value) return value;
     const text = String(value).trim();
-    return /^\d+$/.test(text) ? `${text} dias` : text;
+    return /^\d+$/.test(text) ? `${text} días` : text;
   };
 
   const getWarrantyAndGiftInfo = () => {

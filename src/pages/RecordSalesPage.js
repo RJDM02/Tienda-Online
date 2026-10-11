@@ -144,12 +144,12 @@ const RecordSalesPage = () => {
   const handleConfirmReturn = async () => {
     const cleanReason = returnReason.trim();
     if (!cleanReason) {
-      setReturnError('Debe escribir el motivo de la devolucion');
+      setReturnError('Debe escribir el motivo de la devolución');
       return;
     }
 
     if (!currentReturnSale) {
-      setReturnError('No se encontro la venta a devolver');
+      setReturnError('No se encontró la venta a devolver');
       return;
     }
 
@@ -170,11 +170,11 @@ const RecordSalesPage = () => {
 
       const payload = await response.json().catch(() => ({}));
       if (!response.ok) {
-        throw new Error(payload.error || payload.message || 'Error al gestionar la devolucion');
+        throw new Error(payload.error || payload.message || 'Error al gestionar la devolución');
       }
 
       setSales((prevSales) => prevSales.filter((sale) => sale.id !== currentReturnSale.id));
-      message.success('Devolucion gestionada correctamente');
+      message.success('Devolución gestionada correctamente');
       closeReturnModal();
     } catch (err) {
       setReturnError(err.message);
@@ -430,7 +430,7 @@ const RecordSalesPage = () => {
             size={isMobile ? 'small' : 'middle'}
             disabled={record.estado !== 'procesado'}
             className="bg-red-600 hover:bg-red-700 text-white border-none shadow-md hover:shadow-lg transition-all duration-300"
-            title="Devolucion"
+            title="Devolución"
           >
             {!isMobile && 'Devolucion'}
           </Button>
@@ -482,7 +482,7 @@ const RecordSalesPage = () => {
               allowClear
             />
             <Input
-              placeholder="Filtrar por telefono"
+              placeholder="Filtrar por teléfono"
               value={filters.telefono}
               onChange={(e) => handleFilterChange('telefono', e.target.value)}
               allowClear
@@ -712,7 +712,7 @@ const RecordSalesPage = () => {
         </Modal>
 
         <Modal
-          title={`Gestionar Devolucion - Venta #${currentReturnSale?.id || ''}`}
+          title={`Gestionar Devolución - Venta #${currentReturnSale?.id || ''}`}
           visible={returnModalVisible}
           onCancel={closeReturnModal}
           footer={[
@@ -726,7 +726,7 @@ const RecordSalesPage = () => {
               loading={returnLoading}
               onClick={handleConfirmReturn}
             >
-              Confirmar Devolucion
+              Confirmar Devolución
             </Button>,
           ]}
         >
@@ -746,13 +746,13 @@ const RecordSalesPage = () => {
             </div>
             {currentReturnSale?.variacion?.modelo && (
               <div className="text-sm text-gray-700">
-                <strong>Variacion:</strong> {currentReturnSale.variacion.modelo}
+                <strong>Variación:</strong> {currentReturnSale.variacion.modelo}
               </div>
             )}
             <Input.TextArea
               value={returnReason}
               onChange={(e) => setReturnReason(e.target.value)}
-              placeholder="Escriba el motivo de la devolucion"
+              placeholder="Escriba el motivo de la devolución"
               rows={4}
               maxLength={500}
               showCount

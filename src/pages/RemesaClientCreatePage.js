@@ -66,19 +66,19 @@ function RemesaClientCreatePage() {
               </Col>
 
               <Col xs={24} sm={12} md={8} lg={6}>
-                <Form.Item name="telefono" label="Telefono" rules={[{ required: true, message: 'Ingrese el telefono' }]}>
-                  <Input placeholder="Numero de telefono" />
+                <Form.Item name="telefono" label="Teléfono" rules={[{ required: true, message: 'Ingrese el teléfono' }]}>
+                  <Input placeholder="Número de teléfono" />
                 </Form.Item>
               </Col>
 
               <Col xs={24} sm={12} md={8} lg={6}>
-                <Form.Item name="direccion" label="Direccion" rules={[{ required: true, message: 'Ingrese la direccion' }]}>
-                  <Input placeholder="Direccion" />
+                <Form.Item name="direccion" label="Dirección" rules={[{ required: true, message: 'Ingrese la dirección' }]}>
+                  <Input placeholder="Dirección" />
                 </Form.Item>
               </Col>
 
               <Col xs={24} sm={12} md={8} lg={6}>
-                <Form.Item name="dni" label="DNI/Cedula" rules={[{ required: true, message: 'Ingrese el DNI' }]}>
+                <Form.Item name="dni" label="DNI/Cédula" rules={[{ required: true, message: 'Ingrese el DNI' }]}>
                   <Input placeholder="Documento de identidad" />
                 </Form.Item>
               </Col>
@@ -92,13 +92,13 @@ function RemesaClientCreatePage() {
               <Col xs={24} sm={12} md={8} lg={6}>
                 <Form.Item
                   name="password"
-                  label="Contrasena"
+                  label="Contraseña"
                   rules={[
-                    { required: true, message: 'Ingrese la contrasena' },
-                    { min: 8, message: 'Minimo 8 caracteres' },
+                    { required: true, message: 'Ingrese la contraseña' },
+                    { min: 8, message: 'Mínimo 8 caracteres' },
                   ]}
                 >
-                  <Input.Password placeholder="Contrasena" />
+                  <Input.Password placeholder="Contraseña" />
                 </Form.Item>
               </Col>
             </Row>

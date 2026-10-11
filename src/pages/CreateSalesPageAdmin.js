@@ -559,7 +559,7 @@ const CreateAdminSalesPage = () => {
                     </Typography>
                   </Box>
                 ) : (
-                  success ? 'Venta Registrada!' : 'Registrar Venta'
+                  success ? '¡Venta Registrada!' : 'Registrar Venta'
                 )}
               </Button>
 

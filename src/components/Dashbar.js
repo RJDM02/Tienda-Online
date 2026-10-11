@@ -565,7 +565,7 @@ const Dashbar = ({ onFilterChange, userData, onEditProfile, selectedCategories =
                                 {categoryImageUrl && (
                                   <img
                                     src={categoryImageUrl}
-                                    alt={`Categoria ${category.nombre}`}
+                                    alt={`Categoría ${category.nombre}`}
                                     onError={(e) => {
                                       e.currentTarget.style.display = 'none';
                                       const fallback = e.currentTarget.nextElementSibling;

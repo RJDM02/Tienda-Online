@@ -234,7 +234,7 @@ const CreateWorkerPage = () => {
           {/* Campo de Teléfono */}
           <div className="space-y-2">
             <label className="text-sm font-medium text-gray-700 block">
-              Ubicacion</label>
+              Ubicación</label>
             <div className="relative">
               <input
                 type="text"
@@ -242,14 +242,14 @@ const CreateWorkerPage = () => {
                 value={formData.ubicacion}
                 onChange={handleChange}
                 className="w-full pl-4 pr-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#FF6B00] focus:border-transparent transition-all duration-200 bg-gray-50 focus:bg-white"
-                placeholder="Zona o funcion para agrupar"
+                placeholder="Zona o función para agrupar"
               />
             </div>
           </div>
 
           <div className="space-y-2">
             <label className="text-sm font-medium text-gray-700 block">
-              Telefono
+              Teléfono
             </label>
             <div className="relative">
               <input

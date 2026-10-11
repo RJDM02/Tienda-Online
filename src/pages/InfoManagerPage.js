@@ -127,7 +127,7 @@ const InfoManagerPage = () => {
     <div className="min-h-screen bg-gray-100 py-10 px-4">
       <div className="max-w-6xl mx-auto space-y-8">
         <header className="bg-white rounded-2xl shadow-sm p-6 border border-gray-100">
-          <h1 className="text-3xl font-bold text-gray-900">Informacion para Gestores</h1>
+          <h1 className="text-3xl font-bold text-gray-900">Información para Gestores</h1>
           <p className="text-gray-600 mt-2">
             Consulta rápidamente las divisas disponibles y las opciones de domicilio vigentes.
           </p>
@@ -166,7 +166,7 @@ const InfoManagerPage = () => {
               onClick={activeTab === 'divisas' ? fetchDivisas : fetchDomicilios}
               className="text-sm font-medium text-blue-600 hover:text-blue-700 transition-colors"
             >
-              Actualizar informacion
+              Actualizar información
             </button>
           </div>
 
@@ -174,7 +174,7 @@ const InfoManagerPage = () => {
             {isLoading ? (
               <div className="flex flex-col items-center justify-center py-16 text-gray-500">
                 <div className="w-12 h-12 border-4 border-gray-200 border-t-blue-500 rounded-full animate-spin mb-4"></div>
-                <p className="text-sm font-medium">Cargando informacion...</p>
+                <p className="text-sm font-medium">Cargando información...</p>
               </div>
             ) : activeTab === 'divisas' ? (
               <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
@@ -225,7 +225,7 @@ const InfoManagerPage = () => {
                         </div>
                         <div>
                           <p className="text-lg font-semibold text-gray-900">
-                            {domicilio.ubicacion || 'Ubicacion no especificada'}
+                            {domicilio.ubicacion || 'Ubicación no especificada'}
                           </p>
                           <p className="text-sm text-gray-500">
                             Identificador: {domicilio.id || 'N/D'}

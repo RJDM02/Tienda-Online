@@ -129,14 +129,14 @@ const MessengerListPage = () => {
           regalo_nombre: item.producto?.regalo_nombre || null
         },
         variacion: item.variacion ? {
-          nombre: item.variacion.item_info?.nombre || 'Sin variaci�n',
+          nombre: item.variacion.item_info?.nombre || 'Sin variación',
           color: item.variacion.item_info?.color || 'Sin color',
           modelo: item.variacion.item_info?.modelo || 'Sin modelo'
         } : null,
         precio: item.costo_post_descuento || '0.00',
         moneda: item.moneda?.nombre || 'No especificada',
         domicilio: {
-          ubicacion: item.domicilio?.ubicacion || 'Ubicaci�n no especificada',
+          ubicacion: item.domicilio?.ubicacion || 'Ubicación no especificada',
           precio: item.domicilio?.precio || '0.00'
         },
         nota: item.nota || '',
@@ -239,7 +239,7 @@ const MessengerListPage = () => {
   const handlePerformDelivery = async (deliveryId) => {
     const token = localStorage.getItem('authToken');
     if (!token) {
-      setError('Debes iniciar sesiA3n nuevamente.');
+      setError('Debes iniciar sesión nuevamente.');
       navigate('/login');
       return;
     }
@@ -257,7 +257,7 @@ const MessengerListPage = () => {
       });
 
       if (!response.ok) {
-        let message = 'No se pudo actualizar la mensajerA-a.';
+        let message = 'No se pudo actualizar la mensajería.';
         try {
           const errorData = await response.json();
           if (typeof errorData === 'string') {
@@ -268,7 +268,7 @@ const MessengerListPage = () => {
             message = errorData.message;
           }
         } catch (parseError) {
-          // Ignorar errores de parseo y usar el mensaje genA3rico
+          // Ignorar errores de parseo y usar el mensaje genérico
         }
         throw new Error(message);
       }
@@ -291,7 +291,7 @@ const MessengerListPage = () => {
         setSuccess(null);
       }
     } catch (err) {
-      setError(err.message || 'OcurriA3 un error al actualizar la mensajerA-a.');
+      setError(err.message || 'Ocurrió un error al actualizar la mensajería.');
     } finally {
       setActionLoadingId(null);
     }
@@ -623,7 +623,7 @@ const MessengerListPage = () => {
                                     transition: 'all 0.2s ease-in-out',
                                   }}
                                 >
-                                  {actionLoadingId === primaryDeliveryId ? 'Procesando...' : 'Realizar mensajeria'}
+                                  {actionLoadingId === primaryDeliveryId ? 'Procesando...' : 'Realizar mensajería'}
                                 </Button>
                               )}
                               <div className={`px-3 py-1 rounded-lg border text-sm font-medium flex items-center space-x-2 ${statusConfig.color}`}>

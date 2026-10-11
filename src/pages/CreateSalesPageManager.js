@@ -522,7 +522,7 @@ const CreateSalesPageManager = () => {
                     </Typography>
                   </Box>
                 ) : (
-                  success ? 'Venta Exitosa!' : 'Confirmar Venta'
+                  success ? '¡Venta Exitosa!' : 'Confirmar Venta'
                 )}
               </Button>
 

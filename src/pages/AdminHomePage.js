@@ -46,37 +46,37 @@ const emptyHomeForm = {
 
 const textFields = [
   ['hero_eyebrow', 'Eyebrow del hero'],
-  ['hero_title', 'Titulo principal'],
-  ['hero_title_highlight', 'Titulo resaltado'],
+  ['hero_title', 'Título principal'],
+  ['hero_title_highlight', 'Título resaltado'],
   ['hero_subtitle', 'Subtitulo del hero', 'textarea'],
-  ['hero_primary_button_text', 'Texto boton principal'],
-  ['hero_primary_button_url', 'URL boton principal'],
-  ['hero_secondary_button_text', 'Texto boton secundario'],
-  ['hero_secondary_button_url', 'URL boton secundario'],
+  ['hero_primary_button_text', 'Texto botón principal'],
+  ['hero_primary_button_url', 'URL botón principal'],
+  ['hero_secondary_button_text', 'Texto botón secundario'],
+  ['hero_secondary_button_url', 'URL botón secundario'],
   ['spotlight_status', 'Estado tarjeta hero'],
   ['spotlight_price', 'Precio tarjeta hero'],
   ['spotlight_text', 'Texto tarjeta hero'],
   ['products_eyebrow', 'Eyebrow productos vendidos'],
-  ['products_title', 'Titulo productos vendidos'],
+  ['products_title', 'Título productos vendidos'],
   ['products_link_text', 'Texto enlace tienda'],
   ['products_link_url', 'URL enlace tienda'],
   ['advantages_eyebrow', 'Eyebrow ventajas'],
-  ['advantages_title', 'Titulo ventajas'],
+  ['advantages_title', 'Título ventajas'],
   ['new_eyebrow', 'Eyebrow recientes'],
-  ['new_title', 'Titulo recientes'],
+  ['new_title', 'Título recientes'],
   ['new_meta', 'Meta recientes'],
   ['faq_eyebrow', 'Eyebrow FAQ'],
-  ['faq_title', 'Titulo FAQ'],
+  ['faq_title', 'Título FAQ'],
   ['faq_intro', 'Intro FAQ', 'textarea'],
   ['footer_logo', 'Logo footer'],
   ['footer_copy', 'Texto footer', 'textarea'],
   ['footer_hours_label', 'Label horario'],
-  ['footer_hours_days', 'Dias horario'],
+  ['footer_hours_days', 'Días horario'],
   ['footer_hours_value', 'Horas horario'],
   ['footer_bottom_text', 'Texto legal footer'],
-  ['terms_title', 'Titulo terminos'],
-  ['terms_content', 'Contenido terminos', 'textarea'],
-  ['conditions_title', 'Titulo condiciones'],
+  ['terms_title', 'Título términos'],
+  ['terms_content', 'Contenido términos', 'textarea'],
+  ['conditions_title', 'Título condiciones'],
   ['conditions_content', 'Contenido condiciones', 'textarea'],
 ];
 
@@ -164,7 +164,7 @@ const AdminHomePage = () => {
   };
 
   const deleteHeroImage = async (id) => {
-    if (!window.confirm('Estas seguro de eliminar esta imagen?')) return;
+    if (!window.confirm('¿Estás seguro de eliminar esta imagen?')) return;
 
     try {
       const response = await fetch(`${API_URL}/eliminar_actualizar_herocarusel/${id}/`, {
@@ -182,7 +182,7 @@ const AdminHomePage = () => {
   };
 
   const deletePlaceImage = async (id) => {
-    if (!window.confirm('Estas seguro de eliminar esta imagen?')) return;
+    if (!window.confirm('¿Estás seguro de eliminar esta imagen?')) return;
 
     try {
       const response = await fetch(`${API_URL}/eliminar_actualizar_placecarusel/${id}/`, {
@@ -279,13 +279,13 @@ const AdminHomePage = () => {
           <input
             value={item.titulo || ''}
             onChange={(event) => updateArrayValue('advantages', index, { ...item, titulo: event.target.value })}
-            placeholder="Titulo"
+            placeholder="Título"
             className="border border-gray-300 rounded-lg px-3 py-2"
           />
           <textarea
             value={item.descripcion || ''}
             onChange={(event) => updateArrayValue('advantages', index, { ...item, descripcion: event.target.value })}
-            placeholder="Descripcion"
+            placeholder="Descripción"
             rows="2"
             className="md:col-span-2 border border-gray-300 rounded-lg px-3 py-2"
           />
@@ -387,7 +387,7 @@ const AdminHomePage = () => {
           </span>
           {title}
           <span className="ml-auto bg-gray-100 text-gray-600 px-3 py-1 rounded-full text-sm">
-            {(images || []).length} imagenes
+            {(images || []).length} imágenes
           </span>
         </h2>
       </div>
@@ -442,8 +442,8 @@ const AdminHomePage = () => {
       <div className="container mx-auto px-4 py-8">
         <div className="mb-8 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
           <div>
-            <h1 className="text-3xl font-bold text-gray-900 mb-2">Administrar Pagina de Inicio</h1>
-            <p className="text-gray-600">Gestiona textos, terminos, preguntas, footer e imagenes del home.</p>
+            <h1 className="text-3xl font-bold text-gray-900 mb-2">Administrar Página de Inicio</h1>
+            <p className="text-gray-600">Gestiona textos, términos, preguntas, footer e imágenes del home.</p>
           </div>
           <button
             type="button"

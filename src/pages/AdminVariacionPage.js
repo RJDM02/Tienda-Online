@@ -380,7 +380,7 @@ const AdminVariacionPage = () => {
                       Modelo
                     </th>
                     <th className="px-6 py-4 text-left text-sm font-semibold text-gray-700 uppercase tracking-wider">
-                      Ubicacion
+                      Ubicación
                     </th>
                     <th className="px-6 py-4 text-left text-sm font-semibold text-gray-700 uppercase tracking-wider">
                       Punto de Venta
@@ -739,7 +739,7 @@ const AdminVariacionPage = () => {
               />
 
               <TextField
-                label="Ubicacion"
+                label="Ubicación"
                 name="ubicacion"
                 value={editFormData.ubicacion}
                 onChange={handleEditChange}
@@ -794,13 +794,13 @@ const AdminVariacionPage = () => {
 
               {/* Campo UPC */}
               <TextField
-                label="SKU (C�digo de Barras)"
+                label="SKU (Código de Barras)"
                 name="upc"
                 value={editFormData.upc}
                 onChange={handleEditChange}
                 fullWidth
                 margin="normal"
-                placeholder="Ingrese el c�digo SKU"
+                placeholder="Ingrese el código SKU"
                 sx={{
                   '& .MuiOutlinedInput-root': {
                     borderRadius: '12px',

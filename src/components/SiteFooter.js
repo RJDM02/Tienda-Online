@@ -17,7 +17,7 @@ const DEFAULT_LINKS = [
   { texto: 'Ir a la tienda', url: '/shop' },
   { texto: 'Destacados', url: '/#productos' },
   { texto: 'Ventajas', url: '/#ventajas' },
-  { texto: 'Recién llegado', url: '/#nuevos' },
+  { texto: 'Recién llegados', url: '/#nuevos' },
 ];
 
 const FooterLink = ({ url, children }) => {

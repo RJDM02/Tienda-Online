@@ -372,7 +372,7 @@ const CreateVariacionPage = () => {
                 />
 
                 <TextField
-                  label="Ubicacion"
+                  label="Ubicación"
                   variant="outlined"
                   fullWidth
                   name="ubicacion"

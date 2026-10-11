@@ -336,7 +336,7 @@ const AdminWorkerPage = () => {
                       Rol
                     </th>
                     <th className="px-6 py-4 text-left text-sm font-semibold text-gray-700 uppercase tracking-wider">
-                      Ubicacion
+                      Ubicación
                     </th>
                     <th className="px-6 py-4 text-left text-sm font-semibold text-gray-700 uppercase tracking-wider">
                       Teléfono
@@ -538,7 +538,7 @@ const AdminWorkerPage = () => {
               />
 
               <TextField
-                label="Ubicacion"
+                label="Ubicación"
                 variant="outlined"
                 fullWidth
                 value={editForm.ubicacion}
@@ -561,7 +561,7 @@ const AdminWorkerPage = () => {
               />
 
               <TextField
-                label="Telefono"
+                label="Teléfono"
                 variant="outlined"
                 fullWidth
                 value={editForm.telefono}

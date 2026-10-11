@@ -253,7 +253,7 @@ const SalesManagerPage = () => {
     );
     const precioGestor = toNumber(pedido.precio_gestor);
     const gananciaTotal = calcularGananciaTotal(pedido);
-    const currencyName = pedido.moneda?.nombre || 'Dolares (USD)';
+    const currencyName = pedido.moneda?.nombre || 'Dólares (USD)';
 
     return (
       <>

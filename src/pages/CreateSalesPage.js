@@ -183,7 +183,7 @@ const CreateSalesPage = () => {
       if (isManager || !currentUser) {
         const phoneValue = formData.clientPhone.trim();
         if (!/^[0-9]+$/.test(phoneValue)) {
-          setPhoneError('El telefono solo permite numeros');
+          setPhoneError('El teléfono solo permite números');
           setSubmitting(false);
           return;
         }
@@ -206,7 +206,7 @@ const CreateSalesPage = () => {
       if (maxUsablePoints === 0) {
         puntosRedimidos = 0;
       } else if (puntosRedimidos > maxUsablePoints) {
-        setError(`No puedes usar mas de ${maxUsablePoints} puntos en esta compra.`);
+        setError(`No puedes usar más de ${maxUsablePoints} puntos en esta compra.`);
         setSubmitting(false);
         return;
       }
@@ -333,7 +333,7 @@ const CreateSalesPage = () => {
 
     if (name === 'clientPhone') {
       const digitsOnly = /^[0-9]*$/;
-      setPhoneError(digitsOnly.test(value) ? '' : 'El telefono solo permite numeros');
+      setPhoneError(digitsOnly.test(value) ? '' : 'El teléfono solo permite números');
       setFormData(prev => ({ ...prev, clientPhone: value }));
       return;
     }
@@ -403,7 +403,7 @@ const CreateSalesPage = () => {
                   <Grid item xs={12} sm={6}>
                     <TextField
                       fullWidth
-                      label="Telefono"
+                      label="Teléfono"
                       name="clientPhone"
                       value={formData.clientPhone}
                       onChange={handleChange}
@@ -533,7 +533,7 @@ const CreateSalesPage = () => {
                     ? (availablePoints >= POINTS_THRESHOLD
                       ? `Tienes ${availablePoints.toLocaleString('es-ES')} puntos disponibles para usar.`
                       : `Tienes ${availablePoints.toLocaleString('es-ES')} puntos disponibles. Necesitas al menos ${POINTS_THRESHOLD.toLocaleString('es-ES')} puntos para canjear.`)
-                    : 'Inicia sesion para acumular y canjear puntos.'}
+                    : 'Inicia sesión para acumular y canjear puntos.'}
                 </Typography>
                 <TextField
                   fullWidth
@@ -547,14 +547,14 @@ const CreateSalesPage = () => {
                   sx={styles.textField}
                   helperText={
                     !currentUser
-                      ? 'Este campo se habilita al iniciar sesion.'
+                      ? 'Este campo se habilita al iniciar sesión.'
                       : availablePoints < POINTS_THRESHOLD
                         ? `Necesitas al menos ${POINTS_THRESHOLD.toLocaleString('es-ES')} puntos para canjear.`
                         : `Puedes usar hasta ${availablePoints.toLocaleString('es-ES')} puntos en esta compra.`
                   }
                 />
                 <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mt: 1 }}>
-                  Nota: 100 puntos equivalen a 1 USD de descuento (convertido segun la moneda seleccionada). Minimo para canjear: {POINTS_THRESHOLD.toLocaleString('es-ES')} puntos.
+                  Nota: 100 puntos equivalen a 1 USD de descuento (convertido según la moneda seleccionada). Mínimo para canjear: {POINTS_THRESHOLD.toLocaleString('es-ES')} puntos.
                 </Typography>
               </Box>
 
@@ -573,10 +573,10 @@ const CreateSalesPage = () => {
                   sx={styles.textField}
                   helperText={
                     !currentUser
-                      ? 'Inicia sesion para usar tus cupones.'
+                      ? 'Inicia sesión para usar tus cupones.'
                       : isManager
                         ? 'Los cupones se aplican solo en compras de cliente.'
-                        : 'Opcional. Si tienes un cupon, escríbelo aquí.'
+                        : 'Opcional. Si tienes un cupón, escríbelo aquí.'
                   }
                 />
               </Box>
@@ -674,7 +674,7 @@ const CreateSalesPage = () => {
                     </Typography>
                   </Box>
                 ) : (
-                  success ? 'Compra Exitosa!' : 'Confirmar Compra'
+                  success ? '¡Compra Exitosa!' : 'Confirmar Compra'
                 )}
               </Button>
 

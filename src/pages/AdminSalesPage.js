@@ -339,7 +339,7 @@ const AdminSalesPage = () => {
               <div><strong>Nombre:</strong> {record.producto.nombre}</div>
               <div><strong>Precio:</strong> {record.producto.precio_post_descuento}</div>
               <div><strong>Precio Gestor:</strong> {record.precio_gestor || 0}</div>
-              <div><strong>Ubicacion:</strong> {record.producto.ubicacion || 'N/A'}</div>
+              <div><strong>Ubicación:</strong> {record.producto.ubicacion || 'N/A'}</div>
             </>
           ) : (
             <>
@@ -348,7 +348,7 @@ const AdminSalesPage = () => {
               <div><strong>Modelo:</strong> {record.variacion.modelo}</div>
               <div><strong>Precio:</strong> {record.variacion.precio_post_descuento}</div>
               <div><strong>Precio Gestor:</strong> {record.precio_gestor || 0}</div> 
-              <div><strong>Ubicacion:</strong> {record.variacion.ubicacion || record.variacion.item_info?.ubicacion || 'N/A'}</div>
+              <div><strong>Ubicación:</strong> {record.variacion.ubicacion || record.variacion.item_info?.ubicacion || 'N/A'}</div>
             </>
           )}
         </div>
@@ -389,7 +389,7 @@ const AdminSalesPage = () => {
               <div><strong>Teléfono:</strong> {record.telefono_cliente}</div>
               <div><strong>Gestor:</strong> {record.gestor.nombre} ({record.gestor.username})</div>
               <div><strong>Teléfono Gestor:</strong> {record.gestor.telefono}</div>
-              <div><strong>Garantia:</strong> {record.detalle_garantia_gestor ? record.detalle_garantia_gestor.nombre : "sin garantia de gestor"}</div>
+              <div><strong>Garantía:</strong> {record.detalle_garantia_gestor ? record.detalle_garantia_gestor.nombre : "sin garantía de gestor"}</div>
             </>
           ) : (
             <>
@@ -435,7 +435,7 @@ const AdminSalesPage = () => {
       render: (_, record) => (
         <div>
           <div><strong>Nombre:</strong> {record.mensajero?.nombre || 'Sin asignar'}</div>
-          <div><strong>Ubicacion:</strong> {record.mensajero?.ubicacion || 'N/A'}</div>
+          <div><strong>Ubicación:</strong> {record.mensajero?.ubicacion || 'N/A'}</div>
         </div>
       ),
       width: 180,
@@ -676,7 +676,7 @@ const AdminSalesPage = () => {
                     <div><strong>Nombre:</strong> {saleDetails.gestor.nombre}</div>
                     <div><strong>Usuario:</strong> {saleDetails.gestor.username}</div>
                     <div><strong>Teléfono:</strong> {saleDetails.gestor.telefono}</div>
-                    <div><strong>Garantia:</strong> {saleDetails.gestor.detalle_garantia_gestor ? saleDetails.gestor.detalle_garantia_gestor.nombre : "sin garantia de gestor"}</div>
+                    <div><strong>Garantía:</strong> {saleDetails.gestor.detalle_garantia_gestor ? saleDetails.gestor.detalle_garantia_gestor.nombre : "sin garantía de gestor"}</div>
                   </div>
                 </Descriptions.Item>
               )}

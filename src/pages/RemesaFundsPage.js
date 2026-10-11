@@ -40,7 +40,7 @@ function RemesaFundsPage() {
 
   const depositar = async () => {
     if (!monto || Number(monto) <= 0) {
-      message.warning('Ingrese un monto valido para depositar');
+      message.warning('Ingrese un monto válido para depositar');
       return;
     }
 
@@ -60,7 +60,7 @@ function RemesaFundsPage() {
         throw new Error(data?.detail || JSON.stringify(data) || 'No se pudo depositar');
       }
 
-      message.success(data?.mensaje || 'Deposito aplicado');
+      message.success(data?.mensaje || 'Depósito aplicado');
       setMonto(null);
       await loadFondo();
     } catch (error) {
@@ -104,7 +104,7 @@ function RemesaFundsPage() {
             Fondo de Remesas
           </Typography.Title>
           <Typography.Text type="secondary">
-            Gestiona el saldo y deposita nuevo fondo con la misma linea visual del panel.
+            Gestiona el saldo y deposita nuevo fondo con la misma línea visual del panel.
           </Typography.Text>
 
           <Row gutter={[16, 16]} style={{ marginTop: 20 }}>
@@ -112,7 +112,7 @@ function RemesaFundsPage() {
               <Card style={{ borderRadius: 14, background: '#fafafa', borderColor: '#e5e7eb' }}>
                 <Statistic title="Saldo Actual" value={Number(fondo?.monto || 0)} precision={2} />
                 <Typography.Text type="secondary">
-                  Ultima renovacion: {fondo?.ultima_renovacion ? new Date(fondo.ultima_renovacion).toLocaleString() : '-'}
+                  Última renovación: {fondo?.ultima_renovacion ? new Date(fondo.ultima_renovacion).toLocaleString() : '-'}
                 </Typography.Text>
               </Card>
             </Col>
@@ -157,7 +157,7 @@ function RemesaFundsPage() {
             columns={depositColumns}
             bordered
             pagination={{ showSizeChanger: true }}
-            title={() => 'Historial de Depositos'}
+            title={() => 'Historial de Depósitos'}
           />
         </div>
       </div>

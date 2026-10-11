@@ -28,23 +28,23 @@ const fallbackHomeData = {
   hero_eyebrow: 'Envío garantizado a toda La Habana',
   hero_title: 'Tecnología real,',
   hero_title_highlight: 'entregada rápido.',
-  hero_subtitle: 'La mayor variedad en Cuba. Laptops, tablets, lámparas LED, bocinas JBL, almacenamiento y todos los accesorios tecnológicos que necesitas, probados y listos para llevar.',
+  hero_subtitle: 'La mayor variedad en Cuba. Laptops, tablets, lámparas LED, bocinas JBL, almacenamiento y todos los accesorios tecnológicos que necesita, probados y listos para llevar.',
   hero_primary_button_text: 'Empiece su compra',
   hero_primary_button_url: '/shop',
   hero_secondary_button_text: 'Ver lo nuevo esta semana',
   hero_secondary_button_url: '#nuevos',
-  spotlight_status: 'En Stock',
+  spotlight_status: 'En stock',
   spotlight_price: 'Listo para entregar',
   spotlight_text: 'Consolas, laptops y periféricos',
   ticker_items: [
     'Garantía real en cada equipo',
-    'Entrega Directa a Domicilio',
-    'Pago contra Entrega',
-    'Cupones de descuentos y sistema de puntos',
+    'Entrega directa a domicilio',
+    'Pago contra entrega',
+    'Cupones de descuento y sistema de puntos',
     'Productos nuevos cada semana',
     'Soporte por WhatsApp',
   ],
-  products_eyebrow: 'Selección Destacada',
+  products_eyebrow: 'Selección destacada',
   products_title: 'Los favoritos de la casa',
   products_link_text: 'Explorar todos',
   products_link_url: '/shop',
@@ -67,7 +67,7 @@ const fallbackHomeData = {
       descripcion: 'Acumule beneficios por sus compras habituales y aproveche recompensas exclusivas y descuentos en sus próximos pedidos.',
     },
   ],
-  new_eyebrow: 'Recién Llegados',
+  new_eyebrow: 'Recién llegados',
   new_title: 'Nuevo esta semana',
   new_meta: 'Ver novedades',
   faq_eyebrow: 'Soporte al cliente',
@@ -243,7 +243,7 @@ const HomePage = () => {
               {spotlightProduct.imagen && <img src={spotlightProduct.imagen} alt="" />}
               <span>
                 <b>{spotlightProduct.nombre}</b>
-                <em>{homeData.spotlight_status} • {homeData.spotlight_price}</em>
+                <em>{homeData.spotlight_status} • ${Number(spotlightProduct.precio_post_descuento || spotlightProduct.precio || 0).toFixed(2)} USD</em>
               </span>
             </Link>
           ) : (

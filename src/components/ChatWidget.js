@@ -96,8 +96,8 @@ const ChatWidget = () => {
           metadata: { language: locale },
           initialMessages: [],
           i18n: {
-            en: { title: 'Soy VJH bot', subtitle: 'en que puedo ayudarte?' },
-            es: { title: 'Asistente', subtitle: 'En que podemos ayudarte?' }
+            en: { title: 'Soy VJH bot', subtitle: '¿En qué puedo ayudarte?' },
+            es: { title: 'Asistente', subtitle: '¿En qué podemos ayudarte?' }
           }
         });
 
