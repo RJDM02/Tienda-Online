@@ -1,6 +1,7 @@
 import { apiFetch as fetch } from '../auth/session';
-import { useState, useEffect, useCallback, useRef } from 'react';
-import { useLocation, useNavigate, Link } from 'react-router-dom';
+import { useState, useEffect, useLayoutEffect, useCallback, useMemo, useRef } from 'react';
+import { useLocation, useNavigate, useNavigationType, Link } from 'react-router-dom';
+import { useSessionSnapshot } from '../auth/useSessionSnapshot';
 import { Filter } from 'lucide-react';
 import Dashbar from '../components/Dashbar';
 import CardItem from '../components/CardItem';
@@ -12,58 +13,133 @@ import '../styles/vjh-theme.css';
 import './ShopPage.css';
 
 import { API_URL } from '../config/apiConfig';
+
+// Keep a bounded history in this tab; a new catalog visit still fetches fresh data.
+const catalogHistory = new Map();
+
+function readFilters(search) {
+  const params = new URLSearchParams(search);
+  const list = name => params.get(name)?.split(',').filter(Boolean) || [];
+  const price = (name, fallback) => {
+    const value = params.get(name);
+    return value !== null && value !== '' && Number.isFinite(Number(value))
+      ? Number(value) : fallback;
+  };
+  return {
+    searchTerm: params.get('search') || '',
+    categories: list('categories'),
+    subcategories: list('subcategories'),
+    conditions: list('conditions'),
+    priceRange: [price('min', 0), price('max', 9999)]
+  };
+}
+
 const ShopPage = () => {
   const location = useLocation();
-  const navigate = useNavigate();
-  const [allProducts, setAllProducts] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [initialLoadComplete, setInitialLoadComplete] = useState(false);
-  const [nextPageUrl, setNextPageUrl] = useState(null);
-  const [hasMore, setHasMore] = useState(true);
-  const [categoriesData, setCategoriesData] = useState([]);
-  const [userData, setUserData] = useState(null);
-  const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false);
-  const filters = useRef({
-    subcategories: [],
-    priceRange: [0, 9999],
-    searchTerm: '',
-    categories: [],
-    conditions: []
-  });
-  const isLoadingMore = useRef(false);
-
-  const getCurrentUser = useCallback(() => {
+  const navigationType = useNavigationType();
+  const sessionSnapshot = useSessionSnapshot();
+  const userData = useMemo(() => {
     try {
       const token = localStorage.getItem('authToken');
       if (!token) return null;
-      const decoded = jwtDecode(token);
-      setUserData(decoded);
-      return decoded;
-    } catch (error) {
-      console.error('Error decoding token:', error);
+      return sessionSnapshot ? JSON.parse(sessionSnapshot) : jwtDecode(token);
+    } catch {
       return null;
     }
-  }, []);
+  }, [sessionSnapshot]);
+  const historyKey = JSON.stringify([
+    location.key, location.search, userData?.user_id, userData?.rol,
+    userData?.punto_venta_id, userData?.auth_session
+  ]);
+
+  return <ShopCatalog key={historyKey} historyKey={historyKey}
+    restore={navigationType === 'POP'} userData={userData} />;
+};
+
+const ShopCatalog = ({ historyKey, restore, userData }) => {
+  const location = useLocation();
+  const navigate = useNavigate();
+  const [saved] = useState(() => restore ? catalogHistory.get(historyKey) : null);
+  const [allProducts, setAllProducts] = useState(saved?.products || []);
+  const [loading, setLoading] = useState(!saved);
+  const [initialLoadComplete, setInitialLoadComplete] = useState(!!saved);
+  const [nextPageUrl, setNextPageUrl] = useState(saved?.nextPageUrl || null);
+  const [hasMore, setHasMore] = useState(saved ? saved.hasMore : true);
+  const [categoriesData, setCategoriesData] = useState(saved?.categories || []);
+  const [categoriesLoaded, setCategoriesLoaded] = useState(!!saved);
+  const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false);
+  const filters = useRef(readFilters(location.search));
+  const isLoadingMore = useRef(false);
+  const mounted = useRef(true);
+  const requests = useRef(new Set());
+  const restoring = useRef(true);
+  const snapshot = useRef({ scrollY: saved?.scrollY || 0 });
+
+  useLayoutEffect(() => {
+    snapshot.current = {
+      ...snapshot.current, products: allProducts, nextPageUrl, hasMore,
+      categories: categoriesData, complete: initialLoadComplete
+    };
+  }, [allProducts, nextPageUrl, hasMore, categoriesData, initialLoadComplete]);
+
+  useLayoutEffect(() => {
+    const previousRestoration = window.history.scrollRestoration;
+    window.history.scrollRestoration = 'manual';
+    const top = saved?.scrollY || 0;
+    const restoreScroll = () => window.scrollTo({ top, left: 0, behavior: 'instant' });
+    const trackScroll = () => {
+      if (!restoring.current) snapshot.current.scrollY = window.scrollY;
+    };
+    restoreScroll();
+    let settledFrame;
+    const frame = requestAnimationFrame(() => {
+      restoreScroll();
+      settledFrame = requestAnimationFrame(() => { restoring.current = false; });
+    });
+    window.addEventListener('scroll', trackScroll, { passive: true });
+    return () => {
+      cancelAnimationFrame(frame);
+      cancelAnimationFrame(settledFrame);
+      window.removeEventListener('scroll', trackScroll);
+      window.history.scrollRestoration = previousRestoration;
+      if (snapshot.current.complete) {
+        catalogHistory.delete(historyKey);
+        catalogHistory.set(historyKey, snapshot.current);
+        if (catalogHistory.size > 6) catalogHistory.delete(catalogHistory.keys().next().value);
+      }
+    };
+  }, [historyKey, saved]);
 
   useEffect(() => {
-    getCurrentUser();
-  }, [getCurrentUser]);
+    mounted.current = true;
+    const pendingRequests = requests.current;
+    return () => {
+      mounted.current = false;
+      pendingRequests.forEach(controller => controller.abort());
+    };
+  }, []);
 
   const fetchCategories = useCallback(async () => {
+    const controller = new AbortController();
+    requests.current.add(controller);
     try {
-      const response = await fetch(`${API_URL}/listar_categoria/`);
+      const response = await fetch(`${API_URL}/listar_categoria/`, { signal: controller.signal });
+      if (!response.ok) throw new Error('Error fetching categories');
       const data = await response.json();
-      setCategoriesData(data);
+      if (mounted.current && !controller.signal.aborted) setCategoriesData(data);
     } catch (error) {
-      console.error('Error fetching categories:', error);
+      if (error.name !== 'AbortError') console.error('Error fetching categories:', error);
+    } finally {
+      requests.current.delete(controller);
+      if (mounted.current && !controller.signal.aborted) setCategoriesLoaded(true);
     }
   }, []);
 
   useEffect(() => {
-    fetchCategories();
-  }, [fetchCategories]);
+    if (!categoriesLoaded) fetchCategories();
+  }, [fetchCategories, categoriesLoaded]);
 
-  const buildApiUrl = (baseUrl = `${API_URL}/listar_item_activo/`) => {
+  const buildApiUrl = useCallback((baseUrl = `${API_URL}/listar_item_activo/`) => {
     const params = new URLSearchParams();
 
     if (filters.current.searchTerm) {
@@ -98,18 +174,21 @@ const ShopPage = () => {
     }
 
     return `${baseUrl}?${params.toString()}`;
-  };
+  }, [categoriesData, userData]);
 
   const fetchProducts = useCallback(async (url) => {
+    if (isLoadingMore.current) return;
+    const controller = new AbortController();
+    requests.current.add(controller);
     try {
-      if (isLoadingMore.current) return;
-
       setLoading(true);
       isLoadingMore.current = true;
 
       const apiUrl = url || buildApiUrl();
-      const response = await fetch(apiUrl);
+      const response = await fetch(apiUrl, { signal: controller.signal });
+      if (!response.ok) throw new Error('Error fetching products');
       const data = await response.json();
+      if (!mounted.current || controller.signal.aborted) return;
 
       const formattedProducts = data.results.map(item => ({
         ...item,
@@ -120,8 +199,11 @@ const ShopPage = () => {
         condicion: String(item.condicion_detalle?.id) || ''
       }));
 
-      if (url && url.includes('page=')) {
-        setAllProducts(prev => [...prev, ...formattedProducts]);
+      if (url) {
+        setAllProducts(prev => {
+          const knownIds = new Set(prev.map(item => item.id));
+          return [...prev, ...formattedProducts.filter(item => !knownIds.has(item.id))];
+        });
       } else {
         setAllProducts(formattedProducts);
         setInitialLoadComplete(true);
@@ -130,15 +212,16 @@ const ShopPage = () => {
       setNextPageUrl(data.next);
       setHasMore(!!data.next);
     } catch (error) {
-      console.error('Error:', error);
+      if (error.name !== 'AbortError') console.error('Error:', error);
     } finally {
-      setLoading(false);
+      requests.current.delete(controller);
+      if (mounted.current && !controller.signal.aborted) setLoading(false);
       isLoadingMore.current = false;
     }
-  }, [categoriesData]);
+  }, [buildApiUrl]);
 
   const loadMoreProducts = useCallback(() => {
-    if (!hasMore || isLoadingMore.current || !nextPageUrl) return;
+    if (restoring.current || !hasMore || isLoadingMore.current || !nextPageUrl) return;
     fetchProducts(nextPageUrl);
   }, [hasMore, nextPageUrl, fetchProducts]);
 
@@ -161,31 +244,16 @@ const ShopPage = () => {
   }, [loadMoreProducts, hasMore]);
 
   useEffect(() => {
-    const searchParams = new URLSearchParams(location.search);
-    const searchQuery = searchParams.get('search') || '';
-    const categoriesParam = searchParams.get('categories') || '';
-    const subcategoriesParam = searchParams.get('subcategories') || '';
-    const conditionsParam = searchParams.get('conditions') || '';
-    const minPrice = parseInt(searchParams.get('min')) || 0;
-    const maxPrice = parseInt(searchParams.get('max')) || 9999;
-
-    filters.current = {
-      searchTerm: searchQuery,
-      categories: categoriesParam ? categoriesParam.split(',') : [],
-      subcategories: subcategoriesParam ? subcategoriesParam.split(',') : [],
-      conditions: conditionsParam ? conditionsParam.split(',') : [],
-      priceRange: [minPrice, maxPrice]
-    };
-
-    setAllProducts([]);
-    setNextPageUrl(null);
-    setInitialLoadComplete(false);
-    setHasMore(true);
-
-    fetchProducts();
-  }, [location.search, fetchProducts]);
+    if (categoriesLoaded && !initialLoadComplete) fetchProducts();
+  }, [categoriesLoaded, initialLoadComplete, fetchProducts]);
 
   const handleFilterChange = useCallback((newFilters) => {
+    // Dashbar also reports its filters on mount; do not replace history for a no-op.
+    const unchanged = Object.keys(newFilters).every(key =>
+      JSON.stringify(newFilters[key]) === JSON.stringify(filters.current[key])
+    );
+    if (unchanged) return;
+
     filters.current = { ...filters.current, ...newFilters };
 
     const searchParams = new URLSearchParams();
