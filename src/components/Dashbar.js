@@ -81,7 +81,7 @@ const getCategoryImageUrl = (imageUrl) => {
   return imageUrl.startsWith('/') ? imageUrl : `/${imageUrl}`;
 };
 
-const Dashbar = ({ onFilterChange, userData, onEditProfile, selectedCategories = [], selectedConditions = [], priceRange, mobileOpen = false, onCloseMobile }) => {
+const Dashbar = ({ onFilterChange, userData, onEditProfile, selectedCategories = [], selectedSubcategories = [], selectedConditions = [], priceRange, mobileOpen = false, onCloseMobile }) => {
   const [categories, setCategories] = useState([]);
   const [subcategories, setSubcategories] = useState([]);
   const [conditions, setConditions] = useState([]);
@@ -92,8 +92,7 @@ const Dashbar = ({ onFilterChange, userData, onEditProfile, selectedCategories =
   });
   const [error, setError] = useState(null);
   const [expandedCategories, setExpandedCategories] = useState({});
-  const [selectedSubcategories, setSelectedSubcategories] = useState([]);
-  const [localPriceRange, setLocalPriceRange] = useState([0, 9999]);
+  const [localPriceRange, setLocalPriceRange] = useState(priceRange || [0, 9999]);
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [expandedSection, setExpandedSection] = useState(['price', 'categories', 'condition']);
 
@@ -101,15 +100,6 @@ const Dashbar = ({ onFilterChange, userData, onEditProfile, selectedCategories =
   useEffect(() => {
     setLocalPriceRange(priceRange || [0, 9999]);
   }, [priceRange]);
-
-  useEffect(() => {
-    // Sincronizar subcategorías desde la URL
-    const searchParams = new URLSearchParams(window.location.search);
-    const subcategoriesParam = searchParams.get('subcategories');
-    if (subcategoriesParam) {
-      setSelectedSubcategories(subcategoriesParam.split(','));
-    }
-  }, []);
 
   useEffect(() => {
     const fetchConditions = async () => {
@@ -178,17 +168,6 @@ const Dashbar = ({ onFilterChange, userData, onEditProfile, selectedCategories =
     fetchSubcategories();
   }, []);
 
-  useEffect(() => {
-    if (!loading.categories && !loading.subcategories && !loading.conditions) {
-      onFilterChange({
-        subcategories: selectedSubcategories,
-        priceRange: localPriceRange,
-        categories: selectedCategories,
-        conditions: selectedConditions
-      });
-    }
-  }, [selectedSubcategories, localPriceRange, selectedCategories, selectedConditions, loading, onFilterChange]);
-
   const handleCategoryChange = (categoryId) => {
     const newCategories = selectedCategories.includes(String(categoryId))
       ? selectedCategories.filter(id => id !== String(categoryId))
@@ -198,11 +177,10 @@ const Dashbar = ({ onFilterChange, userData, onEditProfile, selectedCategories =
   };
 
   const handleSubcategoryChange = (subcategoryName) => {
-    setSelectedSubcategories(prev =>
-      prev.includes(subcategoryName)
-        ? prev.filter(name => name !== subcategoryName)
-        : [...prev, subcategoryName]
-    );
+    const subcategories = selectedSubcategories.includes(subcategoryName)
+      ? selectedSubcategories.filter(name => name !== subcategoryName)
+      : [...selectedSubcategories, subcategoryName];
+    onFilterChange({ subcategories });
   };
 
   const handleConditionChange = (conditionId) => {
@@ -218,6 +196,7 @@ const Dashbar = ({ onFilterChange, userData, onEditProfile, selectedCategories =
   };
 
   const handlePriceChangeCommitted = (event, newValue) => {
+    setLocalPriceRange(newValue);
     onFilterChange({ priceRange: newValue });
   };
 
@@ -254,7 +233,7 @@ const Dashbar = ({ onFilterChange, userData, onEditProfile, selectedCategories =
   };
 
   const clearSubcategories = () => {
-    setSelectedSubcategories([]);
+    onFilterChange({ subcategories: [] });
   };
 
   const clearConditions = () => {
@@ -267,7 +246,6 @@ const Dashbar = ({ onFilterChange, userData, onEditProfile, selectedCategories =
   };
 
   const clearAllFilters = () => {
-    setSelectedSubcategories([]);
     setLocalPriceRange([0, 9999]);
     onFilterChange({
       subcategories: [],
@@ -454,15 +432,21 @@ const Dashbar = ({ onFilterChange, userData, onEditProfile, selectedCategories =
                 min={0}
                 max={9999}
                 step={10}
-                aria-labelledby="range-slider"
+                disableSwap
+                getAriaLabel={index => index === 0 ? 'Precio minimo' : 'Precio maximo'}
+                getAriaValueText={value => `${value} USD`}
                 sx={{
                   color: '#e8611a',
+                  width: 'calc(100% - 16px)',
+                  marginX: '8px',
+                  touchAction: 'none',
                   '& .MuiSlider-thumb': {
-                    height: 16,
-                    width: 16,
+                    height: 24,
+                    width: 24,
                     backgroundColor: '#e8611a',
                     border: '2px solid #e8611a',
                     boxShadow: '0 0 6px rgba(232, 97, 26, 0.3)',
+                    '&::after': { width: 44, height: 44 },
                   },
                   '& .MuiSlider-track': {
                     border: 'none',

@@ -47,19 +47,20 @@ const ShopPage = () => {
       return null;
     }
   }, [sessionSnapshot]);
-  const historyKey = JSON.stringify([
-    location.key, location.search, userData?.user_id, userData?.rol,
+  const catalogScope = JSON.stringify([
+    userData?.user_id, userData?.rol,
     userData?.punto_venta_id, userData?.auth_session
   ]);
+  const historyKey = JSON.stringify([location.key, location.search, catalogScope]);
 
-  return <ShopCatalog key={historyKey} historyKey={historyKey}
+  return <ShopCatalog key={catalogScope} historyKey={historyKey}
     restore={navigationType === 'POP'} userData={userData} />;
 };
 
 const ShopCatalog = ({ historyKey, restore, userData }) => {
   const location = useLocation();
   const navigate = useNavigate();
-  const [saved] = useState(() => restore ? catalogHistory.get(historyKey) : null);
+  const saved = useMemo(() => restore ? catalogHistory.get(historyKey) : null, [historyKey, restore]);
   const [allProducts, setAllProducts] = useState(saved?.products || []);
   const [loading, setLoading] = useState(!saved);
   const [initialLoadComplete, setInitialLoadComplete] = useState(!!saved);
@@ -70,22 +71,38 @@ const ShopCatalog = ({ historyKey, restore, userData }) => {
   const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false);
   const filters = useRef(readFilters(location.search));
   const isLoadingMore = useRef(false);
+  const productRequest = useRef(null);
   const mounted = useRef(true);
   const requests = useRef(new Set());
   const restoring = useRef(true);
-  const snapshot = useRef({ scrollY: saved?.scrollY || 0 });
+  const snapshot = useRef({ historyKey, scrollY: saved?.scrollY || 0 });
 
   useLayoutEffect(() => {
+    if (snapshot.current.historyKey !== historyKey) return;
     snapshot.current = {
       ...snapshot.current, products: allProducts, nextPageUrl, hasMore,
       categories: categoriesData, complete: initialLoadComplete
     };
-  }, [allProducts, nextPageUrl, hasMore, categoriesData, initialLoadComplete]);
+  }, [allProducts, nextPageUrl, hasMore, categoriesData, initialLoadComplete, historyKey]);
 
   useLayoutEffect(() => {
+    productRequest.current?.abort();
+    productRequest.current = null;
+    isLoadingMore.current = false;
+    const changingFilters = snapshot.current.historyKey !== historyKey;
+    const top = saved?.scrollY ?? (changingFilters ? window.scrollY : 0);
+    filters.current = readFilters(location.search);
+    setAllProducts(saved?.products || []);
+    setNextPageUrl(saved?.nextPageUrl || null);
+    setHasMore(saved ? saved.hasMore : true);
+    setInitialLoadComplete(!!saved);
+    setLoading(!saved);
+    snapshot.current = { historyKey, scrollY: top, complete: !!saved,
+      products: saved?.products || [], nextPageUrl: saved?.nextPageUrl || null,
+      hasMore: saved ? saved.hasMore : true, categories: snapshot.current.categories || [] };
+    restoring.current = true;
     const previousRestoration = window.history.scrollRestoration;
     window.history.scrollRestoration = 'manual';
-    const top = saved?.scrollY || 0;
     const restoreScroll = () => window.scrollTo({ top, left: 0, behavior: 'instant' });
     const trackScroll = () => {
       if (!restoring.current) snapshot.current.scrollY = window.scrollY;
@@ -108,7 +125,7 @@ const ShopCatalog = ({ historyKey, restore, userData }) => {
         if (catalogHistory.size > 6) catalogHistory.delete(catalogHistory.keys().next().value);
       }
     };
-  }, [historyKey, saved]);
+  }, [historyKey, saved, location.search]);
 
   useEffect(() => {
     mounted.current = true;
@@ -179,6 +196,7 @@ const ShopCatalog = ({ historyKey, restore, userData }) => {
   const fetchProducts = useCallback(async (url) => {
     if (isLoadingMore.current) return;
     const controller = new AbortController();
+    productRequest.current = controller;
     requests.current.add(controller);
     try {
       setLoading(true);
@@ -216,7 +234,10 @@ const ShopCatalog = ({ historyKey, restore, userData }) => {
     } finally {
       requests.current.delete(controller);
       if (mounted.current && !controller.signal.aborted) setLoading(false);
-      isLoadingMore.current = false;
+      if (productRequest.current === controller) {
+        productRequest.current = null;
+        isLoadingMore.current = false;
+      }
     }
   }, [buildApiUrl]);
 
@@ -245,7 +266,7 @@ const ShopCatalog = ({ historyKey, restore, userData }) => {
 
   useEffect(() => {
     if (categoriesLoaded && !initialLoadComplete) fetchProducts();
-  }, [categoriesLoaded, initialLoadComplete, fetchProducts]);
+  }, [categoriesLoaded, initialLoadComplete, fetchProducts, historyKey]);
 
   const handleFilterChange = useCallback((newFilters) => {
     // Dashbar also reports its filters on mount; do not replace history for a no-op.
@@ -326,6 +347,7 @@ const ShopCatalog = ({ historyKey, restore, userData }) => {
             onFilterChange={handleFilterChange}
             userData={userData}
             selectedCategories={filters.current.categories}
+            selectedSubcategories={filters.current.subcategories}
             selectedConditions={filters.current.conditions}
             priceRange={filters.current.priceRange}
             mobileOpen={mobileFiltersOpen}

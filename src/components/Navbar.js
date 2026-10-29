@@ -1,5 +1,5 @@
 import { apiFetch as fetch } from '../auth/session';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import {
   AppBar,
@@ -55,6 +55,8 @@ import './Navbar.css';
 import { API_BASE_URL } from '../config/apiConfig';
 function Navbar({ onShowLogin }) {
   const location = useLocation();
+  const searchLocation = useRef(location);
+  searchLocation.current = location;
   const navigate = useNavigate();
   const [anchorEl, setAnchorEl] = useState(null);
   const [adminMenuAnchorEl, setAdminMenuAnchorEl] = useState(null);
@@ -315,12 +317,16 @@ function Navbar({ onShowLogin }) {
 
   // Modifica la función updateSearch para que no navegue si el query está vacío
   const updateSearch = (query) => {
-    // La busqueda siempre lleva al catalogo, que es donde se filtran los productos
-    if (query.trim()) {
-      navigate(`/shop?search=${encodeURIComponent(query.trim())}`);
-    } else if (location.pathname === '/shop' && location.search) {
-      // Si hay parámetros de búsqueda pero el query está vacío, navega sin parámetros
-      navigate('/shop');
+    const current = searchLocation.current;
+    const term = query.trim();
+    if (!term && current.pathname !== '/shop') return;
+    const params = new URLSearchParams(current.pathname === '/shop' ? current.search : '');
+    if (term) params.set('search', term);
+    else params.delete('search');
+    const search = params.toString();
+    const target = `/shop${search ? `?${search}` : ''}`;
+    if (target !== `${current.pathname}${current.search}`) {
+      navigate(target, { replace: current.pathname === '/shop' });
     }
   };
 
@@ -335,6 +341,7 @@ function Navbar({ onShowLogin }) {
 
     const handleSearchSubmit = (e) => {
       e.preventDefault();
+      clearTimeout(debounceTimer);
       updateSearch(searchQuery);
     };
 
