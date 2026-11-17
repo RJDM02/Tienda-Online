@@ -7,6 +7,19 @@ import { API_URL } from '../config/apiConfig';
 const { Option } = Select;
 const { RangePicker } = DatePicker;
 
+const deliveryLocationCollator = new Intl.Collator('es', { sensitivity: 'base', numeric: true });
+
+const compareSalesByDeliveryLocation = (a, b) => {
+  const locationA = (a.domicilio?.ubicacion || '').trim();
+  const locationB = (b.domicilio?.ubicacion || '').trim();
+  const zoneA = locationA.split('(')[0].trim();
+  const zoneB = locationB.split('(')[0].trim();
+
+  return deliveryLocationCollator.compare(zoneA, zoneB)
+    || deliveryLocationCollator.compare(locationA, locationB)
+    || ((Date.parse(b.horario_deseado_entrega) || 0) - (Date.parse(a.horario_deseado_entrega) || 0));
+};
+
 const AdminSalesPage = () => {
   const [sales, setSales] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -357,6 +370,8 @@ const AdminSalesPage = () => {
     {
       title: 'Domicilio',
       key: 'domicilio',
+      sorter: compareSalesByDeliveryLocation,
+      showSorterTooltip: { title: 'Ordenar por zona y barrio' },
       render: (_, record) => (
         <div>
           <div><strong>Ubicación:</strong> {record.domicilio.ubicacion}</div>
