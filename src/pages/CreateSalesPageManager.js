@@ -16,7 +16,9 @@ import {
   Snackbar,
   Card,
   CardContent,
-  IconButton
+  IconButton,
+  Checkbox,
+  FormControlLabel
 } from '@mui/material';
 import { DatePicker, LocalizationProvider, TimePicker } from '@mui/x-date-pickers';
 import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
@@ -75,6 +77,9 @@ const CreateSalesPageManager = () => {
     deliveryPointId: '',
     clientName: '',
     clientPhone: '',
+    deliveryToAnotherPerson: false,
+    recipientName: '',
+    recipientPhone: '',
     vuelto: '',
     warrantyId: '', // Nuevo campo para la garantía
   });
@@ -82,6 +87,7 @@ const CreateSalesPageManager = () => {
   const [currentUser, setCurrentUser] = useState(null);
   const [openSnackbar, setOpenSnackbar] = useState(false);
   const [phoneError, setPhoneError] = useState('');
+  const [recipientPhoneError, setRecipientPhoneError] = useState('');
 
   useEffect(() => {
     const token = localStorage.getItem('authToken');
@@ -167,6 +173,9 @@ const CreateSalesPageManager = () => {
           precio_gestor: parseFloat(productPrices[item.id]) || 0,
           nombre_cliente: formData.clientName,
           telefono_cliente: formData.clientPhone,
+          entrega_a_tercero: formData.deliveryToAnotherPerson,
+          nombre_receptor: formData.deliveryToAnotherPerson ? formData.recipientName : null,
+          telefono_receptor: formData.deliveryToAnotherPerson ? formData.recipientPhone : null,
           garantia_gestor: formData.warrantyId || null, // Nuevo campo garantía
         };
 
@@ -234,7 +243,25 @@ const CreateSalesPageManager = () => {
       return;
     }
 
+    if (name === 'recipientPhone') {
+      const digitsOnly = /^[0-9]*$/;
+      setRecipientPhoneError(digitsOnly.test(value) ? '' : 'El teléfono debe contener sólo números.');
+      setFormData(prev => ({ ...prev, recipientPhone: value }));
+      return;
+    }
+
     setFormData(prev => ({ ...prev, [name]: value }));
+  };
+
+  const handleDeliveryRecipientToggle = (event) => {
+    const deliveryToAnotherPerson = event.target.checked;
+    setFormData(prev => ({
+      ...prev,
+      deliveryToAnotherPerson,
+      recipientName: deliveryToAnotherPerson ? prev.recipientName : '',
+      recipientPhone: deliveryToAnotherPerson ? prev.recipientPhone : '',
+    }));
+    if (!deliveryToAnotherPerson) setRecipientPhoneError('');
   };
 
   const handlePriceChange = (itemId, newPrice) => {
@@ -316,6 +343,45 @@ const CreateSalesPageManager = () => {
                     sx={styles.textField}
                   />
                 </Grid>
+                <Grid item xs={12}>
+                  <FormControlLabel
+                    control={<Checkbox checked={formData.deliveryToAnotherPerson} onChange={handleDeliveryRecipientToggle} />}
+                    label="El producto lo recibirá otra persona"
+                  />
+                </Grid>
+                {formData.deliveryToAnotherPerson && <>
+                  <Grid item xs={12}>
+                    <Typography variant="body2" color="text.secondary">
+                      Datos de quien recibirá el producto
+                    </Typography>
+                  </Grid>
+                  <Grid item xs={12} sm={6}>
+                    <TextField
+                      fullWidth
+                      label="Nombre de quien recibe"
+                      name="recipientName"
+                      value={formData.recipientName}
+                      onChange={handleChange}
+                      required
+                      sx={styles.textField}
+                    />
+                  </Grid>
+                  <Grid item xs={12} sm={6}>
+                    <TextField
+                      fullWidth
+                      label="Teléfono de quien recibe"
+                      name="recipientPhone"
+                      value={formData.recipientPhone}
+                      onChange={handleChange}
+                      required
+                      type="tel"
+                      error={Boolean(recipientPhoneError)}
+                      helperText={recipientPhoneError || ' '}
+                      inputProps={{ inputMode: 'numeric', pattern: '[0-9]*', maxLength: 12 }}
+                      sx={styles.textField}
+                    />
+                  </Grid>
+                </>}
               </Grid>
               <Divider sx={{ my: 2 }} />
             </Box>
