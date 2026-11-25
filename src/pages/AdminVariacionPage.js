@@ -233,7 +233,7 @@ const AdminVariacionPage = () => {
       formDataToSend.append('modelo', editFormData.modelo);
       formDataToSend.append('ubicacion', editFormData.ubicacion);
       formDataToSend.append('precio', editFormData.precio);
-      formDataToSend.append('distribucion_stock', JSON.stringify(stockPayload(editFormData.distribucion_stock, editFormData.operacion_stock || 'establecer', currentVariacion?.inventario_por_locacion || [])));
+      formDataToSend.append('distribucion_stock', JSON.stringify(stockPayload(editFormData.distribucion_stock, editFormData.operacion_stock || 'establecer', currentVariacion?.inventario_por_locacion || [], editFormData.transferencia_stock)));
       formDataToSend.append('operacion_stock', editFormData.operacion_stock || 'establecer');
       formDataToSend.append('comision', editFormData.comision);
       formDataToSend.append('upc', editFormData.upc);
@@ -766,7 +766,9 @@ const AdminVariacionPage = () => {
                 locations={puntosVenta}
                 values={editFormData.distribucion_stock || {}}
                 operation={editFormData.operacion_stock || 'establecer'}
-                onOperationChange={operation => setEditFormData(prev => ({ ...prev, operacion_stock: operation, distribucion_stock: {} }))}
+                transfer={editFormData.transferencia_stock || {}}
+                onTransferChange={transfer => setEditFormData(prev => ({ ...prev, transferencia_stock: transfer }))}
+                onOperationChange={operation => setEditFormData(prev => ({ ...prev, operacion_stock: operation, distribucion_stock: {}, transferencia_stock: {} }))}
                 disabled={loading.submitting}
                 restock inventory={currentVariacion?.inventario_por_locacion || []}
                 onChange={values => setEditFormData(prev => ({ ...prev, distribucion_stock: values }))}

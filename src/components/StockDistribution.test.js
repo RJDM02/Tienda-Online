@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { fireEvent, render, screen } from '@testing-library/react';
+import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import StockDistribution, { stockPayload } from './StockDistribution';
 
 const locations = [{ id: 7, nombre: 'Tienda Centro' }];
@@ -7,14 +7,55 @@ const locations = [{ id: 7, nombre: 'Tienda Centro' }];
 function Form({ restock = false, inventory = [], initialOperation = 'reponer', onSave }) {
   const [values, setValues] = useState({});
   const [operation, setOperation] = useState(initialOperation);
+  const [transfer, setTransfer] = useState({});
   return <>
     <StockDistribution locations={locations} values={values} onChange={setValues}
       restock={restock} inventory={inventory} operation={operation}
-      onOperationChange={value => { setOperation(value); setValues({}); }} />
+      transfer={transfer} onTransferChange={setTransfer}
+      onOperationChange={value => { setOperation(value); setValues({}); setTransfer({}); }} />
     <button onClick={() => setValues({})}>Limpiar</button>
-    {onSave && <button onClick={() => onSave(stockPayload(values, operation, inventory))}>Guardar</button>}
+    {onSave && <button onClick={() => onSave(stockPayload(values, operation, inventory, transfer))}>Guardar</button>}
   </>;
 }
+
+test('transfers from main to a shop in the editor with an unchanged total and correct payload', async () => {
+  const onSave = jest.fn();
+  render(<Form restock initialOperation="establecer" onSave={onSave} inventory={[
+    { punto_venta: null, nombre: 'Sede Principal', cantidad: 5 },
+    { punto_venta: 7, nombre: 'Tienda Centro', cantidad: 3 },
+  ]} />);
+  fireEvent.mouseDown(screen.getByLabelText('Operación de stock'));
+  fireEvent.click(screen.getByRole('option', { name: 'Transferir entre locaciones' }));
+  await waitFor(() => expect(screen.queryByRole('listbox')).not.toBeInTheDocument());
+  fireEvent.mouseDown(screen.getByLabelText(/Destino/));
+  fireEvent.click(screen.getByRole('option', { name: 'Tienda Centro' }));
+  await waitFor(() => expect(screen.queryByRole('listbox')).not.toBeInTheDocument());
+  fireEvent.change(screen.getByLabelText(/Unidades a transferir/), { target: { value: '2' } });
+  expect(screen.getByText('Sede Principal: 5 → 3')).toBeInTheDocument();
+  expect(screen.getByText('Tienda Centro: 3 → 5')).toBeInTheDocument();
+  expect(screen.getByText('Stock total: 8 · El total no cambia con la transferencia.')).toBeInTheDocument();
+  fireEvent.click(screen.getByText('Guardar'));
+  expect(onSave).toHaveBeenCalledWith({ origen_punto_venta: null, destino_punto_venta: 7, cantidad: 2, nota: '' });
+  fireEvent.change(screen.getByLabelText(/Unidades a transferir/), { target: { value: '6' } });
+  expect(screen.getByLabelText(/Unidades a transferir/).checkValidity()).toBe(false);
+  fireEvent.mouseDown(screen.getByLabelText('Operación de stock'));
+  fireEvent.click(screen.getByRole('option', { name: 'Editar cantidad final' }));
+  expect(screen.getByLabelText(/Tienda Centro/)).toHaveValue(3);
+  expect(screen.queryByLabelText(/Unidades a transferir/)).not.toBeInTheDocument();
+});
+
+test('transfer payload supports returning to main and rejects invalid movements', () => {
+  const inventory = [{ punto_venta: 7, cantidad: 3 }];
+  expect(stockPayload({}, 'transferir', inventory, { origen: '7', destino: 'principal', cantidad: '3' }))
+    .toEqual({ origen_punto_venta: 7, destino_punto_venta: null, cantidad: 3, nota: '' });
+  for (const transfer of [
+    { origen: '7', destino: '7', cantidad: '1' },
+    { origen: '7', destino: '', cantidad: '1' },
+    { origen: '7', destino: 'principal', cantidad: '0' },
+    { origen: '7', destino: 'principal', cantidad: '1.5' },
+    { origen: '7', destino: 'principal', cantidad: '4' },
+  ]) expect(() => stockPayload({}, 'transferir', inventory, transfer)).toThrow();
+});
 
 test('entering zero and saving sends final zero while preserving other locations', () => {
   const onSave = jest.fn();
