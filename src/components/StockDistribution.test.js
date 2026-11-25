@@ -4,40 +4,67 @@ import StockDistribution, { stockPayload } from './StockDistribution';
 
 const locations = [{ id: 7, nombre: 'Tienda Centro' }];
 
-function Form({ restock = false, inventory = [] }) {
+function Form({ restock = false, inventory = [], initialOperation = 'reponer', onSave }) {
   const [values, setValues] = useState({});
-  const [operation, setOperation] = useState('reponer');
+  const [operation, setOperation] = useState(initialOperation);
   return <>
     <StockDistribution locations={locations} values={values} onChange={setValues}
       restock={restock} inventory={inventory} operation={operation}
       onOperationChange={value => { setOperation(value); setValues({}); }} />
     <button onClick={() => setValues({})}>Limpiar</button>
+    {onSave && <button onClick={() => onSave(stockPayload(values, operation, inventory))}>Guardar</button>}
   </>;
 }
 
+test('entering zero and saving sends final zero while preserving other locations', () => {
+  const onSave = jest.fn();
+  render(<Form restock initialOperation="establecer" onSave={onSave} inventory={[
+    { punto_venta: null, nombre: 'Sede Principal', cantidad: 6 },
+    { punto_venta: 7, nombre: 'Tienda Centro', cantidad: 4 },
+  ]} />);
+  expect(screen.getByLabelText(/Tienda Centro/)).toHaveValue(4);
+  fireEvent.change(screen.getByLabelText(/Tienda Centro/), { target: { value: '0' } });
+  expect(screen.getByText('Actual: 4 · Cantidad final: 0')).toBeInTheDocument();
+  expect(screen.getByText('Stock actual: 10 · Stock final: 6')).toBeInTheDocument();
+  fireEvent.click(screen.getByText('Guardar'));
+  expect(onSave).toHaveBeenCalledWith(expect.arrayContaining([
+    { punto_venta: 7, cantidad: 0, cantidad_actual: 4 },
+    { punto_venta: null, cantidad: 6, cantidad_actual: 6 },
+  ]));
+});
+
+test('editing defaults to final quantities and requires explicit zero instead of a blank', () => {
+  render(<StockDistribution restock inventory={[
+    { punto_venta: null, nombre: 'Sede Principal', cantidad: 10 },
+  ]} onChange={() => {}} />);
+  expect(screen.getByLabelText(/Sede Principal/)).toHaveValue(10);
+  expect(screen.getByText('Editar cantidad final')).toBeInTheDocument();
+  expect(() => stockPayload({ principal: '' }, 'establecer')).toThrow('Escriba 0');
+});
+
 test('switches to withdrawal, clears additions and allows withdrawing all stock', () => {
   render(<Form restock inventory={[{ punto_venta: 7, nombre: 'Tienda Centro', cantidad: 4 }]} />);
-  fireEvent.change(screen.getByLabelText('Tienda Centro'), { target: { value: '2' } });
+  fireEvent.change(screen.getByLabelText(/Tienda Centro/), { target: { value: '2' } });
   fireEvent.mouseDown(screen.getByLabelText('Operación de stock'));
   fireEvent.click(screen.getByRole('option', { name: 'Retirar unidades' }));
-  expect(screen.getByLabelText('Tienda Centro')).toHaveValue(null);
-  fireEvent.change(screen.getByLabelText('Tienda Centro'), { target: { value: '4' } });
+  expect(screen.getByLabelText(/Tienda Centro/)).toHaveValue(null);
+  fireEvent.change(screen.getByLabelText(/Tienda Centro/), { target: { value: '4' } });
   expect(screen.getByText('Actual: 4 · Después de retirar: 0')).toBeInTheDocument();
   expect(screen.getByText('Stock actual: 4 · A retirar: 4 · Total previsto: 0')).toBeInTheDocument();
-  expect(screen.getByLabelText('Tienda Centro').checkValidity()).toBe(true);
-  fireEvent.change(screen.getByLabelText('Tienda Centro'), { target: { value: '5' } });
+  expect(screen.getByLabelText(/Tienda Centro/).checkValidity()).toBe(true);
+  fireEvent.change(screen.getByLabelText(/Tienda Centro/), { target: { value: '5' } });
   expect(screen.getByText('Solo hay 4 unidades disponibles en esta locación.')).toBeInTheDocument();
-  expect(screen.getByLabelText('Tienda Centro').checkValidity()).toBe(false);
+  expect(screen.getByLabelText(/Tienda Centro/).checkValidity()).toBe(false);
 });
 
 test('calculates the initial total and clears the quantities on reset', () => {
   render(<Form />);
-  fireEvent.change(screen.getByLabelText('Sede Principal'), { target: { value: '6' } });
-  fireEvent.change(screen.getByLabelText('Tienda Centro'), { target: { value: '4' } });
+  fireEvent.change(screen.getByLabelText(/Sede Principal/), { target: { value: '6' } });
+  fireEvent.change(screen.getByLabelText(/Tienda Centro/), { target: { value: '4' } });
   expect(screen.getByText('Stock total: 10')).toBeInTheDocument();
   fireEvent.click(screen.getByText('Limpiar'));
   expect(screen.getByText('Stock total: 0')).toBeInTheDocument();
-  expect(screen.getByLabelText('Tienda Centro')).toHaveValue(null);
+  expect(screen.getByLabelText(/Tienda Centro/)).toHaveValue(null);
 });
 
 test('restocking shows existing stock plus new quantities per location', () => {
@@ -45,7 +72,7 @@ test('restocking shows existing stock plus new quantities per location', () => {
     { punto_venta: null, nombre: 'Sede Principal', cantidad: 6 },
     { punto_venta: 7, nombre: 'Tienda Centro', cantidad: 4 },
   ]} />);
-  fireEvent.change(screen.getByLabelText('Tienda Centro'), { target: { value: '3' } });
+  fireEvent.change(screen.getByLabelText(/Tienda Centro/), { target: { value: '3' } });
   expect(screen.getByText('Actual: 4 · Después de reponer: 7')).toBeInTheDocument();
   expect(screen.getByText('Stock actual: 10 · A agregar: 3 · Total previsto: 13')).toBeInTheDocument();
 });

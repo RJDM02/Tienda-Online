@@ -518,8 +518,8 @@ const AdminItemPage = () => {
       // Agregar campos al FormData
       formData.append('nombre', editForm.nombre);
       formData.append('descripcion', editForm.descripcion);
-      formData.append('distribucion_stock', JSON.stringify(stockPayload(editForm.distribucion_stock)));
-      formData.append('operacion_stock', editForm.operacion_stock || 'reponer');
+      formData.append('distribucion_stock', JSON.stringify(stockPayload(editForm.distribucion_stock, editForm.operacion_stock || 'establecer', currentItem?.inventario_por_locacion || [])));
+      formData.append('operacion_stock', editForm.operacion_stock || 'establecer');
       formData.append('precio', editForm.precio);
       formData.append('costo', editForm.costo);
     formData.append('descuento', editForm.descuento);
@@ -1520,7 +1520,7 @@ const AdminItemPage = () => {
               <StockDistribution
                 locations={puntosVentaData}
                 values={editForm.distribucion_stock || {}}
-                operation={editForm.operacion_stock || 'reponer'}
+                operation={editForm.operacion_stock || 'establecer'}
                 onOperationChange={operation => setEditForm(prev => ({ ...prev, operacion_stock: operation, distribucion_stock: {} }))}
                 disabled={loading.submitting}
                 restock inventory={currentItem?.inventario_por_locacion || []}
