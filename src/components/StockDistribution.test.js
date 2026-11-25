@@ -6,12 +6,29 @@ const locations = [{ id: 7, nombre: 'Tienda Centro' }];
 
 function Form({ restock = false, inventory = [] }) {
   const [values, setValues] = useState({});
+  const [operation, setOperation] = useState('reponer');
   return <>
     <StockDistribution locations={locations} values={values} onChange={setValues}
-      restock={restock} inventory={inventory} />
+      restock={restock} inventory={inventory} operation={operation}
+      onOperationChange={value => { setOperation(value); setValues({}); }} />
     <button onClick={() => setValues({})}>Limpiar</button>
   </>;
 }
+
+test('switches to withdrawal, clears additions and allows withdrawing all stock', () => {
+  render(<Form restock inventory={[{ punto_venta: 7, nombre: 'Tienda Centro', cantidad: 4 }]} />);
+  fireEvent.change(screen.getByLabelText('Tienda Centro'), { target: { value: '2' } });
+  fireEvent.mouseDown(screen.getByLabelText('Operación de stock'));
+  fireEvent.click(screen.getByRole('option', { name: 'Retirar unidades' }));
+  expect(screen.getByLabelText('Tienda Centro')).toHaveValue(null);
+  fireEvent.change(screen.getByLabelText('Tienda Centro'), { target: { value: '4' } });
+  expect(screen.getByText('Actual: 4 · Después de retirar: 0')).toBeInTheDocument();
+  expect(screen.getByText('Stock actual: 4 · A retirar: 4 · Total previsto: 0')).toBeInTheDocument();
+  expect(screen.getByLabelText('Tienda Centro').checkValidity()).toBe(true);
+  fireEvent.change(screen.getByLabelText('Tienda Centro'), { target: { value: '5' } });
+  expect(screen.getByText('Solo hay 4 unidades disponibles en esta locación.')).toBeInTheDocument();
+  expect(screen.getByLabelText('Tienda Centro').checkValidity()).toBe(false);
+});
 
 test('calculates the initial total and clears the quantities on reset', () => {
   render(<Form />);
