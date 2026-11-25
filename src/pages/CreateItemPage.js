@@ -1,3 +1,4 @@
+import StockDistribution, { stockPayload, stockTotal } from '../components/StockDistribution';
 import { apiFetch as fetch } from '../auth/session';
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
@@ -89,7 +90,7 @@ const CreateItemPage = () => {
                     }
                 });
 
-                if (!subCatResponse.ok || !garantiaResponse.ok || !regaloResponse.ok || !condicionResponse.ok) {
+                if (!subCatResponse.ok || !garantiaResponse.ok || !regaloResponse.ok || !condicionResponse.ok || !puntoVentaResponse.ok) {
                     throw new Error('Error al obtener datos iniciales');
                 }
 
@@ -258,14 +259,12 @@ const CreateItemPage = () => {
             data.append('descripcion', formData.descripcion);
             data.append('precio', formData.precio);
             data.append('cantidad', formData.cantidad);
+            data.append('distribucion_stock', JSON.stringify(stockPayload(formData.distribucion_stock)));
             data.append('costo', formData.costo);
             data.append('descuento', formData.descuento);
             data.append('comision', formData.comision);
             data.append('condicion', formData.condicion);
             data.append('ubicacion', formData.ubicacion);
-            if (formData.punto_venta) {
-                data.append('punto_venta', formData.punto_venta);
-            }
             data.append('upc', formData.upc); // Agregar el campo UPC al FormData
             
             // Agregar video si existe
@@ -300,7 +299,7 @@ const CreateItemPage = () => {
 
             if (!response.ok) {
                 const errorData = await response.json();
-                throw new Error(errorData.detail || errorData.message || 'Error al crear el producto');
+                throw new Error(errorData.detail || errorData.message || JSON.stringify(errorData) || 'Error al crear el producto');
             }
 
             // Enviar notificación SOLO con los datos requeridos
@@ -497,23 +496,12 @@ const CreateItemPage = () => {
                                 sx={textFieldStyles}
                             />
 
-                            <TextField
-                                select
-                                label="Punto de Venta (opcional)"
-                                variant="outlined"
-                                fullWidth
-                                name="punto_venta"
-                                value={formData.punto_venta}
-                                onChange={handleChange}
-                                disabled={loading}
-                                helperText="Si no se asigna, el producto se considera en la Sede Principal"
-                                sx={textFieldStyles}
-                            >
-                                <MenuItem value="">Sede Principal</MenuItem>
-                                {puntosVenta.map((pv) => (
-                                    <MenuItem key={pv.id} value={pv.id}>{pv.nombre}</MenuItem>
-                                ))}
-                            </TextField>
+                            <StockDistribution
+                              locations={puntosVenta}
+                              values={formData.distribucion_stock || {}}
+                              disabled={loading}
+                              onChange={values => setFormData(prev => ({ ...prev, distribucion_stock: values, cantidad: stockTotal(values) }))}
+                            />
                         </div>
 
                         {/* Información de Precios y Stock */}
@@ -537,12 +525,12 @@ const CreateItemPage = () => {
                                 />
                                 
                                 <TextField
-                                    label="Cantidad en Stock"
+                                    label="Stock total"
                                     variant="outlined"
                                     type="number"
                                     name="cantidad"
                                     value={formData.cantidad}
-                                    onChange={handleChange}
+                                    InputProps={{ readOnly: true }}
                                     inputProps={{ min: 0 }}
                                     required
                                     disabled={loading}

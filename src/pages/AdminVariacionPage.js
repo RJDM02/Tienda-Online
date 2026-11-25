@@ -1,3 +1,4 @@
+import StockDistribution, { stockPayload } from '../components/StockDistribution';
 import { apiFetch as fetch } from '../auth/session';
 import { API_URL } from '../config/apiConfig';
 import { useState, useEffect } from 'react';
@@ -100,7 +101,7 @@ const AdminVariacionPage = () => {
           }
         });
 
-        if (!garantiaResponse.ok || !regaloResponse.ok || !condicionResponse.ok) {
+        if (!garantiaResponse.ok || !regaloResponse.ok || !condicionResponse.ok || !puntoVentaResponse.ok) {
           throw new Error('Error al obtener datos iniciales');
         }
 
@@ -231,11 +232,8 @@ const AdminVariacionPage = () => {
       formDataToSend.append('color', editFormData.color);
       formDataToSend.append('modelo', editFormData.modelo);
       formDataToSend.append('ubicacion', editFormData.ubicacion);
-      if (editFormData.punto_venta) {
-        formDataToSend.append('punto_venta', editFormData.punto_venta);
-      }
       formDataToSend.append('precio', editFormData.precio);
-      formDataToSend.append('cantidad', editFormData.cantidad);
+      formDataToSend.append('distribucion_stock', JSON.stringify(stockPayload(editFormData.distribucion_stock)));
       formDataToSend.append('comision', editFormData.comision);
       formDataToSend.append('upc', editFormData.upc);
       
@@ -266,7 +264,7 @@ const AdminVariacionPage = () => {
 
       if (!response.ok) {
         const errorData = await response.json();
-        throw new Error(errorData.message || 'Error al actualizar la variación');
+        throw new Error(errorData.message || JSON.stringify(errorData) || 'Error al actualizar la variación');
       }
 
       setSuccess('Variación actualizada correctamente');
@@ -443,11 +441,12 @@ const AdminVariacionPage = () => {
                           <div className="text-sm font-medium text-gray-900">{variacion.ubicacion || 'N/A'}</div>
                         </td>
                         <td className="px-6 py-4">
-                          <Chip
-                            label={variacion.punto_venta_detalle?.nombre || 'Sede Principal'}
-                            color={variacion.punto_venta_detalle ? 'primary' : 'default'}
-                            size="small"
-                          />
+                          {(variacion.inventario_por_locacion || []).map((row) => (
+                          <Chip key={row.punto_venta ?? 'principal'}
+                            label={`${row.nombre}: ${row.cantidad}`}
+                            color={row.punto_venta ? 'primary' : 'default'}
+                            size="small" sx={{ mr: 0.5, mb: 0.5 }} />
+                        ))}
                         </td>
                         <td className="px-6 py-4">
                           <div className="text-sm font-bold text-[#FF6B00]">${variacion.precio} / {variacion.precio_post_descuento}</div>
@@ -762,35 +761,13 @@ const AdminVariacionPage = () => {
                 }}
               />
 
-              <TextField
-                select
-                label="Punto de Venta (opcional)"
-                name="punto_venta"
-                value={editFormData.punto_venta}
-                onChange={handleEditChange}
-                fullWidth
-                margin="normal"
-                helperText="Si no se asigna, la variación se considera en la Sede Principal"
-                sx={{
-                  '& .MuiOutlinedInput-root': {
-                    borderRadius: '12px',
-                    '&:hover fieldset': {
-                      borderColor: '#FF6B00',
-                    },
-                    '&.Mui-focused fieldset': {
-                      borderColor: '#FF6B00',
-                    },
-                  },
-                  '& .MuiInputLabel-root.Mui-focused': {
-                    color: '#FF6B00',
-                  },
-                }}
-              >
-                <MenuItem value="">Sede Principal</MenuItem>
-                {puntosVenta.map((pv) => (
-                  <MenuItem key={pv.id} value={pv.id}>{pv.nombre}</MenuItem>
-                ))}
-              </TextField>
+              <StockDistribution
+                locations={puntosVenta}
+                values={editFormData.distribucion_stock || {}}
+                disabled={loading.submitting}
+                restock inventory={currentVariacion?.inventario_por_locacion || []}
+                onChange={values => setEditFormData(prev => ({ ...prev, distribucion_stock: values }))}
+              />
 
               {/* Campo UPC */}
               <TextField
@@ -846,11 +823,11 @@ const AdminVariacionPage = () => {
                   }}
                 />
                 <TextField
-                  label="Cantidad"
+                  label="Stock actual"
                   name="cantidad"
                   type="number"
                   value={editFormData.cantidad}
-                  onChange={handleEditChange}
+                  InputProps={{ readOnly: true }}
                   fullWidth
                   required
                   margin="normal"

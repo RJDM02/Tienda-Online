@@ -1,3 +1,4 @@
+import StockDistribution, { stockPayload } from '../components/StockDistribution';
 import { apiFetch as fetch } from '../auth/session';
 import { API_URL } from '../config/apiConfig';
 import { useState, useEffect, useRef, useCallback } from 'react';
@@ -165,7 +166,7 @@ const AdminItemPage = () => {
       });
 
       if (!categoriesResponse.ok || !subcategoriesResponse.ok || !conditionsResponse.ok ||
-          !garantiasResponse.ok || !regalosResponse.ok) {
+          !garantiasResponse.ok || !regalosResponse.ok || !puntosVentaResponse.ok) {
         throw new Error('Error al obtener datos iniciales');
       }
 
@@ -517,7 +518,7 @@ const AdminItemPage = () => {
       // Agregar campos al FormData
       formData.append('nombre', editForm.nombre);
       formData.append('descripcion', editForm.descripcion);
-      formData.append('cantidad', editForm.cantidad);
+      formData.append('distribucion_stock', JSON.stringify(stockPayload(editForm.distribucion_stock)));
       formData.append('precio', editForm.precio);
       formData.append('costo', editForm.costo);
     formData.append('descuento', editForm.descuento);
@@ -525,7 +526,7 @@ const AdminItemPage = () => {
     formData.append('comision', editForm.comision);
     formData.append('upc', editForm.upc);
     formData.append('ubicacion', editForm.ubicacion);
-    if (editForm.punto_venta) formData.append('punto_venta', editForm.punto_venta);
+
       
       // Agregar garantía, regalo y condición
       if (editForm.garantia) formData.append('garantia', editForm.garantia);
@@ -561,7 +562,7 @@ const AdminItemPage = () => {
 
       if (!response.ok) {
         const errorData = await response.json();
-        throw new Error(errorData.message || 'Error al actualizar el producto');
+        throw new Error(errorData.message || JSON.stringify(errorData) || 'Error al actualizar el producto');
       }
       // Enviar notificación de descuento si aplica
       if (editForm.descuento !== oldDiscount) {
@@ -1246,11 +1247,12 @@ const AdminItemPage = () => {
 
                       {/* Punto de Venta */}
                       <td className="px-6 py-4">
-                        <Chip
-                          label={item.punto_venta_detalle?.nombre || 'Sede Principal'}
-                          color={item.punto_venta_detalle ? 'primary' : 'default'}
-                          size="small"
-                        />
+                        {(item.inventario_por_locacion || []).map((row) => (
+                          <Chip key={row.punto_venta ?? 'principal'}
+                            label={`${row.nombre}: ${row.cantidad}`}
+                            color={row.punto_venta ? 'primary' : 'default'}
+                            size="small" sx={{ mr: 0.5, mb: 0.5 }} />
+                        ))}
                       </td>
 
                       {/* Variaciones */}
@@ -1514,43 +1516,21 @@ const AdminItemPage = () => {
                 }}
               />
 
-              <TextField
-                select
-                label="Punto de Venta (opcional)"
-                name="punto_venta"
-                value={editForm.punto_venta}
-                onChange={handleEditChange}
-                fullWidth
-                margin="normal"
-                helperText="Si no se asigna, el producto se considera en la Sede Principal"
-                sx={{
-                  '& .MuiOutlinedInput-root': {
-                    borderRadius: '12px',
-                    '&:hover fieldset': {
-                      borderColor: '#FF6B00',
-                    },
-                    '&.Mui-focused fieldset': {
-                      borderColor: '#FF6B00',
-                    },
-                  },
-                  '& .MuiInputLabel-root.Mui-focused': {
-                    color: '#FF6B00',
-                  },
-                }}
-              >
-                <MenuItem value="">Sede Principal</MenuItem>
-                {puntosVentaData.map((pv) => (
-                  <MenuItem key={pv.id} value={pv.id}>{pv.nombre}</MenuItem>
-                ))}
-              </TextField>
+              <StockDistribution
+                locations={puntosVentaData}
+                values={editForm.distribucion_stock || {}}
+                disabled={loading.submitting}
+                restock inventory={currentItem?.inventario_por_locacion || []}
+                onChange={values => setEditForm(prev => ({ ...prev, distribucion_stock: values }))}
+              />
 
               <div className="grid grid-cols-2 gap-4">
                 <TextField
-                  label="Cantidad"
+                  label="Stock actual"
                   name="cantidad"
                   type="number"
                   value={editForm.cantidad}
-                  onChange={handleEditChange}
+                  InputProps={{ readOnly: true }}
                   fullWidth
                   margin="normal"
                   sx={{

@@ -1,3 +1,4 @@
+import StockDistribution, { stockPayload, stockTotal } from '../components/StockDistribution';
 import { apiFetch as fetch } from '../auth/session';
 import { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
@@ -27,7 +28,7 @@ const CreateVariacionPage = () => {
     ubicacion: '',
     punto_venta: '',
     costo: '',
-    cantidad: '',
+    cantidad: 0,
     imagen: null,
     garantia: '',
     regalo: [],
@@ -83,7 +84,7 @@ const CreateVariacionPage = () => {
           }
         });
 
-        if (!garantiaResponse.ok || !regaloResponse.ok || !condicionResponse.ok) {
+        if (!garantiaResponse.ok || !regaloResponse.ok || !condicionResponse.ok || !puntoVentaResponse.ok) {
           throw new Error('Error al obtener datos iniciales');
         }
 
@@ -145,7 +146,7 @@ const CreateVariacionPage = () => {
       }
 
       // Validaciones
-      if (!formData.color || !formData.precio || !formData.modelo || !formData.cantidad || !formData.condicion) {
+      if (!formData.color || !formData.precio || !formData.modelo || formData.cantidad === '' || !formData.condicion) {
         throw new Error('Todos los campos requeridos deben ser completados');
       }
 
@@ -159,11 +160,9 @@ const CreateVariacionPage = () => {
       formDataToSend.append('precio', formData.precio);
       formDataToSend.append('modelo', formData.modelo);
       formDataToSend.append('ubicacion', formData.ubicacion);
-      if (formData.punto_venta) {
-        formDataToSend.append('punto_venta', formData.punto_venta);
-      }
       formDataToSend.append('costo', formData.costo);
       formDataToSend.append('cantidad', formData.cantidad);
+      formDataToSend.append('distribucion_stock', JSON.stringify(stockPayload(formData.distribucion_stock)));
       formDataToSend.append('condicion', formData.condicion);
       formDataToSend.append('comision', formData.comision || '0.00');
       
@@ -190,7 +189,7 @@ const CreateVariacionPage = () => {
 
       if (!response.ok) {
         const errorData = await response.json();
-        throw new Error(errorData.message || 'Error al crear la variación');
+        throw new Error(errorData.message || JSON.stringify(errorData) || 'Error al crear la variación');
       }
       await NewVariationAlert.sendNewVariationNotification({
         color: formData.color,
@@ -209,7 +208,7 @@ const CreateVariacionPage = () => {
         ubicacion: '',
         punto_venta: '',
         costo: '',
-        cantidad: '',
+        cantidad: 0,
         imagen: null,
         garantia: '',
         regalo: [],
@@ -236,7 +235,7 @@ const CreateVariacionPage = () => {
       ubicacion: '',
       punto_venta: '',
       costo: '',
-      cantidad: '',
+      cantidad: 0,
       imagen: null,
       garantia: '',
       regalo: [],
@@ -383,23 +382,12 @@ const CreateVariacionPage = () => {
                   sx={textFieldStyles}
                 />
 
-                <TextField
-                  select
-                  label="Punto de Venta (opcional)"
-                  variant="outlined"
-                  fullWidth
-                  name="punto_venta"
-                  value={formData.punto_venta}
-                  onChange={handleChange}
+                <StockDistribution
+                  locations={puntosVenta}
+                  values={formData.distribucion_stock || {}}
                   disabled={loading.form || loading.initialData}
-                  helperText="Si no se asigna, la variación se considera en la Sede Principal"
-                  sx={textFieldStyles}
-                >
-                  <MenuItem value="">Sede Principal</MenuItem>
-                  {puntosVenta.map((pv) => (
-                    <MenuItem key={pv.id} value={pv.id}>{pv.nombre}</MenuItem>
-                  ))}
-                </TextField>
+                  onChange={values => setFormData(prev => ({ ...prev, distribucion_stock: values, cantidad: stockTotal(values) }))}
+                />
               </div>
             </div>
 
@@ -424,12 +412,12 @@ const CreateVariacionPage = () => {
                 />
                 
                 <TextField
-                  label="Cantidad en Stock"
+                  label="Stock total"
                   variant="outlined"
                   type="number"
                   name="cantidad"
                   value={formData.cantidad}
-                  onChange={handleChange}
+                  InputProps={{ readOnly: true }}
                   inputProps={{ min: 0 }}
                   required
                   disabled={loading.form || loading.initialData}
@@ -603,7 +591,7 @@ const CreateVariacionPage = () => {
             <div className="flex space-x-3 pt-6">
               <Button
                 type="submit"
-                disabled={loading.form || loading.initialData || !formData.color || !formData.modelo || !formData.precio || !formData.cantidad || !formData.condicion}
+                disabled={loading.form || loading.initialData || !formData.color || !formData.modelo || !formData.precio || formData.cantidad === '' || !formData.condicion}
                 sx={{
                   backgroundColor: '#000000',
                   color: '#ffffff',
