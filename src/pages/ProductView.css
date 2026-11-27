@@ -735,6 +735,23 @@
 
   .pv-cta__secondary {
     gap: 12px;
+    flex-wrap: wrap;
+  }
+
+  /* The PDF controls are a third action group: keep them on their own row
+     instead of forcing a third narrow column beyond the mobile viewport. */
+  .pv-cta__secondary > .pv-pdf-actions {
+    flex: 1 0 100%;
+    min-width: 0;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+
+  .pv-pdf-actions > .vj-btn {
+    flex: 1 1 140px;
+    min-width: 0;
+    justify-content: center;
   }
 
   .pv-comments,

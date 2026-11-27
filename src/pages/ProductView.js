@@ -1,5 +1,5 @@
 import { apiFetch as fetch } from '../auth/session';
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import {
   Button,
@@ -19,6 +19,7 @@ import ChatWidget from '../components/ChatWidget';
 import { useCart } from '../context/CartContext';
 
 import { API_URL } from '../config/apiConfig';
+import { prepareProductPdf, canSharePreparedPdf, sharePreparedPdf, downloadPreparedPdf } from '../integrations/compartir_pdf';
 import '../styles/vjh-theme.css';
 import './ProductView.css';
 const style = {
@@ -54,6 +55,26 @@ const ProductView = ({ onShowLogin = () => {} }) => {
   const [averageRating, setAverageRating] = useState(0);
   const [userData, setUserData] = useState(null);
   const [autoSelectedVariation, setAutoSelectedVariation] = useState(false);
+  const [preparedPdf, setPreparedPdf] = useState(null);
+  const [preparedPdfKey, setPreparedPdfKey] = useState(null);
+  const [pdfStatus, setPdfStatus] = useState('idle');
+  const [pdfError, setPdfError] = useState('');
+  const pdfAbortRef = useRef(null);
+  // These values must be computed before every early return: hooks may not be conditional.
+  const urlReferral = new URLSearchParams(window.location.search).get('ref') || null;
+  const jwtReferral = userData?.referido_id || null;
+  const pdfKey = JSON.stringify({
+    product: product?.id, variation: selectedVariation?.id || null,
+    urlReferral, jwtReferral, price: selectedVariation?.precio_post_descuento || product?.precio_post_descuento || null,
+    availability: selectedVariation?.estado ?? product?.estado ?? null,
+    condition: selectedVariation?.condicion_detalle?.nombre || product?.condicion_detalle?.nombre || null,
+    images: selectedVariation?.imagen || product?.imagenes?.map((image) => image.imagen).join('|') || null,
+  });
+  useEffect(() => {
+    pdfAbortRef.current?.abort();
+    pdfAbortRef.current = null;
+    setPreparedPdf(null); setPreparedPdfKey(null); setPdfError(''); setPdfStatus('idle');
+  }, [pdfKey]);
 
   // Estados para el manejo de gestos táctiles
   const [touchStart, setTouchStart] = useState(null);
@@ -552,6 +573,32 @@ const ProductView = ({ onShowLogin = () => {} }) => {
   const regalo = (Array.isArray(regaloRaw) ? regaloRaw.filter(Boolean).join(", ") : regaloRaw) || null;
   const availableStock = getAvailableStock();
   const canBuy = product.estado && availableStock > 0;
+  const pdfContext = () => {
+    if (!product) return null;
+    const endpoint = new URL(`/api/products/${encodeURIComponent(product.id)}/sheet.pdf`, window.location.origin);
+    if (selectedVariation?.id) endpoint.searchParams.set('variation', selectedVariation.id);
+    if (urlReferral) endpoint.searchParams.set('url_ref', urlReferral);
+    if (jwtReferral) endpoint.searchParams.set('jwt_ref', jwtReferral);
+    return { key: pdfKey, endpoint: `${endpoint.pathname}${endpoint.search}`, filename: product.nombre };
+  };
+
+  const handlePreparePdf = async () => {
+    const context = pdfContext();
+    if (!context || pdfStatus === 'preparing') return;
+    const controller = new AbortController();
+    pdfAbortRef.current?.abort(); pdfAbortRef.current = controller;
+    setPdfStatus('preparing'); setPdfError(''); setPreparedPdf(null); setPreparedPdfKey(null);
+    try {
+      const token = localStorage.getItem('authToken');
+      const file = await prepareProductPdf({ endpoint: context.endpoint, filename: context.filename, signal: controller.signal, request: fetch, headers: token ? { Authorization: `Bearer ${token}` } : {} });
+      if (context.key !== pdfKey || controller.signal.aborted) return;
+      setPreparedPdf(file); setPreparedPdfKey(context.key); setPdfStatus('ready');
+    } catch (error) {
+      if (error?.name !== 'AbortError' && context.key === pdfKey) { setPdfStatus('error'); setPdfError(error?.message || 'No se pudo preparar la ficha. Inténtalo de nuevo.'); }
+    } finally { if (pdfAbortRef.current === controller) pdfAbortRef.current = null; }
+  };
+  const handleSharePreparedPdf = async () => { if (preparedPdf && preparedPdfKey === pdfKey) await sharePreparedPdf(preparedPdf, `Ficha: ${product.nombre}`); };
+  const handleDownloadPreparedPdf = () => { if (preparedPdf && preparedPdfKey === pdfKey) downloadPreparedPdf(preparedPdf); };
   const mainSubcategory = product.subcategorias_detalle?.[0];
   const availableColors = getAvailableColors();
   const availableModels = getAvailableModels();
@@ -794,6 +841,17 @@ const ProductView = ({ onShowLogin = () => {} }) => {
               >
                 <span>Compartir</span>
               </ProductShareButton>
+              <div className="pv-pdf-actions" role="group" aria-label="Ficha PDF del producto">
+                <button type="button" onClick={handlePreparePdf} disabled={pdfStatus === 'preparing'} aria-busy={pdfStatus === 'preparing'} className="vj-btn vj-btn--outline">
+                  {pdfStatus === 'preparing' ? 'Preparando PDF…' : pdfStatus === 'ready' ? 'Preparar de nuevo' : 'Preparar ficha PDF'}
+                </button>
+                {pdfStatus === 'ready' && <>
+                  {canSharePreparedPdf(preparedPdf) && <button type="button" onClick={handleSharePreparedPdf} className="vj-btn vj-btn--outline">Compartir PDF</button>}
+                  <button type="button" onClick={handleDownloadPreparedPdf} className="vj-btn vj-btn--outline">Descargar PDF</button>
+                </>}
+                <p role="status" aria-live="polite" className="sr-only">{pdfStatus === 'preparing' ? 'Preparando ficha PDF' : ''}</p>
+                {pdfStatus === 'error' && <p role="alert" className="pv-pdf-error">{pdfError}</p>}
+              </div>
             </div>
           </div>
         </div>
